@@ -120,7 +120,6 @@ public class Expression {
     	ScalarSymbol s;
     	ArraySymbol as;
     	char[] exprArray = expr.toCharArray();
-    	ArrayList<String> symbolList = new ArrayList<String>();
     	scalars = new ArrayList<ScalarSymbol>();
     	arrays = new ArrayList<ArraySymbol>();
     	String currentSymbol = "";
@@ -320,15 +319,6 @@ public class Expression {
     		}
     	}
     	return result;
-    }
-    
-    private Expression createSubExpression(String subexpression) {
-    	Expression e = new Expression(subexpression);
-    	e.arrays = arrays;
-    	e.scalars = scalars;
-    	e.openingBracketIndex = openingBracketIndex;
-    	e.closingBracketIndex = closingBracketIndex;
-    	return e;
     }
     
     private float operate(char operator, float a, float b) {
