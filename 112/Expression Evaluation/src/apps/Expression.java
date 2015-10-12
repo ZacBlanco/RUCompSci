@@ -2,6 +2,7 @@ package apps;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
@@ -88,7 +89,7 @@ public class Expression {
 	    		if( exprArray[i] == '[' || exprArray[i] == '(') {
 	    			brackets.push(exprArray[i]);
 	    			openingBrackets.add(i);
-	    		} else if (exprArray[i] == ']' && brackets.peek() == '[' ) {
+	    		} else if ( exprArray[i] == ']' && brackets.peek() == '[' ) {
 	    			brackets.pop();
 	    			closingBrackets.add(i);
 	    		} else if( exprArray[i] == ')' && brackets.peek() == '(') {
@@ -132,13 +133,13 @@ public class Expression {
     			if(currentSymbol.length() < 1) {
     				continue;
     			} else {
-    				if (exprArray[i] == '[') {
+    				if (exprArray[i] == '[' && currentSymbol.length() > 0) {
     					as = new ArraySymbol(currentSymbol);
     					if(!arrays.contains(as)) {
     						arrays.add(as);
     					}
 						currentSymbol = "";
-    				} else {
+    				} else if(currentSymbol.length() > 0) {
     					s = new ScalarSymbol(currentSymbol);
     					if(!scalars.contains(s)){
     						scalars.add(s);
@@ -230,7 +231,9 @@ public class Expression {
     			i=b2;
     			ArraySymbol as = arrays.get(arrays.indexOf(new ArraySymbol(cToken)));
     			int[] values = as.values;
-    			if(eval < 0 || eval >= values.length) {
+				if(values == null) {
+					throw new Error("Array values are null");
+				} else if(eval < 0 || eval >= values.length) {
     				// Throw error
     				throw new Error("Array index is out of bounds. Index is " + eval + ". Array is symbol: " + as.name);
     			} else {
@@ -243,16 +246,14 @@ public class Expression {
     			// This means we've hit an operator, let's first push our latest operand to the stack.
     			// If this is a variable then we'll need to get it's value to store it.
 
-    			operands.push(getSymbolValue(cToken));
+    			operands.push(getScalarSymbolValue(cToken));
     			if(!operators.isEmpty() && operators.peek() == '-') {
     				operators.pop();
     				operands.push(operands.pop() * -1.0f);
     				operators.push('+');
-    			}    		
-    			
-    			
+    			}
     			// If the operator we're about to push is of lesser precedence than the top
-    			// We need to pop the top two operands, the top operator, operate on those two as x1 operator x2
+    			// We need to pop the top two operands, the top operator, operate on those two
     			// Then we can push the newest operand and operator.
 					while(!operators.isEmpty() && comparePrecedence(operators.peek(), exprArray[i]) >= 0) {
  	    				float opand2 = operands.pop();
@@ -268,7 +269,7 @@ public class Expression {
     	// Need to perform a bit of manipulation for this last one.
     	// Always remember to include our last operand from the stack. There should never be an operator afterwards.
     	
-    	operands.push(getSymbolValue(cToken));
+    	operands.push(getScalarSymbolValue(cToken));
     	
     	if(operands.size() - 1 == operators.size()) {
     		while(!operators.isEmpty()){
@@ -283,7 +284,7 @@ public class Expression {
     	return operands.pop();
     }
     
-    private float getSymbolValue(String token) {
+    private float getScalarSymbolValue(String token) {
     	int symbolIndex = scalars.indexOf(new ScalarSymbol(token));
     	float f;
 		if(symbolIndex != -1) {
@@ -353,9 +354,7 @@ public class Expression {
     			}
     		}
     	}
-    	
     	throw new Error("Could not find matching brace for brace at index " + braceLocation + " of expression.");
-    	
     }
 
     /**

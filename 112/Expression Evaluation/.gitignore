@@ -1,0 +1,6 @@
+.project
+*.class
+.idea/**
+bin/**
+*.class
+*.class
