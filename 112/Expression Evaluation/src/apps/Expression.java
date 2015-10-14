@@ -222,8 +222,6 @@ public class Expression {
     			if(sub.length() > 0) {
     				String eval = "" + evaluate(sub);
         			cToken = eval;
-    			} else {
-    				cToken = "";
     			}
     			i = b2;
     		}else if( exprArray[i] == '[') {
