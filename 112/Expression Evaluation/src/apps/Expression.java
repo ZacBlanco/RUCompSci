@@ -219,8 +219,12 @@ public class Expression {
     		} else if (exprArray[i] == '(' ) {
     			int b2 = findMatchingBrace(i, expression);
     			String sub = expression.substring(i + 1,  b2);
-    			String eval = "" + evaluate(sub);
-    			cToken = eval;
+    			if(sub.length() > 0) {
+    				String eval = "" + evaluate(sub);
+        			cToken = eval;
+    			} else {
+    				cToken = "";
+    			}
     			i = b2;
     		}else if( exprArray[i] == '[') {
     			int b2 = findMatchingBrace(i, expression);
