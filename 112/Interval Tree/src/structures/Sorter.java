@@ -22,7 +22,37 @@ public class Sorter {
 	 */
 	public static void sortIntervals(ArrayList<Interval> intervals, char lr) {
 		// COMPLETE THIS METHOD
+		
+		//Sorting according to left or right
+		int mark = 0;
+		if (intervals.size() <= 0) { return; }
+		while ( mark < intervals.size() ) {
+			Interval intMark = intervals.get(mark);
+			
+			for(int i = 0; i < mark; i++) {
+				Interval intI = intervals.get(i);
+				if(lr == 'l') {
+					if( intI.leftEndPoint > intMark.leftEndPoint ) {
+						intervals.add(i, intMark);
+						intervals.remove(mark + 1);
+						break;
+					}
+				} else if (lr == 'r') {
+					if( intI.rightEndPoint  > intMark.rightEndPoint ) {
+						intervals.add(i, intMark);
+						intervals.remove(mark + 1);
+						break;
+					}
+				} else {
+					throw new Error("Do not know how to sort according to char " + lr);
+				}
+			}
+			mark++;
+		}
+		return;
+		
 	}
+	
 	
 	/**
 	 * Given a set of intervals (left sorted and right sorted), extracts the left and right end points,
