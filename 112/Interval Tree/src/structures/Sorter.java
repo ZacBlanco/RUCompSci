@@ -64,7 +64,42 @@ public class Sorter {
 	 */
 	public static ArrayList<Integer> getSortedEndPoints(ArrayList<Interval> leftSortedIntervals, ArrayList<Interval> rightSortedIntervals) {
 		// COMPLETE THIS METHOD
-		// THE FOLLOWING LINE HAS BEEN ADDED TO MAKE THE PROGRAM COMPILE
-		return null;
+		ArrayList<Integer> ints = new ArrayList();
+		if(leftSortedIntervals == null || leftSortedIntervals.size() == 0) { throw new Error("No intervals to test in right"); }
+		if(rightSortedIntervals == null || rightSortedIntervals.size() == 0) { throw new Error("No intervals to test in left"); }
+		int last = Integer.MIN_VALUE;
+		for(int l = 0; l < leftSortedIntervals.size(); l++) {
+			if( l <= 0 ) {
+				last = leftSortedIntervals.get(l).leftEndPoint;
+				ints.add(last);
+			} else {
+				int curr = leftSortedIntervals.get(l).leftEndPoint;
+				if(curr > last && curr != last) {
+					ints.add(curr);
+					last = curr;
+				}
+			}
+		}
+		
+		for(int r = 0; r < rightSortedIntervals.size(); r++) {	
+			int currRight = rightSortedIntervals.get(r).rightEndPoint;
+
+			for(int i = 0; i < ints.size() - 1; i++) {
+				int currInt = ints.get(i);
+				 if (currRight == currInt) {
+					break;
+				} else {
+					int next = ints.get(i + 1);
+					if( currRight < next && currRight > currInt) {
+						ints.add(i + 1, currRight);
+						break;
+					} else if (currRight > next && i >= ints.size() - 2) {
+						ints.add(currRight);
+						break;
+					}
+				}
+			}
+		}
+		return ints;
 	}
 }
