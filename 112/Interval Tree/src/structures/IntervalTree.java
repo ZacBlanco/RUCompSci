@@ -58,7 +58,6 @@ public class IntervalTree {
 	 * @return Root of the tree structure
 	 */
 	public static IntervalTreeNode buildTreeNodes(ArrayList<Integer> endPoints) {
-		// COMPLETE THIS METHOD
 		Queue<IntervalTreeNode> nodes = new Queue<IntervalTreeNode>();
 
 		for (int i = 0; i < endPoints.size(); i++) {
@@ -83,6 +82,8 @@ public class IntervalTree {
 					
 					
 					IntervalTreeNode n = new IntervalTreeNode(split, min, max);
+					n.leftIntervals = new ArrayList<Interval>();
+					n.rightIntervals = new ArrayList<Interval>();
 					n.leftChild = t1;
 					n.rightChild = t2;
 					nodes.enqueue(n);
@@ -108,8 +109,48 @@ public class IntervalTree {
 	 */
 	public void mapIntervalsToTree(ArrayList<Interval> leftSortedIntervals,
 			ArrayList<Interval> rightSortedIntervals) {
-		// COMPLETE THIS METHOD
+		IntervalTreeNode r = getRoot();
+		if (r == null) { return; }
+
+		for(Interval n : leftSortedIntervals) {
+			IntervalTreeNode h = getHighestSplit(n, root);
+			h.leftIntervals.add(n);
+		}
+		
+		for(Interval n : rightSortedIntervals) {
+			IntervalTreeNode h = getHighestSplit(n, root);
+			h.rightIntervals.add(n);
+		}
 	}
+	
+	private boolean intervalContains(Interval n, IntervalTreeNode t) {
+		return (t.splitValue >= n.leftEndPoint && t.splitValue <= n.rightEndPoint);
+	}
+	private IntervalTreeNode getHighestSplit(Interval n, IntervalTreeNode node) {
+		IntervalTreeNode first = node;
+		
+		while( first.leftChild != null || first.rightChild != null ) {
+			if( intervalContains(n, first) ) {
+				break;
+			} else {
+				if(first.leftChild.minSplitValue <= n.leftEndPoint && 
+					first.leftChild.maxSplitValue >= n.rightEndPoint) {
+					first = first.leftChild;
+				} else if (first.rightChild.minSplitValue <= n.leftEndPoint && 
+							first.rightChild.maxSplitValue >= n.rightEndPoint) {
+					first = first.rightChild;
+				} else {
+					break;
+				}
+			}
+		}
+		return first;
+	}
+	
+	public boolean isLeaf(IntervalTreeNode n) {
+		return (n.leftChild == null && n.rightChild == null);
+	}
+	
 
 	/**
 	 * Gets all intervals in this interval tree that intersect with a given
@@ -121,9 +162,46 @@ public class IntervalTree {
 	 *         no intersections
 	 */
 	public ArrayList<Interval> findIntersectingIntervals(Interval q) {
-		// COMPLETE THIS METHOD
-		// THE FOLLOWING LINE HAS BEEN ADDED TO MAKE THE PROGRAM COMPILE
-		return null;
+		return findIntersectingIntervals(getRoot(), q);		
+	}
+	
+	private ArrayList<Interval> findIntersectingIntervals(IntervalTreeNode node, Interval q) {
+		ArrayList<Interval> results = new ArrayList<Interval>();
+		if (node == null) { return results; }
+		if (node.leftChild == null && node.rightChild == null) { return results; }
+		if(intervalContains(q, node)) {
+			for(Interval n : node.leftIntervals) {
+				results.add(n);
+			}
+			results.addAll(findIntersectingIntervals(node.leftChild, q));
+			results.addAll(findIntersectingIntervals(node.rightChild, q));
+		} else if (node.splitValue <= q.leftEndPoint) {
+			int i = node.rightIntervals.size() - 1;
+			while (i >= 0) {
+				Interval t = node.rightIntervals.get(i);
+				if(t.rightEndPoint >= q.leftEndPoint) {
+					results.add(t);
+				} else {
+					break;
+				}
+				i--;
+			}
+			results.addAll(findIntersectingIntervals(node.rightChild, q));
+		} else if (node.splitValue >= q.rightEndPoint) {
+			int i = node.leftIntervals.size() - 1;
+			while (i >= 0) {
+				Interval t = node.leftIntervals.get(i);
+				if(q.rightEndPoint >= t.leftEndPoint) {
+					results.add(t);
+				} else {
+					break;
+				}
+				i--;
+			}
+			results.addAll(findIntersectingIntervals(node.leftChild, q));
+		}
+		
+		return results;	
 	}
 
 	/**
