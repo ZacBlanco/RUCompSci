@@ -84,9 +84,12 @@ public class Sorter {
 		for(int r = 0; r < rightSortedIntervals.size(); r++) {	
 			int currRight = rightSortedIntervals.get(r).rightEndPoint;
 
-			for(int i = 0; i < ints.size() - 1; i++) {
+			for(int i = 0; i < ints.size(); i++) {
 				int currInt = ints.get(i);
 				 if (currRight == currInt) {
+					break;
+				} else if (i == ints.size() - 1 && currRight != currInt){
+					ints.add(currRight);
 					break;
 				} else {
 					int next = ints.get(i + 1);

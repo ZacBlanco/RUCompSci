@@ -1,3 +1,7 @@
-.project
+*.project
 *.class
 bin/
+
+*.prefs
+
+112/Expression Evaluation/test
