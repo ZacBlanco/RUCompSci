@@ -109,6 +109,19 @@ public class LittleSearchEngine {
 	public HashMap<String,Occurrence> loadKeyWords(String docFile) 
 	throws FileNotFoundException {
 		// COMPLETE THIS METHOD
+		// First let's split the array
+		HashMap<String, Occurrence> keywords = new HashMap<String, Occurrence>(75);
+		Scanner sc = new Scanner(new File(docFile));
+		while(sc.hasNextLine()){
+			String line = sc.nextLine().toLowerCase();
+			String[] words = line.split(" ");
+			for (String w : words) {
+				
+			}
+
+		}
+		
+		
 		// THE FOLLOWING LINE HAS BEEN ADDED TO MAKE THE METHOD COMPILE
 		return null;
 	}
@@ -124,6 +137,12 @@ public class LittleSearchEngine {
 	 */
 	public void mergeKeyWords(HashMap<String,Occurrence> kws) {
 		// COMPLETE THIS METHOD
+		
+		for (String kw : kws.keySet()) {
+			ArrayList<Occurrence> occs = keywordsIndex.get(kw);
+			occs.add(kws.get(kw));
+			insertLastOccurrence(occs);
+		}
 	}
 	
 	/**
@@ -139,8 +158,19 @@ public class LittleSearchEngine {
 	 */
 	public String getKeyWord(String word) {
 		// COMPLETE THIS METHOD
-		// THE FOLLOWING LINE HAS BEEN ADDED TO MAKE THE METHOD COMPILE
-		return null;
+		//Let's make everything now lowercase and remove and whitespace.
+		String refined = word.toLowerCase().trim();
+		
+		//Using regex we're going to replace all the "bad" characters that might TRAIL the word 
+		refined = refined.replaceAll("[\\.\\,\\!\\?\\;\\:]*$", "");
+		
+		//We check to make sure the word matches all lowercase alphabetic chars
+		// return word for match, false otherwise
+		if(refined.matches("^[a-z]*")) {
+			return refined;
+		} else {
+			return null;
+		}
 	}
 	
 	/**
