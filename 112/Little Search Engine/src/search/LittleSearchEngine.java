@@ -124,6 +124,8 @@ public class LittleSearchEngine {
 
 		// Define our hashmap to store + values
 		HashMap<String, Occurrence> keywords = new HashMap<String, Occurrence>(75, 2.0f);
+//		File f = new File(docFile);
+//		System.out.println(f.getAbsolutePath());
 		Scanner sc = new Scanner(new File(docFile));
 
 		// Scan while we have lines to scan
@@ -325,11 +327,31 @@ public class LittleSearchEngine {
 			}
 		}
 
+//====================================================================================		
+//									TEST CODE
+//====================================================================================
+		//TEST CODE DO NOT INCLUDE IN FINAL SUBMISSION
+		//TEST WHETHER OR NOT THE FINAL LIST IS IN CORRECT ORDER
+		boolean isGood = true;
+		for(int i = 1; i < merged.size();i++) {
+			if( i > 0 && i < merged.size() - 1) {
+				if(merged.get(i-1).frequency < merged.get(i).frequency || merged.get(i+1).frequency > merged.get(i).frequency) {
+					isGood = false;
+				}
+			}
+		}
+		System.out.println("Merged result arraylist order is correct: " + isGood);
+//====================================================================================
+//									TEST CODE
+//====================================================================================
+
 		// Keep track of which documents are being returned.
 		// Also Go through all of merged & return
 		HashMap<String, String> documentsReturned = new HashMap<String, String>(10, 1.0f);
 		ArrayList<String> documents = new ArrayList<String>();
 
+		
+		//Return only the first 5 items
 		int j = 0;
 		while (documents.size() <= 5 && j < merged.size()) {
 			String doc = merged.get(j).document;

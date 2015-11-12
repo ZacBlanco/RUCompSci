@@ -9,11 +9,8 @@ public class LSETester {
 
 		LittleSearchEngine lse = new LittleSearchEngine();
 
-		// String words[] = {"distance.", "equi-distant", "Rabbit", "Between",
-		// "we're", "World", "World?!", "What,ever"};
-
-		String docFile = "docs.txt";
-		lse.makeIndex(docFile, "noisewords.txt");
+		String docFile = "docs.txt"; //file containing references to all txt documents
+		lse.makeIndex(docFile, "noisewords.txt"); //Index all of our documents
 		Scanner words = new Scanner(System.in);
 
 		String k1 = "", k2 = "";
