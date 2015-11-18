@@ -330,7 +330,7 @@ public class LittleSearchEngine {
 					merged.add(keyList2.get(i));
 				} else {
 					int x = 0;
-					while ( x < merged.size() && keyList2.get(i).frequency <= merged.get(x).frequency) {
+					while ( x < merged.size() && keyList2.get(i).frequency < merged.get(x).frequency) {
 						x++;
 					}
 					merged.add(x, keyList2.get((i)));

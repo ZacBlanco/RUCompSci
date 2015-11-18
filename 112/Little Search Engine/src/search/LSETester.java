@@ -14,13 +14,20 @@ public class LSETester {
 		Scanner words = new Scanner(System.in);
 
 		String k1 = "", k2 = "";
-		while (!k1.equals(":q")) {
-			System.out.println("Enter two keywords now. Type \":q\" for keyword 1 to quit");
+		while (true) {
+			System.out.println("Enter two keywords now. Type \":q\" for either keyword to quit");
 			System.out.print("Keyword 1:");
 			k1 = words.nextLine();
+			if(k1.equals(":q")) {
+				break;
+			}
 			System.out.print("Keyword 2:");
 			k2 = words.nextLine();
-
+			if(k2.equals(":q")) {
+				break;
+			}
+			
+			
 			long pre = System.nanoTime();
 			ArrayList<String> results = lse.top5search(k1, k2);
 			long post = System.nanoTime();
@@ -36,6 +43,8 @@ public class LSETester {
 			System.out.println();
 
 		}
+		
+		System.out.println("Thank you for using the Little Search Engine!");
 
 	}
 
