@@ -135,9 +135,8 @@ public class LittleSearchEngine {
 			String line = sc.nextLine();
 			String[] words = line.split(" ");
 
-			// Now that we have an array of the words on this line, we can
-			// retrieve
-			// Each keyword one by one. Make sure it hasn't returned null
+			// Now that we have an array of the words on this line, we can retrieve
+			// each keyword one by one. Make sure it hasn't returned null
 			// Then we can check if it's already occurred.
 			// If it has, add one to the occurrence object for it.
 			// else create a new occurrence object
@@ -184,6 +183,15 @@ public class LittleSearchEngine {
 			} else {
 				occs.add(kws.get(kw));
 			}
+//====================================================================================		
+//			TEST CODE
+//====================================================================================
+//			if(kw.equals("tooth") || kws.equals("vampire")) {
+//				System.out.println("Found");
+//			}
+//====================================================================================		
+//			TEST CODE
+//====================================================================================
 			insertLastOccurrence(occs);
 		}
 	}
@@ -237,12 +245,12 @@ public class LittleSearchEngine {
 	public ArrayList<Integer> insertLastOccurrence(ArrayList<Occurrence> occs) {
 		// COMPLETE THIS METHOD
 		ArrayList<Integer> indexes = new ArrayList<Integer>();
-
+				
+		
 		// In the case that there are less than two occurrences for the given
 		// keyword
-		if (occs.size() < 2) {
-			indexes.add(0);
-			return indexes;
+		if (occs.size() == 1) {
+			return null;
 		}
 
 		Occurrence lastItem = occs.remove(occs.size() - 1);
@@ -252,10 +260,10 @@ public class LittleSearchEngine {
 		int mid = 0;
 		while (lo <= hi) {
 			mid = (hi + lo) / 2;
+			indexes.add(mid);
 			if (item == occs.get(mid).frequency) {
-				indexes.add(mid);
 				break;
-			} else if (item <= occs.get(mid).frequency) {
+			} else if (item < occs.get(mid).frequency) {
 				// Here this means that hi should be the same, lo should be mid
 				// Because we're sorted in descending order.
 				lo = mid + 1;
@@ -269,7 +277,11 @@ public class LittleSearchEngine {
 		// Finished binary search, so lets add it into the array
 		// Questioning whether mid is correct index or if it should be mid+1 or
 		// /lo/hi
-		occs.add(mid, lastItem);
+		if (item >= occs.get(mid).frequency) {
+			occs.add(mid, lastItem);
+		} else {
+			occs.add(mid+1, lastItem);
+		}
 		return indexes;
 
 	}
@@ -340,7 +352,9 @@ public class LittleSearchEngine {
 				}
 			}
 		}
-		System.out.println("Merged result arraylist order is correct: " + isGood);
+		System.out.println("============================================================");
+		System.out.println(("Merged result arraylist order is correct: " + isGood).toUpperCase());
+		System.out.println("============================================================");
 //====================================================================================
 //									TEST CODE
 //====================================================================================
@@ -362,6 +376,6 @@ public class LittleSearchEngine {
 			j++;
 		}
 
-		return documents;
+		return documents.size() == 0 ? null : documents;
 	}
 }

@@ -25,10 +25,13 @@ public class LSETester {
 			ArrayList<String> results = lse.top5search(k1, k2);
 			long post = System.nanoTime();
 			float seconds = (post - pre) / 1000000000f;
-			System.out.println(results.size() + " results in " + seconds + " seconds.");
-
-			for (String s : results) {
-				System.out.print(s + ", ");
+			if(results != null){
+				System.out.println(results.size() + " results in " + seconds + " seconds.");
+				for (String s : results) {
+					System.out.print(s + ", ");
+				}
+			} else {
+				System.out.println("0 results in " + seconds + " seconds.");
 			}
 			System.out.println();
 
