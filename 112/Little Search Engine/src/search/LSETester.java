@@ -10,9 +10,25 @@ public class LSETester {
 		LittleSearchEngine lse = new LittleSearchEngine();
 
 		String docFile = "docs.txt"; //file containing references to all txt documents
+		
+//		AliceCh1.txt
+//		WowCh1.txt
+//		books/mice.txt
+//		books/oedip10.txt
+//		books/scrlt11.txt
+//		books/sleep10.txt
+//		books/stoker-dracula-168.txt
+//		books/swift-gullivers-728.txt
+//		books/wizrd_oz.txt
+//		books/zenda10.txt
 		lse.makeIndex(docFile, "noisewords.txt"); //Index all of our documents
 		Scanner words = new Scanner(System.in);
-
+		
+		lse.loadKeyWords("pohlx.txt");
+		lse.loadKeyWords("Tyger.txt");
+		lse.loadKeyWords("jude.txt");
+		
+		
 		String k1 = "", k2 = "";
 		while (true) {
 			System.out.println("Enter two keywords now. Type \":q\" for either keyword to quit");

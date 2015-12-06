@@ -183,15 +183,6 @@ public class LittleSearchEngine {
 			} else {
 				occs.add(kws.get(kw));
 			}
-//====================================================================================		
-//			TEST CODE
-//====================================================================================
-//			if(kw.equals("tooth") || kws.equals("vampire")) {
-//				System.out.println("Found");
-//			}
-//====================================================================================		
-//			TEST CODE
-//====================================================================================
 			insertLastOccurrence(occs);
 		}
 	}
@@ -339,26 +330,6 @@ public class LittleSearchEngine {
 			}
 		}
 
-//====================================================================================		
-//									TEST CODE
-//====================================================================================
-		//TEST CODE DO NOT INCLUDE IN FINAL SUBMISSION
-		//TEST WHETHER OR NOT THE FINAL LIST IS IN CORRECT ORDER
-		boolean isGood = true;
-		for(int i = 1; i < merged.size();i++) {
-			if( i > 0 && i < merged.size() - 1) {
-				if(merged.get(i-1).frequency < merged.get(i).frequency || merged.get(i+1).frequency > merged.get(i).frequency) {
-					isGood = false;
-				}
-			}
-		}
-		System.out.println("============================================================");
-		System.out.println(("Merged result arraylist order is correct: " + isGood).toUpperCase());
-		System.out.println("============================================================");
-//====================================================================================
-//									TEST CODE
-//====================================================================================
-
 		// Keep track of which documents are being returned.
 		// Also Go through all of merged & return
 		HashMap<String, String> documentsReturned = new HashMap<String, String>(10, 1.0f);
@@ -367,7 +338,7 @@ public class LittleSearchEngine {
 		
 		//Return only the first 5 items
 		int j = 0;
-		while (documents.size() <= 5 && j < merged.size()) {
+		while (documents.size() < 5 && j < merged.size()) {
 			String doc = merged.get(j).document;
 			if (documentsReturned.get(doc) == null) {
 				documents.add(doc);

@@ -1,10 +1,1 @@
-AliceCh1.txt
-WowCh1.txt
-books/mice.txt
-books/oedip10.txt
-books/scrlt11.txt
-books/sleep10.txt
-books/stoker-dracula-168.txt
-books/swift-gullivers-728.txt
-books/wizrd_oz.txt
-books/zenda10.txt
+pohlx.txt
