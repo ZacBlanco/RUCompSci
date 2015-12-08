@@ -4,8 +4,6 @@ import structures.*;
 
 import java.util.ArrayList;
 
-//CHECK IF I CAN DO THIS
-
 public class MST {
 
 	/**
@@ -43,11 +41,9 @@ public class MST {
 	 * @return Array list of all arcs that are in the MST - sequence of arcs is
 	 *         irrelevant
 	 */
-	public static ArrayList<PartialTree.Arc> execute(Graph graph,
-			PartialTreeList ptlist) {
-		
-		ArrayList<PartialTree.Arc> result = new ArrayList<>();
+	public static ArrayList<PartialTree.Arc> execute(Graph graph, PartialTreeList ptlist) {
 
+		ArrayList<PartialTree.Arc> result = new ArrayList<>();
 
 		while (ptlist.size() > 1) {
 
@@ -56,31 +52,38 @@ public class MST {
 			MinHeap<PartialTree.Arc> arcs = ptx.getArcs();
 
 			PartialTree.Arc alpha = null;
+			boolean broke = false;
 			while (!arcs.isEmpty()) {
 				alpha = arcs.deleteMin();
 				if (!PTContains(ptx, alpha.v2)) {
+					broke = true;
 					break;
 				}
 			}
 
-			result.add(alpha);
-			
-			//Working for case 1 - graph1.txt
-			PartialTree pty = ptlist.removeTreeContaining(alpha.v2);
-			ptx.merge(pty);
-			//pty.merge(ptx);
-			pty.getRoot().parent = pty.getRoot();
-			
-			
-			
-			
-			ptlist.append(ptx);
+			if (broke) {
+				result.add(alpha);
+				
+				// Testing for case 2
+				PartialTree pty = ptlist.removeTreeContaining(alpha.v2);
+				pty.getArcs().merge(ptx.getArcs());
+				
+				Vertex ptr = pty.getRoot();
+				Vertex trail = null;
+				while (ptr != trail) {
+					trail = ptr;
+					ptr = ptr.parent;
+				}
+				ptr.parent = ptx.getRoot();
+
+				ptlist.append(pty);
+			}
 
 		}
-		
+
 		return result;
 	}
-	
+
 	private static boolean PTContains(PartialTree pt, Vertex v) {
 		if (pt == null) {
 			return false;
@@ -88,16 +91,17 @@ public class MST {
 			return false;
 		}
 
+	
 		Vertex ptr = pt.getRoot();
-		Vertex trail;
-
+		Vertex trail = null;
+		
 		if (ptr == null) {
 			return false;
 		} else if (ptr.name.equals(v.name)) {
 			return true;
 		} else {
-				trail = ptr;
-				ptr = ptr.parent;
+			trail = ptr;
+			ptr = ptr.parent;
 		}
 
 		while (ptr != trail) {
@@ -109,5 +113,5 @@ public class MST {
 		}
 		return false;
 	}
-	
+
 }
