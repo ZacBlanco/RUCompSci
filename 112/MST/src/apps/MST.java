@@ -64,10 +64,16 @@ public class MST {
 			}
 
 			result.add(alpha);
+			
+			//Working for case 1 - graph1.txt
 			PartialTree pty = ptlist.removeTreeContaining(alpha.v2);
 			ptx.merge(pty);
-			pty.merge(ptx);
+			//pty.merge(ptx);
 			pty.getRoot().parent = pty.getRoot();
+			
+			
+			
+			
 			ptlist.append(ptx);
 
 		}

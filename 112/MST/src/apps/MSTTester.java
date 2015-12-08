@@ -14,6 +14,11 @@ public class MSTTester {
 		ArrayList<Arc> mst = MST.execute(g, MST.initialize(g));
 		System.out.println(mst.toString());
 		
+		
+		g = new Graph("graph1.txt");
+		mst = MST.execute(g, MST.initialize(g));
+		System.out.println(mst.toString());
+		
 	}
 
 }

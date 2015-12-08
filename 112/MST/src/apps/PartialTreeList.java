@@ -83,6 +83,7 @@ public class PartialTreeList implements Iterable<PartialTree> {
 			throw new NoSuchElementException("Partial Tree List is Empty.");
 		} else if( rear == rear.next ) {
 			Node removed = rear;
+			size--;
 			return removed.tree;
 		}
 		Node removed = rear.next;
@@ -103,7 +104,6 @@ public class PartialTreeList implements Iterable<PartialTree> {
 	 */
 	public PartialTree removeTreeContaining(Vertex vertex)
 			throws NoSuchElementException {
-		Node ptr = rear, trailer = null;
 
 		if (rear == null) {
 			// case where rear is null;
@@ -120,32 +120,28 @@ public class PartialTreeList implements Iterable<PartialTree> {
 			}
 		}
 
-		if (vertex.name.equals("C")) {
-			System.out.println();
+		Node ptr = rear.next, trailer = rear;
+		if(vertex.name.equals("C")){
+			System.out.println("");
 		}
-
-		trailer = ptr;
-		ptr = ptr.next;
-
 		do {
 
-			trailer = ptr;
-			ptr = ptr.next;
-
-			if (vertex.name.equals("C")) {
-				System.out.println();
-			}
-
 			if (PTContains(ptr.tree, vertex)) {
+				if(ptr == rear) {
+					rear = trailer;
+				}
 				PartialTree result = ptr.tree;
 				trailer.next = ptr.next;
 				size--;
 				return result;
 			}
+			
+			trailer = ptr;
+			ptr = ptr.next;
 
-		} while (ptr != rear.next);
+		} while (trailer != rear);
 
-		throw new NoSuchElementException("Vertex does not exist.");
+		throw new NoSuchElementException("Vertex " + vertex.name + " does not exist in PTL " + this.toString());
 	}
 
 	private static boolean PTContains(PartialTree pt, Vertex v) {
