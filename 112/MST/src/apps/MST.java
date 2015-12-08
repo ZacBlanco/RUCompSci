@@ -1,7 +1,6 @@
 package apps;
 
 import structures.*;
-
 import java.util.ArrayList;
 
 public class MST {
@@ -15,7 +14,12 @@ public class MST {
 	 */
 	public static PartialTreeList initialize(Graph graph) {
 
+		//Steps 1+2 of the Algorithm
+		
+		//Create the PTL
 		PartialTreeList L = new PartialTreeList();
+		
+		//Initialize Arcs + PT for each Vertex in the graph.
 		for (Vertex v : graph.vertices) {
 			PartialTree t = new PartialTree(v);
 			MinHeap<PartialTree.Arc> arcs = t.getArcs();
@@ -24,6 +28,8 @@ public class MST {
 				arcs.insert(new PartialTree.Arc(v, n.vertex, n.weight));
 				n = n.next;
 			}
+			
+			//Make sure we add the Partial Tree to the list.
 			L.append(t);
 		}
 
@@ -43,13 +49,22 @@ public class MST {
 	 */
 	public static ArrayList<PartialTree.Arc> execute(Graph graph, PartialTreeList ptlist) {
 
+		//Result that we end up returning.
 		ArrayList<PartialTree.Arc> result = new ArrayList<>();
 
+		
+		//Make sure that we only loop while we have > 1 item left
+		// (We usually end up removing 2)
 		while (ptlist.size() > 1) {
 			PartialTree ptx = ptlist.remove();
+			
+			//Retrieve the arcs of the PTX, initialize our alpha variable.
 			MinHeap<PartialTree.Arc> arcs = ptx.getArcs();
 			PartialTree.Arc alpha = null;
-			boolean broke = false;
+			
+			boolean broke = false; // This variable tells us whether we ran out of items when deleting from our
+			// heap. If we broke out of the loop we should make sure to remove the tree that contains the v2 in
+			// alpha
 			
 			while (!arcs.isEmpty()) {
 				alpha = arcs.deleteMin();
@@ -60,28 +75,55 @@ public class MST {
 			}
 
 			if (broke) {
+				
+				//We know alpha is a component of the MST
 				result.add(alpha);
-				// Testing for case 2
+
+				//Algorithm states we should remove the PT which contains the vertex V2
 				PartialTree pty = ptlist.removeTreeContaining(alpha.v2);
+				
+				//The first thing we want to do is make sure that we properly merge
+				// the two priority queues of ptx+pty.
 				pty.getArcs().merge(ptx.getArcs());
 				
-				//We need to add the "highest" parent vertex and set
-				// its parent to the other tree's root.
+				
+				//Next, because PTY's priority queue is now merged with PTX
+				// The only way to refence the vertices in PTX is if we set PTY's 
+				//maximum parent (endmost) as having a parent of PTX's root 
+				
+				
+				//Here we iterate to the top of the tree of pty (maximum parent)
+				// then we set this vertex's parent as the root of PTX
+				// Essentially this is a linked list of vertexes with a priority queue of arcs at the base.
 				Vertex ptr = pty.getRoot();
 				Vertex trail = null;
-				while (ptr != trail) {
+				while (ptr != trail) { //the tree "ends" when the vertex references itself as the parent.
 					trail = ptr;
 					ptr = ptr.parent;
 				}
+				
+				//finally setting PTY's max parent as PTX's root.
 				ptr.parent = ptx.getRoot();
 
+				
+				//lastly adding our newly modified pty back to the queue
 				ptlist.append(pty);
 			}
 		}
 		return result;
 	}
 
+	
+	/***
+	 * 
+	 * @param pt The partial tree for which we conduct our search on
+	 * @param v the vertex that you are searching for in the tree.
+	 * @return true or false depending on whether the tree contains the vertex, V
+	 */
 	private static boolean PTContains(PartialTree pt, Vertex v) {
+		
+		//poor input case - partial tree is null - automatically false.
+		//poor input case - vertex is null - cannot conduct search, return false.
 		if (pt == null) {
 			return false;
 		} else if (v == null) {
@@ -89,6 +131,9 @@ public class MST {
 		}
 
 	
+		//start with a pointer at the root of the tree.
+		//traverse up the tree until we find the vertex 
+		//or until we hit the "maximum" parent
 		Vertex ptr = pt.getRoot();
 		Vertex trail = null;
 		

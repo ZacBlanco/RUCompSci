@@ -1,0 +1,25 @@
+9
+A
+B
+C
+D
+E
+F
+G
+H
+I
+A B 1
+B C 1
+C D 1
+D E 1
+E F 1
+F G 1
+G H 1
+H I 1
+A B 12
+D F 13
+F H 14
+H E 15
+E A 16
+G C 17
+F I 18
