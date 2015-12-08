@@ -46,13 +46,11 @@ public class MST {
 		ArrayList<PartialTree.Arc> result = new ArrayList<>();
 
 		while (ptlist.size() > 1) {
-
 			PartialTree ptx = ptlist.remove();
-
 			MinHeap<PartialTree.Arc> arcs = ptx.getArcs();
-
 			PartialTree.Arc alpha = null;
 			boolean broke = false;
+			
 			while (!arcs.isEmpty()) {
 				alpha = arcs.deleteMin();
 				if (!PTContains(ptx, alpha.v2)) {
@@ -63,11 +61,12 @@ public class MST {
 
 			if (broke) {
 				result.add(alpha);
-				
 				// Testing for case 2
 				PartialTree pty = ptlist.removeTreeContaining(alpha.v2);
 				pty.getArcs().merge(ptx.getArcs());
 				
+				//We need to add the "highest" parent vertex and set
+				// its parent to the other tree's root.
 				Vertex ptr = pty.getRoot();
 				Vertex trail = null;
 				while (ptr != trail) {
@@ -78,9 +77,7 @@ public class MST {
 
 				ptlist.append(pty);
 			}
-
 		}
-
 		return result;
 	}
 
