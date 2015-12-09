@@ -23,7 +23,7 @@ public class MSTTester {
 		
 
 		testPartialTreeRemove();
-		
+		testPartialTreeRemoveTreeContaining();
 		
 		
 	}
@@ -75,10 +75,58 @@ public class MSTTester {
 		assertThat(l.size() == 3);
 		assertThat(t == first);
 		
-		System.out.println("Passed Partial Tree List Test!");
+		System.out.println("Passed Partial Tree List \"remove()\" Test!");
+	}
+	
+	public static void testPartialTreeRemoveTreeContaining() throws IOException, Exception{
+		PartialTreeList l = new PartialTreeList();
+		PartialTree g = createPT();
+		//Test None
+		assertThat(l.size() == 0);
+		try{
+			l.removeTreeContaining(g.getRoot());
+			fail();
+		}catch(NoSuchElementException e) { }
+		
+		//Test One
+		PartialTree f = createPT();
+		l.append(f);
+		assertThat(l.size() == 1);
+		assertThat(l.removeTreeContaining(f.getRoot()) == f);
+		try{
+			l.removeTreeContaining(g.getRoot());
+			fail();
+		}catch(NoSuchElementException e) { }
+		
+		//Test Two
+		l.append(f);
+		l.append(g);
+		assertThat(l.size() == 2);
+		try{
+			l.removeTreeContaining(createPT().getRoot());
+			fail();
+		}catch(NoSuchElementException e) { }
+		assertThat(l.removeTreeContaining(f.getRoot()) == f);
+		l.remove();
+		
+		//Test many
+		PartialTree[] pt = new PartialTree[25];
+		
+		for(int t = 0; t < pt.length; t++) {
+			pt[t] = createPT();
+			l.append(pt[t]);
+		}
+		for(int i = 0; i < 20; i++) {
+			int iSize = l.size();
+			PartialTree p = pt[i];
+			assertThat(l.removeTreeContaining(p.getRoot()) == p);
+			assertThat(iSize - 1 == l.size());
+		}
+		
+		System.out.println("Passed PartialTree \"removeTreeContaining()\" test!");
+		
 	}
 
-	
 	public static void fail() throws Exception {
 		throw new Exception();
 	}
@@ -91,10 +139,10 @@ public class MSTTester {
 	public static boolean not(boolean condition) throws Exception {
 		return !condition;
 	}
-	
 	public static PartialTree createPT() throws IOException {
-		Graph g = new Graph("graph5.txt");
-		Vertex v = g.vertices[(int)Math.random()*1000 % g.vertices.length];
+		Graph g = new Graph("graph6.txt");
+		int vNum = (int)(Math.random()*1000) % g.vertices.length;
+		Vertex v = g.vertices[vNum];
 		return new PartialTree(v);
 	}
 	
