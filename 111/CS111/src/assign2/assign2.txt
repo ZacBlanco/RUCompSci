@@ -1,0 +1,158 @@
+Computer Science 111
+Zachary Blanco
+
+Problem 1 : Olympic Scores
+
+	Inputs:
+		Number of Judges - nJudges;
+			Restrictions:
+				Must be an integer
+				Must be greater than 2. (everything must be > 2,
+										conversely, nothing can be <= 2)
+										All other input will be considered 'bad input'
+		Judge Scores - jScores
+			Restrictions:
+				Must be a double 
+				Must be between 0.0 and 10.0 (inclusive)
+	
+	Outputs:
+		A Final Score - finalScore;
+			This score will be calculated by
+					removing highest and lowest scores
+					summing the remaining judges scores
+					divide by the (nJudges-2)
+	
+	Error Conditions
+		A number entered for nJudges is not an integer
+		A number for nJudges is <= 2
+		a score for a judge is < 0.0
+		a score for a judge is > 10.0
+	
+		
+		Program Design:
+			first receive input from  user for numbers of judges
+			create array for scores based on judge input
+			use a for loop to iterate through the array and assign scores
+			
+			will create a method that checks for double/integer input within
+			an inclusive range of values.
+			
+	Test Cases{
+		Case 1:
+			nJudges : 3
+			scores : {10, 0, 5}
+			expected : 5.0
+			output : 5.0
+			
+		Case 2:
+			nJudges : -1
+			Expected Output : Error
+			Output : nJudges must be greater than 2
+			(Loop and try new inputs until all are accepted)
+			
+		Case 3:
+			nJudges : 5
+			scores : {1.0, 4.5, 10.0, 0.0 4.5}
+			expected output : 3.3333
+			output : 3.3333
+			
+		Case 4:
+			nJudges : 3
+			scores : {1.0, -1.0, -5.0}
+			expected output : error 
+			output : error scores must be greater than 10	
+		
+	}
+	
+	
+Problem 2: TwoSmallest
+
+	Inputs: 
+		termValue: value at which program begins and terminates
+			Restrictions:
+				Must be a double.
+				
+		lastVal: the last value that the user entered into the prompt.
+			Restrictions:
+				Must be a double
+				Cannot be equal to the terminating value unless at least two other values have been entered.
+				
+				
+		Program Design Notes
+			WILL take multiples of a number. IE if the smallest number is 2.0 and you input 2.0 again, then
+			both of the smallest values will be equal to 2.0
+			
+			Test Cases {
+				
+				Case 1:
+					Inputs: 	1, 2, 1
+					Ex.Output: 	Error
+					Ac. Output:	Error
+					
+				Case 2:
+					Inputs:		1 2 2 1
+					Ex. Output:	2.0, 2.0
+					Ac. Output:	2.0 2.0
+					
+				Case 3:
+					Inputs: 	-3 -3
+					Ex. Output:	Error
+					Ac. Output: Error
+					
+				Case 4:
+					Inputs:		123 4 6 -8 7 3 -4 5 123
+					Ex. Output:	-4 -8
+					Ac. Output: -4 -8
+			
+			}
+
+Problem 3: NthPrime
+			
+	Inputs:
+		nthPrime:
+			must be an integer greater than 0.
+			
+		Outputs:
+			prime:
+				restrictions:
+					Must be an integer
+					the 1st prime is 2, therefore following prime indices are based off of 2 being the
+					first prime number
+					
+	Test Cases{
+		Input: 10
+		Ex. Output: 29
+		Ac. Output: 29
+
+		Input: 1
+		Ex. Output: 2
+		Ac. Output: 2
+		
+		Input: -1
+		Ex. Output: Error 
+		Ac. Output: Error
+		
+		Input: 0
+		Ex. Output: Error
+		Ac. Output: Error
+		
+		Input: 481
+		Ex. Output: 3433
+		Ac. Output: 3433
+	}
+					
+		
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
