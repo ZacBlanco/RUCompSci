@@ -143,37 +143,37 @@ public class PartialTreeList implements Iterable<PartialTree> {
 	}
 
 	private static boolean PTContains(PartialTree pt, Vertex v) {
+		
+		//poor input case - partial tree is null - automatically false.
+		//poor input case - vertex is null - cannot conduct search, return false.
 		if (pt == null) {
 			return false;
 		} else if (v == null) {
 			return false;
 		}
 
+	
+		//start with a pointer at the root of the tree.
+		//traverse up the tree until we find the vertex 
+		//or until we hit the "maximum" parent
 		Vertex ptr = pt.getRoot();
-		Vertex trail;
-
+		Vertex trail = null;
+		
 		if (ptr == null) {
 			return false;
 		} else if (ptr.name.equals(v.name)) {
 			return true;
 		} else {
-				trail = ptr;
-				ptr = ptr.parent;
+			trail = ptr;
+			ptr = ptr.parent;
 		}
 
-		int counter=0;
-		
 		while (ptr != trail) {
 			if (ptr.name.equals(v.name)) {
 				return true;
 			}
-			if(counter > 100){
-				System.out.println("Uh Oh, Infinite loop, breaking");
-				break;
-			}
 			trail = ptr;
 			ptr = ptr.parent;
-			counter++;
 		}
 		return false;
 	}
