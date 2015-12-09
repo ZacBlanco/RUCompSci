@@ -83,6 +83,7 @@ public class PartialTreeList implements Iterable<PartialTree> {
 			throw new NoSuchElementException("Partial Tree List is Empty.");
 		} else if( rear == rear.next ) {
 			Node removed = rear;
+			rear = null;
 			size--;
 			return removed.tree;
 		}
@@ -121,9 +122,6 @@ public class PartialTreeList implements Iterable<PartialTree> {
 		}
 
 		Node ptr = rear.next, trailer = rear;
-		if(vertex.name.equals("C")){
-			System.out.println("");
-		}
 		do {
 
 			if (PTContains(ptr.tree, vertex)) {
@@ -170,7 +168,8 @@ public class PartialTreeList implements Iterable<PartialTree> {
 				return true;
 			}
 			if(counter > 100){
-				System.out.println("Uh Oh");
+				System.out.println("Uh Oh, Infinite loop, breaking");
+				break;
 			}
 			trail = ptr;
 			ptr = ptr.parent;
