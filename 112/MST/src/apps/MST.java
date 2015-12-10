@@ -14,6 +14,9 @@ public class MST {
 	 */
 	public static PartialTreeList initialize(Graph graph) {
 
+		if(graph == null) {
+			return null;
+		}
 		//Steps 1+2 of the Algorithm
 		
 		//Create the PTL
@@ -49,9 +52,13 @@ public class MST {
 	 */
 	public static ArrayList<PartialTree.Arc> execute(Graph graph, PartialTreeList ptlist) {
 
+		//if either are null we want to simply return an empty list. 
+		if (graph == null || ptlist == null) {
+			return new ArrayList<PartialTree.Arc>();
+		}
+		
 		//Result that we end up returning.
 		ArrayList<PartialTree.Arc> result = new ArrayList<>();
-
 		
 		//Make sure that we only loop while we have > 1 item left
 		// (We usually end up removing 2)
