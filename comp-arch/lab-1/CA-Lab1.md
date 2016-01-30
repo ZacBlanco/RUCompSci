@@ -1,5 +1,20 @@
 # Lab 1 Code and Exercise Assignments
 
+Zachary Blanco
+RUID - 158007117
+
+
+## Assignment 1
+
+| op | rs | rt | rd | shamt | funct |
+| 6 bits| 5 bits | 5 bits | 5 bits | 5 bits | 6 bits |
+
+| op | rs | rt | rd | shamt | funct |
+| 000000| 00000 | 01010 | 01000 | 00000 | 10000 |
+
+| op | rs | rt | constant |
+|001000|00000|01010|000 0000 0000 0000|
+
 **Assignment 2 - Commented Code**
 
 ```assembly
@@ -122,41 +137,132 @@ exit:
 ## Assignment 6
 
 ```
+.text
+
 main:
   li $t0, 1
-  li $a0 9
+  li $a0, 10
   jal calc # call procedure
 
-exit:
-  li $v0, 10
+ex:
+
+  li $v0, 10 # Exit Procedure
   syscall
 
 calc:
 
-  bgt
-  
-    n3:
-      li $t0, 1
-
-    n2:
+  move $t6, $a0
+  sub $t6, $t6, 3
+  li $t2, 1
+  li $t1, 1
+  li $t0, 0
     
-    n3:
-  loop:
-    
+    loop:
+      li $t3, 0
+      add $t3, $t1, $t0
+      add $t3, $t3, $t2
+      move $t0, $t1
+      move $t1, $t2
+      move $t2, $t3
+      beq $t7, $t6, ex
+      addi $t7, $t7, 1
+     
+      j loop
+      
+      # Answers
+      # $t0 = 0
+      # $t1 = 1
+      # $t2 = 1
+      # $t3 = 2
+      # $t4 = 4
+      # $t5 = 7
+      # $t6 = 13
+      # $t7 = 24
+      # $t8 = 44
+      # $t9 = 68
 
-  # $t0 = 0
-  # $t1 = 1
-  # $t2 = 1
-  # $t3 = 2
-  # $t4 = 4
-  # $t5 = 7
-  # $t6 = 13
-  # $t7 = 24
-  # $t8 = 44
-  # $t9 = 
+## Assignment 7
 
+```assembly
 
+.text
+main:
+  lw $t0, $s1($s5)
+  lw $t1, $s2($s5)
+  lw $t2, $s3($s5)
+  add $t3, $t0, $t1
+  mul $t4, $t3, $t2
+  sw $t4, $s5($s3)
 
 ```
+
+## Assignment 8
+
+```assembly
+.data 0x10000000
+ ask: .asciiz "\nEnter a number:"
+ ans: .asciiz "Answer: "
+.text 0x00400000
+.globl main
+main:
+	li $v0, 4
+	la $a0, ask # Loads the ask string
+	syscall # Display the ask string
+	li $v0, 5 # Read the input
+	syscall
+	move $t0, $v0 # n = $v0, Move the user input
+	addi $t1, $0, 0 # i = 0
+	addi $t2, $0, 189 # ans = 189, Starting case (n=0)
+	li $t3, 2
+ 
+loop:
+	beq $t1, $t0, END # from i = 0 to n-1 (n times)
+	addi $t1, $t1, 1 # i = i+1
+	div $t2, $t3 # LO = ans / 2, The result is stored on LO
+	mflo $t2 # ans = LO, Copies the content of LO to t2
+	j loop
+END:
+	li $v0, 4
+	la $a0, ans # Loads the ans string
+	syscall
+	move $a0, $t2 # Loads the answer
+	li $v0, 1
+	syscall
+	li $v0, 10
+	syscall
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

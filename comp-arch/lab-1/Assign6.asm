@@ -2,39 +2,35 @@
 
 main:
   li $t0, 1
-  li $a0 9
+  li $a0, 10
   jal calc # call procedure
 
-exit:
-  li $v0, 10
+ex:
+
+  li $v0, 10 # Exit Procedure
   syscall
 
 calc:
 
-  move $a0, $t6
-  beq $a0, 3, n3
-  beq $a0, 2, n2
-  beq $a0, 1, n1
-  
-    n3:
-      addi $t0, $t0, 1
-      li $t2, 1
-    n2:
-      addi $t0, $t0, 1
-      li $t1, 1
-    n1:
-      addi $t0, $t0, 0
-      li $t1, 1
+  move $t6, $a0
+  sub $t6, $t6, 3
+  li $t2, 1
+  li $t1, 1
+  li $t0, 0
     
     loop:
       li $t3, 0
-      add $t3, $t2, $t1
-      add $t3, $t3, $t1
-      move $t1, $t0
-      move $t2, $t1
-      move $t3, $t1
+      add $t3, $t1, $t0
+      add $t3, $t3, $t2
+      move $t0, $t1
+      move $t1, $t2
+      move $t2, $t3
+      beq $t7, $t6, ex
       addi $t7, $t7, 1
-      beq $t7, $t6, exit
+     
+      j loop
+      
+      # Answers
       # $t0 = 0
       # $t1 = 1
       # $t2 = 1
