@@ -1,18 +1,22 @@
-# Lab 1 Code and Exercise Assignments
+# Computer Architecture - Lab 1
 
 Zachary Blanco
+
 RUID - 158007117
 
 
 ## Assignment 1
 
-| op | rs | rt | rd | shamt | funct |
+| op 	| rs	 | rt	  | rd	   | shamt  | funct  | 
+|-|-|
 | 6 bits| 5 bits | 5 bits | 5 bits | 5 bits | 6 bits |
 
 | op | rs | rt | rd | shamt | funct |
+|-|
 | 000000| 00000 | 01010 | 01000 | 00000 | 10000 |
 
 | op | rs | rt | constant |
+|-|
 |001000|00000|01010|000 0000 0000 0000|
 
 **Assignment 2 - Commented Code**
