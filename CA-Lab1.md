@@ -119,5 +119,44 @@ exit:
 	syscall
 ```
 
+## Assignment 6
+
+```
+main:
+  li $t0, 1
+  li $a0 9
+  jal calc # call procedure
+
+exit:
+  li $v0, 10
+  syscall
+
+calc:
+
+  bgt
+  
+    n3:
+      li $t0, 1
+
+    n2:
+    
+    n3:
+  loop:
+    
+
+  # $t0 = 0
+  # $t1 = 1
+  # $t2 = 1
+  # $t3 = 2
+  # $t4 = 4
+  # $t5 = 7
+  # $t6 = 13
+  # $t7 = 24
+  # $t8 = 44
+  # $t9 = 
+
+
+
+```
 
 
