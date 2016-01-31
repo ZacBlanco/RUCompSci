@@ -21,6 +21,8 @@ RUID - 158007117
 
 **Assignment 2 - Commented Code**
 
+Below you will find the code that was commented out on each. line. This details what each command is doing throughout the execution of the program
+
 ```assembly
 # Exercise1 is used in assignments 1 and 2
 
@@ -45,9 +47,8 @@ powerexit:
 	li $2, 1		# Load immediately 10 into register $2.
 	syscall			# End the program because 10 is in register $2
 ```
-## Exercise 2
 
-**Assignment 3**
+## Assignment 3
 
 Fill out the missing instructions according to the comments.
 2. Run the program step by step by pressing the function key f10. Observe the change of
@@ -84,6 +85,39 @@ END:
 Array1: .word 2 5 6 7 12 16 25 27
 Size: .word 8
 ```
+
+2 - Images of Register when running the program
+
+Image of Registers when first starting program
+
+![img](a-3-1-1.png)
+
+Image of register on 2nd line
+
+![img](a-3-1-2.png)
+
+Image of registers after executing loop and exiting
+
+![img](a-3-1-3.png)
+
+3 - Output
+
+The all of the values of the array, A1, have been doubled, thus making the output is
+
+```
+2, 5, 6, 7, 14, 12, 10, 8, 4
+```
+
+
+4 - Why is index (j-1)
+
+The reason for this is because the memory slots are zero-based. This means that the first value will occur at the 0th position, not the 1st position. So we must subtract 1 from j because of this.
+
+## Assignment 4
+
+1 - Type and Record the value of each register
+
+
 
 **Exercise 4.3**
 
