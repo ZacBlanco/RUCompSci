@@ -185,6 +185,9 @@ main:
 
 ex:
 
+  li $v0, 5
+  move $t0, $a0
+  syscall
   li $v0, 10 # Exit Procedure
   syscall
 
