@@ -174,7 +174,8 @@ exit:
 
 ## Assignment 6
 
-```
+```assembly
+
 .text
 
 main:
@@ -218,6 +219,7 @@ calc:
       # $t7 = 24
       # $t8 = 44
       # $t9 = 68
+```
 
 ## Assignment 7
 
