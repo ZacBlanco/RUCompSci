@@ -69,15 +69,62 @@ for first n/2 lines:
 
 
 if( n % 2 == 0)
+	i = n/2 + 1
+	Set spaces using equation similar to above - except subtract max lines from row number
+	Set stars using same equation as above except subtract n from row numbers
 
-rest of lines = n/2 + 1
-set i = n/2 + 1
+```
+
+## Assignment 5
+
+Pseudo Code
+
+```
+password = ""
+while password doesn't match condition (< 6 or > 10)
+	prompt a user for a password
+	set password equal to user input
+	store password into memory address
+
+attempts = 3
+match = false
+Ask user to re enter password
+	set whether whether passwords match by going character by character through each
+	if password != match
+		attempts--;
+
+while the passwords don't match & have more than 0 attempts left
+	prompt user user to enter again 
+	check wheter password matches
+	if != match
+		attempts--;
+
+if match is true
+	print success
+else
+	print failure
+
+exit
+```
+
+## Assignment 6
 
 
 
 ```
+Read an input from the user of a hex value
 
+Determine that every value in hex string is a valid hex char
+	do this by checking whether the character appears in the string '0123456789ABCDEF'
+	Fail and exit if it is not valid.
 
+read characters from leftmost to rightmost
+read the first character
+while the character is not the nulll character
+	from a table in the program, determine which character it is and print its binary representation.
+	read the next character
+
+```
 
 
 
