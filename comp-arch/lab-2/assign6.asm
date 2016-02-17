@@ -5,7 +5,7 @@ invHex: 	.asciiz "Invalid hex string. Exiting.\n"
 valHex: 	.asciiz "Valid hex string.\n"
 bValue: 	.asciiz "Hex to Binary Value"
 zero: 	.asciiz "0000"
-one: 	.asciiz  "0001"
+one: 	.asciiz "0001"
 two: 	.asciiz "00010"
 three: 	.asciiz "0011"
 four: 	.asciiz "0100"
@@ -21,7 +21,7 @@ thriteen: .asciiz "1101"
 fourteen: .asciiz "1110"
 fifteen: 	.asciiz "1111"
 hexValues:.asciiz "1234567890ABCDEF\n"
-hexInput: .space 20
+hexInput: .space 200
 vlidChar: .asciiz "Character Valid\n"
 
 .text
@@ -51,9 +51,10 @@ main:
 
 convert_print_binary:
 	move $t0, $a0
-	lb $t2 0($t0)
+#	addi $t3, $t0, 4
+	lbu $t2 0($t0)
 	printLoop:
-		lb $t2, 0($t0)
+		lbu $t2, 0($t0)
 		beq $t2, $zero, cpbExit
 		li $t1, 48
 		beq $t2, $t1, printZero
@@ -181,11 +182,11 @@ checkValidString:
 	move $t1, $a0
 	li $t6, 10 # value equaling end of input string
 	charLoop:
-		lb $t3, 0($t1) 	# Load a char from the input string
+		lbu $t3, 0($t1) 	# Load a char from the input string
 		beq $t3, $zero, cvsValid 	# We finished checking and are at end of the string
 		move $t8, $a1
 		checkChar:		# Check whether it is a valid character
-			lb $t4, 0($t8)
+			lbu $t4, 0($t8)
 			beqz $t4, cvsInvalid
 			beq $t3, $t4, hexCharValid
 			bne $t3, $t4, nextHex
@@ -195,7 +196,7 @@ checkValidString:
 				
 		hexCharValid:
 			addi $t1, $t1, 1 # Had a valid character
-			syscall
+#			syscall
 			j charLoop
 		
 		
