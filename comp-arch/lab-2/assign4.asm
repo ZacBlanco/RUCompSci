@@ -17,7 +17,7 @@ main:
   move $t6, $t1          # t6 is the number of stars we need to print
   sll $t6, $t6, 1        # t6 is for stars - 2*row - 1 = 1, 3, 5, 7, 9, ...
   addi $t6, $t6, -1
-  move $t7, $s0          # $t7 is for spaces, Should be maxRows+1/2 - rowNum
+  move $t7, $s0          # $t7 is for spaces, Should be maxRows+1/2 - i rowNum
   addi $t7, $t0, 1       # add 1 to our max rows
   srl $t7, $t7, 1        # divide by 2
   sub $t7, $t7, $t1      # subtract by (row number - 1) -> - rownumber + 1
