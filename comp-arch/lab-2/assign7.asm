@@ -1,10 +1,14 @@
 .data
-#arr: 	.space 2000
-arr:		.word 1, 5, 9, 7, 8, 3, 5, 0xF
+arr1: 	.space 2000
+arr:		.word 1, 5, 9, 7, 8, 3, 5, -1, 0, -5, 10, 25, -60, 69, -7, 77, 8, 9, 12, 13, 17
 inputStr: .asciiz "Please enter an integer. End input by typing 0xF:\n"
-numPos: .asciiz "Number of Positive Integers"
-numNeg: .asciiz "Number of Negative Integers"
-median: .asciiz "The median of the Array is:"
+numPos: .asciiz "Number of Positive Integers: "
+numNeg: .asciiz "Number of Negative Integers: "
+numZero: .asciiz "Number of Zeros: "
+median: .asciiz "The median of the Array is: "
+newline: .asciiz "\n"
+spaceChar: .asciiz " "
+theSortedArray: .asciiz "The sorted array is: "
 
 .text 
 
@@ -19,10 +23,10 @@ main:
 	la $a0, inputStr
 	li $v0, 4
 	syscall
-	li $s2, 7
+	li $s2, 21 #Length of array
 	la $s0, arr
 	# We're going to now get values into the array
-#	la $s0, arr
+#	la $s0, arr1
 #	move $s1, $s0
 #	li $s2, 0
 #	inputLoop:
@@ -39,32 +43,36 @@ main:
 		move $a0, $s0
 		move $a1, $s2
 		jal bubbleSort
-		move $a0, $s0
+		move $a0, $s0 # Finished Sorting Array
 		jal printArray
-#		move $t0, $v0
-#		jal getMedian
-#		move $t1, $v0
-#		jal getPositives
-#		move $t2, $v0
-#		jal getNegatives
-#		move $t3, $v0
-#		jal printArray
+		move $t0, $v0
+		move $a0, $s0
+		jal printMedian
+		move $t1, $v0
+		move $a0, $s0
+		jal printPositives
+		move $t2, $v0
+		move $a0, $s0
+		jal printNegatives
+		move $a0, $s0
+		jal printZeros
+		
 	j exit
 
 bubbleSort:
 	li $t0, 1
-	# $t9 ---> Temp variable for swap
 	outerPass:
 		li $t0, 0
 		li $t1, 0 # i variable
 		innerPass:
-			sll $t3, $t1, 2 # [i]
-			add $t3, $a0, $t1
+			add $t3, $t1, $t1
+			add $t3, $t3, $t3 # Multiply t1 by 4
+			add $t3, $a0, $t3 # Add 4*i to base address of arr
 			addi $t4, $t3, 4  # [i+1]
-			lw $t5, 0($t3)
+			lw $t5, 0($t3)	   # $t5 and $t6 store actual array values.
 			lw $t6, 0($t4)
 			sub $t7, $t5, $t6
-			bltz $t7, switchPlaces
+			bgtz $t7, switchPlaces
 			j afterSwitch
 			switchPlaces: #switches location i with i+1
 				sw $t6, 0($t3)
@@ -78,27 +86,161 @@ bubbleSort:
 	bgtz $t0, outerPass
 	jr $ra
 
-getMedian:
+printMedian:
+	la $t0, 0($a0) # Base address of array in t0
+	move $t1, $a1 # Length of Array in $t1
+	
+	li $t2, 2
+	div $t1, $t2 #divide t2 by 2
+	mfhi $t3  # check whether t3 is zero or 1 not.
+			# t3 == 1 - then median is location [t3/2 + 1]
+			# t3 == 0 - then median is average of [t3/2] and [t3/2 + 1]
+	beq $t3, $zero, medAvg
+	j medVal
+	medVal:
+		mflo $t3
+#		addi $t3, $t3, 1
+		li $t4, 4
+		mul $t3, $t3, $t4
+		add $t3, $t3, $t0
+		lw, $t5, 0($t3)
+		j raPrintMed
+	medAvg:
+		mflo $t6
+		move $t7, $t6
+		addi $t6, $t6, -1
+		li $t4, 4
+		mul $t6, $t6, $t4
+		mul $t7, $t7, $t4
+		add $t6, $t7, $t0
+		add $t7, $t7, $t0
+		lw $t3, 0($t6)
+		lw $t4, 0($t7)
+		add $t4, $t4, $t3
+		div $t4, $t2
+		mflo $t5
+		j raPrintMed
+	raPrintMed:
+		la $a0, median
+		li $v0, 4
+		syscall
+		li $v0, 1
+		move $a0, $t5
+		syscall
+		la $a0, newline
+		li $v0, 4
+		syscall
+		jr $ra
+
+printNegatives:
+	la $t0, 0($a0)
+	lui $t1, 0
+	li $t6, 0
+	loopNegatives:
+		sll $t3, $t1, 2
+		add $t2, $t3, $t0
+		lw $t3, 0($t2)
+		bgez $t3, notNeg
+		addi $t6, $t6, 1
+		notNeg:
+		addi $t1, 1
+		sub $t4, $s2, $t1
+		bgtz $t4, loopNegatives
+		
+	printNumNeg:
+		la $a0, numNeg
+		li $v0, 4
+		syscall
+		li $v0, 1
+		move $a0, $t6
+		syscall
+		la $a0, newline
+		li $v0, 4
+		syscall
+	
+	jr $ra
+
+printPositives:
+	la $t0, 0($a0)
+	lui $t1, 0
+	lui $t6, 0
+	loopPositives:
+		sll $t3, $t1, 2
+		add $t2, $t3, $t0
+		lw $t3, 0($t2)
+		blez $t3, notPos
+		addi $t6, $t6, 1
+		notPos:
+		addi $t1, 1
+		sub $t4, $s2, $t1
+		bgtz $t4, loopPositives
+	
+	printNumPos:
+		la $a0, numPos
+		li $v0, 4
+		syscall
+		li $v0, 1
+		move $a0, $t6
+		syscall
+		la $a0, newline
+		li $v0, 4
+		syscall
+	
+	jr $ra
 
 
-getPositives:
-
-
-getNegatives:
+printZeros:
+	la $t0, 0($a0)
+	lui $t1, 0
+	lui $t6, 0
+	loopZeros:
+		sll $t3, $t1, 2
+		add $t2, $t3, $t0
+		lw $t3, 0($t2)
+		bne $t3, $zero, nonZero
+		addi $t6, $t6, 1
+		nonZero:
+		addi $t1, 1
+		sub $t4, $s2, $t1
+		bgtz $t4, loopZeros
+	
+	prZeros:
+		la $a0, numZero
+		li $v0, 4
+		syscall
+		li $v0, 1
+		move $a0, $t6
+		syscall
+		la $a0, newline
+		li $v0, 4
+		syscall
+	
+	jr $ra
 
 
 printArray:
 	la $t0, 0($a0)
 	lui $t1, 0
+	la $a0, theSortedArray
+	li $v0, 4
+	syscall
 	printArrIndex:
 		sll $t3, $t1, 2
-		lw $t3, 0($t0)
+		add $t2, $t3, $t0
+		lw $t3, 0($t2)
 		move $a0, $t3
+		li $v0, 1
+		syscall
+		la $a0, spaceChar
 		li $v0, 4
 		syscall
 		addi $t1, 1
 		sub $t4, $s2, $t1
 		bgtz $t4, printArrIndex
+	
+	la $a0, newline
+	li $v0, 4
+	syscall
 	jr $ra
 
 exit:
