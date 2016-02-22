@@ -1,7 +1,7 @@
 .data
-arr1: 	.space 2000
-arr:		.word 1, 5, 9, 7, 8, 3, 5, -1, 0, -5, 10, 25, -60, 69, -7, 77, 8, 9, 12, 13, 17
-inputStr: .asciiz "Please enter an integer. End input by typing 0xF:\n"
+arr1: 	.space 60
+beginInput: .asciiz "Enter 10 integers:\n"
+inputStr: .asciiz "Please enter an integer:\n"
 numPos: .asciiz "Number of Positive Integers: "
 numNeg: .asciiz "Number of Negative Integers: "
 numZero: .asciiz "Number of Zeros: "
@@ -15,30 +15,34 @@ theSortedArray: .asciiz "The sorted array is: "
 #### Descriptions of Variables ###
 ####
 #### $s0 - The base address of 'arr'
-#### $s1 - The memory pointer to a location of 'arr'
 #### $s2 - The length of the array
 
 
 main:
-	la $a0, inputStr
+	la $a0, beginInput
 	li $v0, 4
 	syscall
-	li $s2, 21 #Length of array
-	la $s0, arr
+	li $s2, 10 #Length of array
+	
 	# We're going to now get values into the array
-#	la $s0, arr1
-#	move $s1, $s0
-#	li $s2, 0
-#	inputLoop:
-#		li $v0, 5		# Read an integer
-#		syscall
-#		move $t9, $v0
-#		beq $v0, 0xF, endInput # Exit input if input value is 0xF
-#		sw $v0, 0($s1)
-#		addi $s1, 4
-#		addi $s2, 1
-#		j inputLoop
-#	
+	la $s0, arr1
+	move $s1, $s0
+	li $t1, 0
+	inputLoop:
+		sub $t2, $t1, $s2
+		bgez $t2, endInput # Exit input if we have all inputs
+		la $a0, inputStr
+		li $v0, 4
+		syscall
+		li $v0, 5		# Read an integer
+		syscall
+		move $t9, $v0
+		sw $v0, 0($s1)
+		addi $s1, 4
+		addi $t1, 1
+		j inputLoop
+
+
 	endInput:
 		move $a0, $s0
 		move $a1, $s2
@@ -106,13 +110,13 @@ printMedian:
 		lw, $t5, 0($t3)
 		j raPrintMed
 	medAvg:
-		mflo $t6
+		mflo $t6 # Getting median
 		move $t7, $t6
 		addi $t6, $t6, -1
 		li $t4, 4
 		mul $t6, $t6, $t4
 		mul $t7, $t7, $t4
-		add $t6, $t7, $t0
+		add $t6, $t6, $t0
 		add $t7, $t7, $t0
 		lw $t3, 0($t6)
 		lw $t4, 0($t7)
