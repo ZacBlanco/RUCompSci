@@ -126,6 +126,109 @@ while the character is not the nulll character
 
 ```
 
+## Assignment 7 
+
+Pseudo-Code
+
+```
+Set up a large space (> 1000) for array storage
+designate register $s2 as the size of the array
+$s0 is the base address for the array
+
+Prompt user for input
+
+get user input by syscall
+check input value
+	if value == 0xF
+		end input and go to sortAndPrint
+	else 
+		add 1 to length of the array
+		jump back to user input prompt
+
+sortAndPrint
+	load address of array as argument 0
+	load length of array as argument 1
+	run bubble sort
+	load address of array as argument 0
+	load length of array as argument 1
+	print Array
+	load address of array as argument 0
+	load length of array as argument 1
+	jump and link printMedian
+	load address of array as argument 0
+	load length of array as argument 1
+	jump and link printPositives
+	load address of array as argument 0
+	load length of array as argument 1
+	jump and link to printNegatives 
+	load address of array as argument 0
+	load length of array as argument 1
+	jump and link to printZeros
+	exit
+	
+bubbleSort:
+	set flag = true - # true when values have been switched
+	while the flag is true
+		set flag = false
+		for (i = 0, i < length, i++)
+			if i and i+1 are not in the right order
+				swap value at location i and i+1
+				set flag = true
+			
+			continue and loop again
+		
+		if flag == false, finished sorting
+			exit
+		else loop again
+		
+printArray
+	start at 0 location up to (and not inluding length)
+	loop until i = length - 1
+		print out value at base+(4*i)
+
+	jump to $ra
+
+printPositives
+	start at 0 location up to (and not inluding length)
+	loop until i = length - 1
+		if value at base+(4*i) > 0
+			add to count
+
+	print count
+	jump to $ra
+
+printNegatives
+	start at 0 location up to (and not inluding length)
+	loop until i = length - 1
+		if value at base+(4*i) < 0
+			add to count
+
+	print count
+	jump to $ra
+	
+printZeros
+	start at 0 location up to (and not inluding length)
+	loop until i = length - 1
+		if value at base+(4*i) == 0
+			add to count
+
+	print count
+	jump to $ra
+
+	jump to $ra
+printMedian
+	if array length is odd
+		median location is at index of length/2
+		set value equal to base + (4*(length/2)) #integer division
+	else
+		median is average of length/2 and length/2 - 1
+		set median = sum of values at both locations together
+		divide median by 2
+	
+	print median
+	jump to $ra
+```
+
 
 
 
