@@ -34,7 +34,7 @@ main:
 	li $a1, 20
 	syscall
 	la $a0, hexInput
-	jal checkValidString
+	jal checkValidString # Return value is either 0 or 1
 	beqz $v0, invalidString ## Check whether string is valid ##
 	validString:
 		la $a0, valHex
@@ -53,6 +53,7 @@ convert_print_binary:
 	move $t0, $a0
 #	addi $t3, $t0, 4
 	lbu $t2 0($t0)
+	# Switch statement to print correct binary representation
 	printLoop:
 		lbu $t2, 0($t0)
 		beq $t2, $zero, cpbExit

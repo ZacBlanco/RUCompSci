@@ -14,6 +14,7 @@ password2: .space 20
 .text
 #### BEGIN METHOD ####
 main:
+	# Set password and check lengths
     la $a0, setPass	
     li $v0, 4
     syscall
@@ -21,7 +22,7 @@ main:
     li $a1, 11
     la $a0, password
     syscall
-    jal getStringLength
+    jal getStringLength # will return length of the password
     addi $t0, $v0, -6
     bltz $t0, failedLength
     addi $t0, $v0, -10
@@ -44,6 +45,7 @@ main:
 		jal compStrings
 		bne $v0, $zero, passMatch
 	EnterPassAgain:
+		# Logic for handling a max of 3 attempts
 		la $a0, inc2	
     		li $v0, 4
     		syscall
@@ -94,9 +96,17 @@ getStringLength:
 		addi $v0, $t0, -1
 		jr $ra
 #### END METHOD ####
-		
-		
+
+
+
+
+
 #### BEGIN METHOD ####
+# Method returns 0 or#
+# 1 depending on if  #
+# the strings are 	 #
+# equal			 #
+######################
 compStrings:
     move $t0, $a0
     move $t1, $a1 

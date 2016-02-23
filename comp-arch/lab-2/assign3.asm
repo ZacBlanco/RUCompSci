@@ -4,6 +4,8 @@
 
 .text
 main:
+
+	## This section gets user input and makes sure it is within correct range
   li $v0, 5
   syscall
   move $t0, $v0
@@ -19,8 +21,9 @@ main:
   bltz $t1, errorSmall
   addi $t1, $t0, -500
   bgtz $t1, errorBig
-  move $t7, $t0
+  move $t7, $t0			
   
+  # Determine which input is the higher and lower values
   sub $t1, $t6, $t7
   bltz $t1, t7Higher
   j t7Lower
@@ -32,6 +35,8 @@ main:
     move $s0, $t7
     move $s1, $t6
   
+  
+  # Determine sum from the set of numbers between two inputs
   preLoop:
   move $t4, $s0       #$t4 is first number to sum
   li $t0, 2
@@ -52,6 +57,8 @@ main:
     addi $t6, $t6, 2
     j sumLoop
 
+
+# Error handling logic
 
 errorBig:
   la $a0, tooBig
