@@ -1,3 +1,5 @@
+# Zachary Blanco
+# Computer Architecture
 .data
 inputStr1: .asciiz "Enter A: "
 inputStr2: .asciiz "Enter B: "
@@ -56,6 +58,7 @@ main:
 		beq $t2, $t3, nandOp
 		li $t3, 6
 		beq $t2, $t3, exit
+		j error
 		andOp:
 			la $a0, andStr
 			li $v0, 4
@@ -72,14 +75,22 @@ main:
 			la $a0, xnorStr
 			li $v0, 4
 			syscall
-			xor $t7, $t0, $t1
-			not $t7, $t7
+			nor $t3, $t0, $t1
+			nor $t4, $t0, $t3
+			nor $t5, $t1, $t3
+			nor $t7, $t4, $t5
+			#xor $t7, $t0, $t1
 			j printResult
 		xorOp:
 			la $a0, xorStr
 			li $v0, 4
 			syscall
-			xor $t7, $t0, $t1
+			nor $t3, $t0, $t0
+			nor $t4, $t1, $t1
+			nor $t4, $t3, $t4
+			nor $t5, $t1, $t0
+			nor $t7, $t4, $t5
+			#xor $t7, $t0, $t1
 			j printResult
 		nandOp:
 			la $a0, nandStr

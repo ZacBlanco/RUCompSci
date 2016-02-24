@@ -1,3 +1,5 @@
+# Zachary Blanco
+# Computer Architecture
 .data
 arr1: 	.space 60
 beginInput: .asciiz "Enter 10 integers:\n"

@@ -24,3 +24,20 @@ loop:
 	
 ```
 	
+	
+## Assignment 2
+
+```
+get array length from user
+
+while we havent reached array length
+	let user enter a number
+	
+sort array and print using bubble sort
+
+enter a number for user
+
+binary search for location where number should go
+set number in correct spot
+shift all numbers over on the right
+```
