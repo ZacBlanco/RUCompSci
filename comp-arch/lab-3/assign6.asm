@@ -103,7 +103,7 @@ calcStdDeviation:
 	mtc1 $s2, $f2 ## total num of items
 	cvt.s.w $f2, $f2
 	li.s $f5, 0.0
-	li $t1, 0 #counter
+	li $t1, 0 # counter
 	li $t3, 0
 	sLoop:
 		sub $t2, $t1, $s2
@@ -136,9 +136,9 @@ calcStdDeviation:
 		div.s $f7, $f5, $f2
 		mov.s $f0, $f7
 		addi $sp, $sp, -4
-		sw $sp, 0($sp)
+		sw $ra, 0($sp)
 		jal squareRoot # Gets square root of f0 and returns in f0
-		lw $sp, 0($sp)
+		lw $ra, 0($sp)
 		addi $sp, $sp, 4
 		jr $ra
 		
@@ -152,23 +152,24 @@ squareRoot:
 	sub $t1, $t5, $t1
 	mtc1 $t1, $f10
 	
+	#Run newton's method 10 times for accuracy
+	li $t9, 0
+	li $t8, 10
+	nMethod:
 	# Newtons method - increase accuracy
+	bgt $t9, $t8, sqEnd
 	mul.s $f11, $f10, $f10
 	mul.s $f11, $f11, $f9
 	sub.s $f12, $f15, $f11
 	mul.s $f10, $f10, $f12
-	# Newtons method - increase accuracy - pass 2
-	mul.s $f11, $f10, $f10
-	mul.s $f11, $f11, $f9
-	sub.s $f12, $f15, $f11
-	mul.s $f10, $f10, $f12
-	# Newtons method - increase accuracy - pass 3
-	mul.s $f11, $f10, $f10
-	mul.s $f11, $f11, $f9
-	sub.s $f12, $f15, $f11
-	mul.s $f10, $f10, $f12
+	addi $t9, $t9, 1
+	j nMethod
 	
-	mov.s $f0, $f10
+	sqEnd:
+	
+	li.s $f1, 1.0
+	div.s $f16, $f1, $f10
+	mov.s $f0, $f16
 	jr $ra
 	
 
