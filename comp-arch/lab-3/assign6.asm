@@ -140,11 +140,15 @@ calcStdDeviation:
 	sExit:
 		div.s $f7, $f5, $f2
 		mov.s $f0, $f7
+		li.s $f7, 0.0
+		c.le.s $f0, $f7 # check if our variance is 0
+		bc1t returnSq
 		addi $sp, $sp, -4
 		sw $ra, 0($sp)
 		jal squareRoot # Gets square root of f0 and returns in f0
 		lw $ra, 0($sp)
 		addi $sp, $sp, 4
+		returnSq:
 		jr $ra
 		
 squareRoot:
