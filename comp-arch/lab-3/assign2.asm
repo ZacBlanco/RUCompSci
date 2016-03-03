@@ -1,5 +1,8 @@
-# Zachary Blanco
-# Computer Architecture
+###############################
+# Zachary Blanco - Section 1A #
+# Student ID -     1580007117 #
+# NetID - 	    zdb5		#
+###############################
 .data
 arr1: 	.space 2000
 beginInput: .asciiz "Enter the length of the array of integers: "

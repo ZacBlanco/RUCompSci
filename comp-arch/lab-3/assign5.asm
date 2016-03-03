@@ -1,3 +1,8 @@
+###############################
+# Zachary Blanco - Section 1A #
+# Student ID -     1580007117 #
+# NetID - 	    zdb5		#
+###############################
 .data
 input1: .asciiz "Please input a value for the radius of the cone: "
 input2: .asciiz "Please input a value for the height of the cone: "

@@ -1,3 +1,8 @@
+###############################
+# Zachary Blanco - Section 1A #
+# Student ID -     1580007117 #
+# NetID - 	    zdb5		#
+###############################
 .data
 input1: .asciiz "input values for m, n, and p in mx^2 + nx +p = 0\n"
 input2: .asciiz "m: "

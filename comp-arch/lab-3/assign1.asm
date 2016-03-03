@@ -1,5 +1,8 @@
-# Zachary Blanco
-# Computer Architecture
+###############################
+# Zachary Blanco - Section 1A #
+# Student ID -     1580007117 #
+# NetID - 	    zdb5		#
+###############################
 .data
 inputStr1: .asciiz "Enter A: "
 inputStr2: .asciiz "Enter B: "

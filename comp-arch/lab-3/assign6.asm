@@ -1,3 +1,8 @@
+###############################
+# Zachary Blanco - Section 1A #
+# Student ID -     1580007117 #
+# NetID - 	    zdb5       #
+###############################
 .data
 lengthStr: .asciiz "How many numbers would you like to input?\n"
 inputStr:  .asciiz "Please enter an input: "
@@ -171,19 +176,3 @@ squareRoot:
 	div.s $f16, $f1, $f10
 	mov.s $f0, $f16
 	jr $ra
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
