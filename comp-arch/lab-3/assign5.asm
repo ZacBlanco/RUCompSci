@@ -6,8 +6,8 @@
 .data
 input1: .asciiz "Please input a value for the radius of the cone: "
 input2: .asciiz "Please input a value for the height of the cone: "
-outputS: .asciiz "Approximated Surface Area: "
-outputV: .asciiz "Approximated Volume: "
+outputS: .asciiz "Surface Area: "
+outputV: .asciiz "Volume: "
 newline: .asciiz "\n"
 
 .text
