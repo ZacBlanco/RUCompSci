@@ -124,12 +124,6 @@ calcStdDeviation:
 		#Square it
 		mul.s $f6, $f6, $f6
 		
-#		li.s $f20, 0.0
-#		c.le.s $f20, $f6
-#		bc1t posDiff
-#		li.s $f19, -1.0
-#		mul.s $f6, $f6, $f19
-		
 		posDiff:
 			add.s $f5, $f5, $f6
 			addi $t3, $t3, 4
