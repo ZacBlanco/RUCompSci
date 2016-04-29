@@ -122,16 +122,16 @@ calc3Det:
 				noSkipCol3:
 				## Get location of word to load from r4[1-5]
 				# Location to load is base + ((t0*20) + (t1*4))
-				addi $t6, $zero, 20
+				addi $t6, $zero, 16
 				mul $t6, $t6, $t0
 				mul $t7, $t1, $t2
 				add $t7, $t7, $t6
 				add $t7, $t7, $s1
 				lw $t8, 0($t7) # Word @ location i,j is in $t8
 				
-				## Store word in r4[1-5]
+				## Store word in r3[1-5]
 				# Location to store word is base+(($t3*16)+($t4*4))
-				addi $t6, $zero, 16
+				addi $t6, $zero, 12
 				mul $t6, $t6, $t3
 				mul $t7, $t4, $t2
 				add $t7, $t7, $t6
@@ -210,10 +210,10 @@ calc3Det:
 	## We don't need t1-t9 anymore so we can overwrite them
 	
 	lw $t1, 0($s3)
-	lw $t2, 0($s3)
-	lw $t3, 0($s3)
-	lw $t4, 0($s3)
-	lw $t5, 0($s3)
+	lw $t2, 4($s3)
+	lw $t3, 8($s3)
+	lw $t4, 12($s3)
+	lw $t5, 16($s3)
 	
 	add $t0, $t0, $t1
 	add $t0, $t0, $t2
