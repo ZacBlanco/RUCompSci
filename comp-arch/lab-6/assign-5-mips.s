@@ -22,7 +22,7 @@ main:
 	la $a0, sinhStr
 	li $v0, 4
 	syscall
-	mov.s $f12, $f1
+	mov.s $f11, $f1
 	li $v0, 2
 	syscall
 	la $a0, newline
