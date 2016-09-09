@@ -3,5 +3,5 @@ bin/
 *.prefs
 
 112/Expression Evaluation/test
-
+*.out
 comp-arch/lab-5/zdb5-lab5-code.zip
