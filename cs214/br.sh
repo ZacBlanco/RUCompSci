@@ -10,8 +10,8 @@ if [ $? == 0 ]; then
 
 
 # The second assignment sheet test case
-gdb -ex=r --args ./words.out "thing1stuff3otherstuff,blarp"
-#./words.out "thing1stuff3otherstuff,blarp"
+#gdb -ex=r --args ./words.out "thing1stuff3otherstuff,blarp"
+./words.out "thing1stuff3otherstuff,blarp"
 
 # Some more cases
 #./words.out "la-dee-da"

@@ -2,18 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Define the functions to use
-int getLength(char str[]);
-int isAlpha(char c);
-void printChars(char str[]);
-char* createString(int start, int end, char argv[]);
-
 typedef struct ListNode {
   struct ListNode* prev;
   struct ListNode* next;
   char* data;
 } ListNode;
 
+// Define the functions to use
+int getLength(char str[]);
+int isAlpha(char c);
+void printChars(char str[]);
+char* createString(int start, int end, char argv[]);
+void printNode(ListNode* ptr);
+ListNode* addToStack(ListNode* stack, char* data);
 
 int main(int argc, char **argv){
   //Print argc, the number of arguments
@@ -28,8 +29,7 @@ int main(int argc, char **argv){
   ListNode* stack = NULL;
 
   int iter = 0; // The iterator variable
-  int start, end = 0; // index of a word's last character
-  int lastAlpha = 0; // True if last character was alphabetic
+  int start = 0, end = 0; // index of a word's last character
 
   //Main loop to iterate over the string
   while (argv[1][iter] != '\0') {
@@ -38,47 +38,21 @@ int main(int argc, char **argv){
 
       //We've approached the end of a word
       //Set the end index to the current iterator
-      //printf("Ending Char: \"%c\"\n", argv[1][iter]); //Current Ending character
-
       end = iter;
 
       //Ensure end is greater than start - if so then attempt to create the string pointer
       if (end > start) {
 
         char* str = createString(start, end, argv[1]);
+        stack = addToStack(stack, str);
 
-        //printf("String: %s\n", str); //print the str
-        if (stack == NULL) {
-          stack = malloc(sizeof(ListNode));
-          stack->prev = NULL;
-          stack->next = NULL;
-          stack->data = str;
-          printf("[CURRENT STACK PTR] -- Prev Ptr: %p, Next Ptr: %p, Data Ptr: %p\n", (*stack).prev, (*stack).next, (*stack).data);
-
-        } else {
-          //Add the string onto the stack
-          ListNode* newPtr = malloc(sizeof(ListNode));
-          newPtr->prev = stack;
-          newPtr->next = NULL;
-          newPtr->data = str;
-          stack->next = newPtr;
-          printf("[CURRENT STACK PTR] -- Prev Ptr: %p, Next Ptr: %p, Data Ptr: %p\n", (*stack).prev, (*stack).next, (*stack).data);
-          stack = newPtr;
-        }
-        printf("New Stack Ptr: %p\n", stack);
-        printf("Prev Ptr: %p, Next Ptr: %p, Data Ptr: %p\n", (*stack).prev, (*stack).next, (*stack).data);
-
-        
       } else {
+        //Index bounds were <= 0 - can't create string from this
         //printf("Bad Bounds. Start: %i , End: %i \n", start, end); // Bounds are not correct    
       }
-      lastAlpha = 0;
       start = iter + 1;
     
     
-    } else {
-      //printf("%c", argv[1][iter]);
-      lastAlpha = 1;
     }
     iter++;
   }
@@ -87,39 +61,58 @@ int main(int argc, char **argv){
   end = iter;
   if (end > start) {
     char* str = createString(start, end, argv[1]);
-    //printf("String: %s\n", str);
+    stack = addToStack(stack, str);
+  }
+
+// Run through the stack (for testing)
+  ListNode* cur = stack;
+  int i = 0;
+  while ( cur != NULL && i < 15) {
+    printf("Top of Stack: ");
+    printf(" %s\n", cur->data);
+    //printNode(cur);
+    cur = cur->prev;
+    i++;
+  }
+  
+  return 0;
+}
+
+void printNode(ListNode* nodePtr){
+  if (nodePtr != NULL) {
+    printf("NodePtr: %p; PrevPtr: %p; NextPtr: %p; Data: %s\n", nodePtr, (*nodePtr).prev, (*nodePtr).next, (*nodePtr).data);
+  } else {
+    printf("Node pointer was NULL\n");
+  }
+}
+
+// Add a string to the top of the stack - return the new top of the stack.
+// ARGUMENTS:
+//    stack: The original stack pointer
+//    data: data to add to the stack
+// RETURNS:
+//    ListNode*: A pointer to a new ListNode* which now resides at the top of the stack.
+ListNode* addToStack(ListNode* stack, char* data) {
+  if (stack == NULL) {
+    stack = malloc(sizeof(ListNode));
+    stack->prev = NULL;
+    stack->next = NULL;
+    stack->data = data;
+//    printf("Current: ");
+//    printNode(stack);
+  } else {
     //Add the string onto the stack
     ListNode* newPtr = malloc(sizeof(ListNode));
     newPtr->prev = stack;
     newPtr->next = NULL;
-    newPtr->data = str;
+    newPtr->data = data;
     stack->next = newPtr;
-    printf("[CURRENT STACK PTR] -- Prev Ptr: %p, Next Ptr: %p, Data Ptr: %p\n", (*stack).prev, (*stack).next, (*stack).data);
+//    printf("Current: ");
+//   printNode(stack);
     stack = newPtr;
   }
-  printf("New Stack Ptr: %p\n", stack);
-  printf("Prev Ptr: %p, Next Ptr: %p, Data Ptr: %p\n", (*stack).prev, (*stack).next, (*stack).data);
-
-  ListNode* cur = stack;
-  printf("Stack Pointer: %p\n", stack);
-  ListNode node = *cur;
-  int i = 0;
-  while ( &cur != NULL && i < 15) {
-    printf("Word: \"%s\"; Pointer: %p\n", (*cur).data, &(*cur).data);
-    printf("Next Ptr: %p; Prev Ptr: %p\n", (*cur).next, (*cur).prev);
-    cur = node.prev;
-    i++;
-  }
-  
-  
-  printf("\n");
-  
-  
-
-  return 0;
+    return stack;
 }
-
-//ListNode* addToStack(ListNode* stackPtr, 
 
 
 // Takes a char array and prints each char to separate line
@@ -162,6 +155,7 @@ char* createString(int start, int end, char argv[]){
     szPtr[i - start] = argv[i];
   }
   szPtr[length-1] = '\0';
+  //printf("START: %i, END: %i\n", start, end);
   //printf("CREATE STRING: \"%s\"; Pointer: %p \n", szPtr, szPtr); //Print string for testing
   return szPtr;
 
