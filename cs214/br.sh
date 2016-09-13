@@ -1,5 +1,5 @@
 gcc -o words.out assign0.c
-
+if [ $? == 0 ]; then
 # Test Cases!!!
 
 # Empty/Missing Argument
@@ -17,3 +17,4 @@ gcc -o words.out assign0.c
 ./words.out "la-dee-da"
 
 ./words.out "do-re-me fa =so   la ------ tee do"
+fi

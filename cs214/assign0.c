@@ -5,40 +5,49 @@
 int getLength(char str[]);
 int isAlpha(char c);
 void printChars(char str[]);
+char* createString(int start, int end, char argv[]);
 
 int main(int argc, char **argv){
   //Print argc, the number of arguments
   printf("Number of arguments: %i\n", argc);
   
-  //This section is for testing/learning purposes
-  //Iterate over the arguments array and print argument, the length, and the individual chars of the argument.
-//  for(int i = 0; i < argc; i++) {
-//    printf("Argument %i: \"%s\"\n", i+1, argv[i]);
-//    int l = getLength(argv[i]);
-//    printf("Number of Characters: %i\n", l);
-//   for(int j = 0; j < l;j++){
-//    printf("Char: \"%c\"; Is alphabetic: %i\n", argv[i][j], isAlpha(argv[i][j]));    
-//    }
-//  }
   
-  
-  //Let's look over the first (not 0th!) argument - we assume this is the only argument we will need
+  //Let's look over the 1st (not 0th!) argument - we assume this is the only argument we will need
   if (argc < 2) {
     printf("You need to supply an argument\n");
     return 1;
   }
   
-  char* arg = &argv[1]; // The array of characters which we'll be reading from
-  int start = 0; // The index of a word's first character
-  int end = 0; // index of a word's last character
-  
-  printf("String arg: \"%s\"\n", arg);
+  int iter = 0; // The iterator variable
+  int start, end = 0; // index of a word's last character
+  int lastAlpha = 0; // True if last character was alphabetic
   
   //Main loop to iterate over the string
-  while (arg[start] != '\0') {
-    start++;
+  while (argv[1][iter] != '\0') {
+
+    if (!isAlpha(argv[1][iter])){
+      end = iter;
+      if (end > start) {
+        char* str = createString(start, end, argv[1]);
+        //printf("String: %s\n", str);
+      } else {
+        printf("Bad Bounds. Start: %i , End: %i \n", start, end);      
+      }
+      lastAlpha = 0;
+      start = iter + 1;
+    } else {
+      //printf("%c", argv[1][iter]);
+      lastAlpha = 1;
+    }
+    iter++;
+  }
+  end = iter;
+  if (end > start) {
+    char* str = createString(start, end, argv[1]);
+    //printf("String: %s\n", str);
   }
   
+  printf("\n");
   
   
 
@@ -67,6 +76,27 @@ int getLength(char str[]) {
     iter++;
   }
   return iter;
+}
+
+//Return a pointer to a character array of a string
+// ARGUMENTS:
+//    start: the start position of the array for the string
+//    end: the end position of the array for the string
+//    argv: The array to copy characters from
+char* createString(int start, int end, char argv[]){  
+  int length = end - start;
+  length += 1;
+  char str[length];
+  char* szPtr = str;
+  int i; 
+  for(i = start; i <= end; i++) {
+    str[i - start] = argv[i];
+    //printf("Character: %c\n", str[i]);
+  }
+  str[length-1] = '\0';
+  printf("STRING: %s\n", str);
+  return szPtr;
+
 }
 
 //Determine if a character is in the Alphabet or not
