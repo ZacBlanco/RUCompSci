@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+// A binary tree node (recursive structure)
+// PARAMETERS
+//    - BNode* prev: the left subtree
+//    - BNode* next: the right subtree
+//    - char* data: character pointer for string data 
 typedef struct BNode {
   struct BNode* prev;
   struct BNode* next;
@@ -14,8 +19,10 @@ int isAlpha(char c);
 void printChars(char str[]);
 char* createString(int start, int end, char argv[]);
 void printNode(BNode* ptr);
-BNode* addToTree(BNode* tree, char* data);
+void addToTree(BNode* tree, char* data);
 void traverseAndFree(BNode* root);
+
+
 
 int main(int argc, char **argv){
 
@@ -28,11 +35,15 @@ int main(int argc, char **argv){
   }
 
 
-  BNode* tree = NULL;
+  BNode* tree = (BNode*) malloc(sizeof(BNode));
+  tree->prev = NULL;
+  tree->next = NULL;
+  tree->data = NULL;
+  
   int iter = 0; // The iterator variable
   int start = 0, end = 0; // index of a word's last character
-
-  //Main loop to iterate over the string
+  
+  //Iterate over the string
   while (argv[1][iter] != '\0') {
     if (!isAlpha(argv[1][iter])){
       //We've approached the end of a word
@@ -42,11 +53,9 @@ int main(int argc, char **argv){
       //Ensure end is greater than start - if so then attempt to create the string pointer
       if (end > start) {
         char* str = createString(start, end, argv[1]);
-        tree = addToTree(tree, str);
+        addToTree(tree, str);
       } else {
         //Index bounds were <= 0 - can't create string from this
-        //printf("Bad Bounds. Start: %i , End: %i \n", start, end);
-        // Bounds are not correct
       }
       start = iter + 1; // Set starting character of the next word to be the next char
     }
@@ -54,9 +63,10 @@ int main(int argc, char **argv){
     iter++;
   }
   
-  //Notify the user in case of an empty string
-  if (iter == 0 || tree == NULL){ 
+  //Notify the user in case of an empty string or no words
+  if (iter == 0 || tree->data == NULL){ 
     printf("Error: The argument supplied had no words.\n");
+    free(tree);
     return 1;
   }
   //Repeat the process for the final word of the string and add it to the list
@@ -65,10 +75,10 @@ int main(int argc, char **argv){
     char* str = createString(start, end, argv[1]);
     addToTree(tree, str);
   }
-
-  printf("Sorted List of Words:\n");
+  
   traverseAndFree(tree);
   return 0;
+  
 }
 
 // Prints a node's value and its immediate childrens' values
@@ -97,6 +107,9 @@ void printNode(BNode* nodePtr){
 void traverseAndFree(BNode* root) {
   if (root == NULL){
     return;
+  } else if (root->data == NULL) {
+    free(root);
+    return;
   }
 
   traverseAndFree(root->prev);
@@ -106,15 +119,17 @@ void traverseAndFree(BNode* root) {
   free(root);
 }
 
-// Add a string to the top of the stack - return the new top of the stack.
+// Add a string to the binary tree
 // ARGUMENTS:
-//    stack: The original stack pointer
-//    data: data to add to the stack
-// RETURNS:
-//    BNode*: A pointer to the root BNode* which now resides at the top of the stack.
-BNode* addToTree(BNode* root, char* data) {
+//    root: the root node of the tree to add to
+//    data: data to add to the tree
+void addToTree(BNode* root, char* data) {
   if (root == NULL) {
-    root = (BNode*) malloc(sizeof(BNode));
+    //Throw error
+    printf("[AddToTree] - NPE - Null pointer passed as the root of the tree");
+    return;
+  } else if (root->data == NULL) {
+    //root = (BNode*) malloc(sizeof(BNode));
     root->prev = NULL;
     root->next = NULL;
     root->data = data;
@@ -143,7 +158,6 @@ BNode* addToTree(BNode* root, char* data) {
       }
     }
   }
-  return root;
 }
 
 
@@ -187,7 +201,6 @@ char* createString(int start, int end, char argv[]){
     szPtr[i - start] = argv[i];
   }
   szPtr[length-1] = '\0';
-  //printf("START: %i, END: %i\n", start, end);
   //printf("CREATE STRING: \"%s\"; Pointer: %p \n", szPtr, szPtr); //Print string for testing
   return szPtr;
 }
