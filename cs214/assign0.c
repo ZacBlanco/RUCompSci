@@ -14,7 +14,7 @@ int isAlpha(char c);
 void printChars(char str[]);
 char* createString(int start, int end, char argv[]);
 void printNode(BNode* ptr);
-void addToTree(BNode* tree, char* data);
+BNode* addToTree(BNode* tree, char* data);
 void traverseAndFree(BNode* root);
 
 int main(int argc, char **argv){
@@ -43,7 +43,7 @@ int main(int argc, char **argv){
       //Ensure end is greater than start - if so then attempt to create the string pointer
       if (end > start) {
         char* str = createString(start, end, argv[1]);
-        addToTree(tree, str);
+        tree = addToTree(tree, str);
       } else {
         //Index bounds were <= 0 - can't create string from this
         //printf("Bad Bounds. Start: %i , End: %i \n", start, end); // Bounds are not correct    
@@ -60,17 +60,6 @@ int main(int argc, char **argv){
     char* str = createString(start, end, argv[1]);
     addToTree(tree, str);
   }
-
-// Run through the tree (for testing)
-  BNode* cur = tree;
-  int i = 0;
-  while ( cur != NULL && i < 15) {
-    printf("Top of Tree: ");
-    printf(" %s\n", cur->data);
-    //printNode(cur);
-    cur = cur->prev;
-    i++;
-  }
   
   printf("TRAVERSING:\n");
   traverseAndFree(tree);
@@ -79,7 +68,16 @@ int main(int argc, char **argv){
 
 void printNode(BNode* nodePtr){
   if (nodePtr != NULL) {
-    printf("NodePtr: %p; PrevPtr: %p; NextPtr: %p; Data: %s\n", nodePtr, (*nodePtr).prev, (*nodePtr).next, (*nodePtr).data);
+  	char* leftStr;
+  	char* rightStr;
+  	if ((*nodePtr).prev != NULL) {
+      leftStr = (*(*nodePtr).prev).data;
+  	} else { leftStr = NULL; }
+  	if ((*nodePtr).next != NULL) {
+      rightStr = (*(*nodePtr).next).data;
+  	} else { rightStr = NULL; }
+  	
+    printf("NodePtr: %p; PrevPtr: %s; NextPtr: %s; Data: %s\n", nodePtr, leftStr, rightStr, (*nodePtr).data);
   } else {
     printf("Node pointer was NULL\n");
   }
@@ -90,9 +88,10 @@ void traverseAndFree(BNode* root) {
     return;
   }
   
+//   printNode(root);
   traverseAndFree(root->prev);
+  printf("%s\n", root->data);
   traverseAndFree(root->next);
-  printf("%s", root->data);
   free(root->data);
 }
 
@@ -102,41 +101,38 @@ void traverseAndFree(BNode* root) {
 //    data: data to add to the stack
 // RETURNS:
 //    BNode*: A pointer to the root BNode* which now resides at the top of the stack.
-void addToTree(BNode* root, char* data) {
+BNode* addToTree(BNode* root, char* data) {
   if (root == NULL) {
     root = (BNode*) malloc(sizeof(BNode));
     root->prev = NULL;
     root->next = NULL;
     root->data = data;
   } else {
-    BNode* newPtr = (BNode*)malloc(sizeof(BNode));
-    newPtr->prev = NULL;
-    newPtr->next = NULL;
-    newPtr->data = data;
-    //Binary Tree Insert O(n)
-    BNode* cur = root;
-    BNode* prev = root;
-    int cmp;
-    while (cur != NULL) {
-      cmp = strcmp(data, cur->data);
-      prev = cur;
-      if (cmp < 0) {
-        cur = cur->prev;
-      } else if (cmp >= 0) {
-        cur = cur->next;
+    int cmp = strcmp(data, root->data);
+     //Binary Tree Insert O(n)
+    if (cmp < 0) {
+      if (root->prev == NULL) {
+        BNode* newPtr = (BNode*)malloc(sizeof(BNode));
+        newPtr->prev = NULL;
+        newPtr->next = NULL;
+        newPtr->data = data;
+        root->prev = newPtr;
+      } else {
+      	addToTree(root->prev, data);
+      }
+    } else {
+      if (root->next == NULL) {
+        BNode* newPtr = (BNode*)malloc(sizeof(BNode));
+        newPtr->prev = NULL;
+        newPtr->next = NULL;
+        newPtr->data = data;
+        root->next = newPtr;
+      } else {
+      	addToTree(root->next, data);
       }
     }
-    //cur was null so we refer to previous pointer to tell us the node where we dropped
-    //set the left/right pointer according to cmp val
-    if (cmp < 0) {
-      prev->prev = newPtr;
-    } else {
-      prev->next = newPtr;
-    }
-    printf("Current: ");
-    printNode(root);
-
   }
+  return root;
 }
 
 
