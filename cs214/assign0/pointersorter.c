@@ -21,8 +21,10 @@ int main(int argc, char **argv){
 
   //Let's look over the 1st (not 0th!) argument - we assume this is the only argument we will need
   if (argc < 2) {
-    printf("Not enough arguments suppled. Please try again with a new set of arguments.\n");
+    printf("No arguments suppled. Please run with at least one argument.\n");
     return 1;
+  } else if (argc > 2) {
+    printf("WARNING: More than 1 argument supplied. 2nd arguments and beyond ignored.");
   }
 
 
@@ -51,7 +53,12 @@ int main(int argc, char **argv){
 
     iter++;
   }
-
+  
+  //Notify the user in case of an empty string
+  if (iter == 0 || tree == NULL){ 
+    printf("Error: The argument supplied had no words.\n");
+    return 1;
+  }
   //Repeat the process for the final word of the string and add it to the list
   end = iter;
   if (end > start) {
