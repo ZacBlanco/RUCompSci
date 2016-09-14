@@ -1,0 +1,140 @@
+########################
+#      Test Cases      #
+########################
+
+Case:
+  - No argument supplied
+Expected Output
+  - "No arguments suppled. Please run with at least one argument."
+
+Case:
+  - ""
+Description:
+  - Empty string input
+Expected Output:
+  - "Error: The argument supplied had no words."
+  
+Case:
+   - "------    -----    ----    "
+Description:
+  - String with only non-alphabetic characters
+Expected Output:
+  - "Error: The argument supplied had no words."
+ 
+Case:
+  - "thing stuff otherstuff blarp"
+Description:
+  - Given assignment test case
+Expected Output:
+  - blarp
+  - otherstuff
+  - stuff
+  - thing
+
+Case:
+  - "thing1stuff3otherstuff,blarp"
+Description:
+  - 2nd given assignment test case
+Expected Output:
+  - blarp
+  - otherstuff
+  - stuff
+  - thing
+
+Case:
+  - "la-dee-da"
+Description:
+  - Try some different symbols other than spaces, number, and comma
+Expected Output:
+   - da
+   - dee
+   - la
+   
+Case:
+  - "\`1234567890-=~!@#$%$^&*()_+,./\\][';<>?|}{\":"
+Description:
+  - Every non-alphabetic character possible to type on a keyboard
+Expected Output:
+  - "Error: The argument supplied had no words."
+
+Case:
+  - "do-re-me fa =so   la ------ tee do"
+Description:
+  - Multiple non-alphabetic characters in between words.
+Expected Output:
+  - do
+  - do
+  - fa
+  - la
+  - me
+  - re
+  - so
+  - tee
+
+Case:
+  - "- hello world"
+Description:
+  - Test a string beginning with multiple delimiting characters 
+Expected Output:
+  - hello
+  - world
+  
+Case:
+  - "hello there world--"
+Description:
+  - Test a string beginning with multiple delimiting characters 
+Expected Output:
+  - hello
+  - world
+
+
+Case:
+  - "- WORLD hello world--HELLO 123WoRlD"
+Description:
+  - Test a string beginning with multiple delimiting characters 
+Expected Output:
+  - WORLD
+  - world
+NOTE:
+  - In this case where the argument contains multiple capitalization permutations
+   of the same word, then the output will depend on the order the words appear in string
+   argument.
+   
+
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
