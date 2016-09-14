@@ -20,7 +20,7 @@ void traverseAndFree(BNode* root);
 int main(int argc, char **argv){
   
   //Print argc, the number of arguments
-  printf("Number of arguments: %i\n", argc);
+  //printf("Number of arguments: %i\n", argc);
 
   //Let's look over the 1st (not 0th!) argument - we assume this is the only argument we will need
   if (argc < 2) {
@@ -108,7 +108,7 @@ BNode* addToTree(BNode* root, char* data) {
     root->next = NULL;
     root->data = data;
   } else {
-    int cmp = strcmp(data, root->data);
+    int cmp = strcasecmp(data, root->data);
      //Binary Tree Insert O(n)
     if (cmp < 0) {
       if (root->prev == NULL) {
