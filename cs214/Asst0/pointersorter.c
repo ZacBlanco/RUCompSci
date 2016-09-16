@@ -1,3 +1,11 @@
+// Author: Zachary Blanco
+// Date: 9/15/2016
+// Rutgers University
+// 01:198:214 - CS214 - Systems Programming
+// Assignment 0
+//
+// No right to reproduce without author's explicit written permission
+//
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,9 +30,52 @@ void printNode(BNode* ptr);
 void addToTree(BNode* tree, char* data);
 void traverseAndFree(BNode* root);
 
+/*
+
+Program Function and Analysis
+
+Given a test case where we have enough arguments (at least 1)
+This program will run in a time of O(n^2) in the worst case
+
+This is due to the fact we use an unbalanced binary tree to store the data.
+In the worst case the words would already be entirely sorted resulting in tree
+insertions that increase the height of the tree by 1 insertion each time.
+This would lead run time to equal  O(n^2) because insertions would follow
+
+(Worst Case)
+1st Insertion = 1
+2nd Insertion = 2
+3rd Insertion = 3
+...
+nth insertion = n time
+
+So to perform n insertions with the total insertion time being Sigma_i(i) then
+then total runtime can be taken as n*(n + 1)/2 which gives O(n^2)
+
+Then after insertions are completed we simply have to perform an in-order 
+traversal of the tree in order to obtain the sorted results. This take O(n)
+time because we only need to do one comparison to print/free each node.
+
+Thus because insertion takes O(n^2) time which is longer than O(n) the runtime
+for this program is O(n^2).
+
+While this implementation runs in O(n^2) it IS possible to make it run faster.
+
+The fastest possible implementation to insert, sort, and print all of the values
+is O(nlog(n)). We know that we must perform "n" insertions from our list of
+words. Then in order to sort and print them alphabetically requires extra time
+which results in a minimum of O(log(n)) in order to organize the data for each
+insertion. This gives a best worst-case runtime of O(nlog(n)) which can be 
+accomplished by implementing a min-heap or a self-balancing binary tree like 
+red-black or AVL trees. The min heap takes O(nlog(n)) for "n" insertions and 
+also takes O(nlog(n)) to print and update the heap each time.
 
 
-int main(int argc, char **argv){
+
+*/
+
+
+int main(int argc, char **argv) {
 
   //Let's look over the 1st (not 0th!) argument - we assume this is the only argument we will need
   if (argc < 2) {
@@ -45,7 +96,8 @@ int main(int argc, char **argv){
   
   //Iterate over the string
   while (argv[1][iter] != '\0') {
-    if (!isAlpha(argv[1][iter])){
+  
+    if (!isAlpha(argv[1][iter])) {
       //We've approached the end of a word
       //Set the end index to the current iterator
       end = iter;
@@ -64,7 +116,7 @@ int main(int argc, char **argv){
   }
   
   //Notify the user in case of an empty string or no words
-  if (iter == 0 || tree->data == NULL){ 
+  if (iter == 0 || tree->data == NULL) { 
     printf("Error: The argument supplied had no words.\n");
     free(tree);
     return 1;
@@ -84,7 +136,7 @@ int main(int argc, char **argv){
 // Prints a node's value and its immediate childrens' values
 // ARGUMENTS
 //    BNode* nodePtr: A BNode to print the values for
-void printNode(BNode* nodePtr){
+void printNode(BNode* nodePtr) {
   if (nodePtr != NULL) {
   	char* leftStr;
   	char* rightStr;
@@ -105,7 +157,7 @@ void printNode(BNode* nodePtr){
 // ARGUMENTS:
 //    BNode* root: A BNode pointer to the root of a tree
 void traverseAndFree(BNode* root) {
-  if (root == NULL){
+  if (root == NULL) {
     return;
   } else if (root->data == NULL) {
     free(root);
@@ -164,9 +216,9 @@ void addToTree(BNode* root, char* data) {
 // Takes a char array and prints each char to separate line
 // ARGUMENTS:
 //   char str[]: A character array to print
-void printChars(char str[]){
+void printChars(char str[]) {
   int iter = 0;
-  while(str[iter] != '\0'){
+  while(str[iter] != '\0') {
     printf("%c\n",str[iter]);
     iter++;
   }
@@ -192,7 +244,7 @@ int getLength(char str[]) {
 //    argv: The array to copy characters from
 // RETURNS:
 //    char*: A pointer to a character array for the word we just created
-char* createString(int start, int end, char argv[]){  
+char* createString(int start, int end, char argv[]) {  
   int length = end - start;
   length += 1; //+1 For null terminator
   char* szPtr = (char*)malloc(sizeof(char)*length);
@@ -210,8 +262,8 @@ char* createString(int start, int end, char argv[]){
 //    char c: A character to analyze
 // RETURNS:
 //    int: 1 if the character is alphabetic or 0 otherwise.
-int isAlpha(char c){
-  if (c >= 'A' && c <= 'Z'){
+int isAlpha(char c) {
+  if (c >= 'A' && c <= 'Z') {
     return 1;
   } else if (c >= 'a' && c <= 'z') {
     return 1;

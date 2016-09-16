@@ -51,7 +51,7 @@ Expected Output:
    - la
    
 Case:
-  - "\`1234567890-=~!@#$%$^&*()_+,./\\][';<>?|}{\":"
+  - "\`1234567890-=~\!@#\$%$^&*()_+,./\\][';<>?|}{\":"
 Description:
   - Every non-alphabetic character possible to type on a keyboard
 Expected Output:
