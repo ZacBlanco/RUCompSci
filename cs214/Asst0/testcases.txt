@@ -93,8 +93,11 @@ Case:
 Description:
   - Test a string beginning with multiple delimiting characters 
 Expected Output:
+  - hello
+  - HELLO
   - WORLD
   - world
+  - WoRlD
 NOTE:
   - In this case where the argument contains multiple capitalization permutations
    of the same word, then the output will depend on the order the words appear in string
