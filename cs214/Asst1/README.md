@@ -17,7 +17,7 @@ make memgrind
 - Run Memgrind
 
 ```
-./memrgrind
+./memgrind
 ```
 
 
