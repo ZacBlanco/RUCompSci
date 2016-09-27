@@ -28,11 +28,17 @@ char *mymalloc(int size, char* file, int line) {
   int added = 0;
   while (added < 5000) {
     int s = search_start % 5000;
+    printf("Start search at %i\n", s); //DEBUG
     if (isAllocated(s, size)) {
+      //printf("Able to allocated %i blocks at %i in mem\n", size, s); //DEBUG
       allocate_mem(s, size);
+      //printf("Allocated memory\n"); //DEBUG
       c_bucket++;
+      //printf("Return Pointer: %p\n", &memblock[s]); //DEBUG
+      //printf("Allocated memspace: %s\n", &allocated[s]); //DEBUG
       return &memblock[s];
     } else {   
+      //printf("Failed to allocate memory\n"); //DEBUG
       added += size;
       search_start += size;
     }
@@ -51,14 +57,16 @@ void myfree(char* x, char* file, int line) {
 // index of _start_ and of size _size
 int isAllocated(int start, int size) {
   if (start < 0 || start > 5000) {
+    printf("Out of bounds for allocation. Return 0;\n"); //DEBUG
     return 0;
   }
   
   int i = start;
-  while(allocated[i] != NULL || (i-start >= size)) {
+  //printf("Allocated[i]: %i\n", allocated[i] == '\0'); //DEBUG
+  while(allocated[i] != '\0' || (i-start <= size)) {
     i++;
   }
-  
+  //printf("Went until mem location %i \n", i); //DEBUG
   return ((i - start) >= size);
   
 }
@@ -66,19 +74,19 @@ int isAllocated(int start, int size) {
 void allocate_mem(int start, int size) {
   allocated[start] = 'b';
   int i;
-  for(i = start; i < size + start; i++) {
+  for(i = start+1; i < size + start; i++) {
     allocated[i] = 'x';
   }
   allocated[start + size] = 'e';
 }
 
 void free_mem(int start, int size) {
-  allocated[start] = NULL;
+  allocated[start] = '\0';
   int i;
   for(i = start+1; i < size + start; i++) {
-    allocated[i] = NULL;
+    allocated[i] = '\0';
   }
-  allocated[start + size] = NULL;
+  allocated[start + size] = '\0';
 }
 
 void print_file(char* filename) {

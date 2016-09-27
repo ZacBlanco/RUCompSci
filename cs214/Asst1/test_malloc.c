@@ -6,7 +6,7 @@
 
 int main() {
 	printf("Running Tests\n");
-  char* a = malloc(sizeof(char)*5);
+  char* a = (char*)malloc(sizeof(char)*5);
   printf("Ptr1: %p\n", a);
   int i;
   for(i = 0; i < 5; i++) {
