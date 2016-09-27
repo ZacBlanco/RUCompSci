@@ -2,15 +2,14 @@
 #include <stdlib.h>
 #include "mymalloc.h"
 
-
 static char memblock[5000];
 
+char *mymalloc(int size, char* file, double line) {
+  
+}
 
-mymalloc(int size) {
+void myfree(char* x, char* file, double line) {
   
-  
-  
-  
-  
+
 }
 
