@@ -14,7 +14,7 @@ static int buckets = 8;
 static int c_bucket = 0; // Current bucket
 static int bucket_size = 625;
 
-char *mymalloc(int size, char* file, int line) {
+void *mymalloc(size_t size, char* file, int line) {
   
   //Handle case <= 0 or > 5000;
   if (size <= 0 || size > 5000){
@@ -34,8 +34,8 @@ char *mymalloc(int size, char* file, int line) {
       allocate_mem(s, size);
       //printf("Allocated memory\n"); //DEBUG
       c_bucket++;
-      //printf("Return Pointer: %p\n", &memblock[s]); //DEBUG
-      //printf("Allocated memspace: %s\n", &allocated[s]); //DEBUG
+      printf("Return Pointer: %p\n", &memblock[s]); //DEBUG
+      printf("Allocated memspace: %s\n", &allocated[s]); //DEBUG
       return &memblock[s];
     } else {   
       //printf("Failed to allocate memory\n"); //DEBUG
@@ -49,7 +49,28 @@ char *mymalloc(int size, char* file, int line) {
 }
 
 
-void myfree(char* x, char* file, int line) {
+void myfree(void* x, char* file, int line) {
+    int free_count = 0;
+    int index = x - (void *)&memblock;
+    printf("Index: %d\n", index);
+
+    if (allocated[index] == 'o') {
+        // free one space
+        // count--;
+        // x = NULL;
+    } else if (allocated[index] == 'b') {
+        // iterate through and free all spaces
+        // free_count++ && count -= free_count;
+        // x = NULL;
+    } else if (allocated[index] == '\0') {
+        printf("Error. Trying to free unallocated memory.\n");
+        print_file(file);
+        print_line(line);
+    } else {
+      printf("Error. Trying to free incorrect pointer.\n");
+      print_file(file);
+      print_line(line);
+    }
   
 }
 
@@ -72,21 +93,31 @@ int isAllocated(int start, int size) {
 }
 
 void allocate_mem(int start, int size) {
-  allocated[start] = 'b';
-  int i;
-  for(i = start+1; i < size + start; i++) {
-    allocated[i] = 'x';
+  
+  if (size == 1) {
+    allocated[start] = 'o';
+  } else {
+    allocated[start] = 'b';
+    int i;
+    for(i = start+1; i < size + start; i++) {
+      allocated[i] = 'x';
+    }
+    allocated[start + size] = 'e';
   }
-  allocated[start + size] = 'e';
 }
 
 void free_mem(int start, int size) {
-  allocated[start] = '\0';
-  int i;
-  for(i = start+1; i < size + start; i++) {
-    allocated[i] = '\0';
+  
+  if (size == 1) {
+    allocated[start] = '\0';
+  } else {
+    allocated[start] = '\0';
+    int i;
+    for(i = start+1; i < size + start; i++) {
+      allocated[i] = '\0';
+    }
+    allocated[start + size] = '\0';
   }
-  allocated[start + size] = '\0';
 }
 
 void print_file(char* filename) {

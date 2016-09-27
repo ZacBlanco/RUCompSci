@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include "mymalloc.h"
 
@@ -18,6 +19,10 @@ int main() {
   //a[2] = b[5];
   printf("A: %s\n", a);
   printf("Ptr2: %p\n", a);
+  char *c = (char *)malloc(sizeof(char) * 10);
+  free(a);
+  free(c);
+
   return 0;
   
   
