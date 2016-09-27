@@ -8,18 +8,77 @@ static int count = 0;
 
 // A nice round number to use for bucketing algorithm
 // Downfall is that we can't really allocate > 625 bytes
+// because we fall into other buckets which have a high
+// probability of already being allocated.
 static int buckets = 8;
 static int c_bucket = 0; // Current bucket
-
-
+static int bucket_size = 625;
 
 char *mymalloc(int size, char* file, int line) {
   
-  return &memblock[0];
+  //Handle case <= 0 or > 5000;
+  if (size <= 0 || size > 5000){
+    return NULL;
+  }
+  
+  // Do a search for contiguous block of _size
+  // start at (c_bucket)*(bucket_size);
+  
+  int search_start = c_bucket*bucket_size; //Search start
+  int added = 0;
+  while (added < 5000) {
+    int s = search_start % 5000;
+    if (isAllocated(s, size)) {
+      allocate_mem(s, size);
+      c_bucket++;
+      return &memblock[s];
+    } else {   
+      added += size;
+      search_start += size;
+    }
+  }
+  
+  return NULL;
+  
 }
+
 
 void myfree(char* x, char* file, int line) {
   
+}
+
+//Return whether or not we can allocate a block @
+// index of _start_ and of size _size
+int isAllocated(int start, int size) {
+  if (start < 0 || start > 5000) {
+    return 0;
+  }
+  
+  int i = start;
+  while(allocated[i] != NULL || (i-start >= size)) {
+    i++;
+  }
+  
+  return ((i - start) >= size);
+  
+}
+
+void allocate_mem(int start, int size) {
+  allocated[start] = 'b';
+  int i;
+  for(i = start; i < size + start; i++) {
+    allocated[i] = 'x';
+  }
+  allocated[start + size] = 'e';
+}
+
+void free_mem(int start, int size) {
+  allocated[start] = NULL;
+  int i;
+  for(i = start+1; i < size + start; i++) {
+    allocated[i] = NULL;
+  }
+  allocated[start + size] = NULL;
 }
 
 void print_file(char* filename) {
