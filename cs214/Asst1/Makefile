@@ -1,18 +1,18 @@
 CC=gcc
 ARGS=-c
-EXE=memgrind
-TEST_EXE=test_malloc
+EXE=memgrind.out
+TEST_EXE=test_malloc.out
 
 all: memgrind
 
 clean:
-	rm -rf *o *.gch memgrind test_malloc
+	rm -rf *o *.gch memgrind.out test_malloc.out
 
 test: test_run
 
 test_run: clean	clr mymalloc.o test_malloc.o
 	$(CC) -o $(TEST_EXE) test_malloc.o mymalloc.o
-	./test_malloc
+	./test_malloc.out
 
 clr:
 	clear
