@@ -6,5 +6,6 @@ bin/
 *.out
 comp-arch/lab-5/zdb5-lab5-code.zip
 
-cs214/Asst1/*.o
+cs214/**/*.o
 memgrind
+.vscode
