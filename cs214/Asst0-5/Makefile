@@ -1,14 +1,21 @@
 CC=gcc
-args:-o
+ARGS=-c
 
 clean:
-	rm -rf *.o main
+	rm -rf *.o main.out
+clear:
+	clear
+all: main
 
-all: part1_main.o
+main: part1_main.o part1_functions.o
+	$(CC) -o main.out part1_main.o part1_functions.o 
+test: clean clear main
+	clear
+	./main.out
 
-part1_main.o: part1_func.o
-	$(CC) $(args) part1_main.c
+part1_main.o: part1_functions.o
+	$(CC) $(ARGS) part1_main.c
 
-part1_func.c:
-	$(CC) $(args) part1_functions.c
+part1_functions.o:
+	$(CC) $(ARGS) part1_functions.c
 	

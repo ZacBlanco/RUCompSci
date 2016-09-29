@@ -16,7 +16,7 @@
  */
 void one(const int a, const int b) {
   int c = (a * a) + (b * b);
-  printf("%d^2 + %d^2 = %d", a, b, c);
+  printf("%d^2 + %d^2 = %d\n", a, b, c);
 }
 
 /**
@@ -28,10 +28,12 @@ void one(const int a, const int b) {
  */
 void two(const char *grade) {
   // you may find the atoi function useful
-  if (grade > 70)
-    printf("%d passed!\n", grade);
-  else
-    printf("%d not passed!\n", grade);
+  int gr = atoi(grade);
+  if ( gr > 70) {
+    printf("%d passed!\n", gr);
+  } else {
+    printf("%d not passed!\n", gr);
+  }
 }
 
 /**
@@ -39,7 +41,7 @@ void two(const char *grade) {
  */
 void three() {
   int x = 4;
-  int *p = x;
+  int *p = &x;
 
   printf("The value of p is: %d\n", *p);
 }
@@ -52,10 +54,11 @@ void three() {
  *     Value to test.
  */
 void four(const float value) {
-  if (0 < value < 1)
+  if (0 < value && value < 1) {
     printf("The value is between zero and one.\n");
-  else
-    printf("The value is not between zero and one.\n");
+  }else {
+      printf("The value is not between zero and one.\n");
+  }
 }
 
 /**
@@ -69,7 +72,7 @@ void four(const float value) {
  *     Second input parameter.
  */
 void five(const int *x, const int *y) {
-  if (x == y)
+  if (*x == *y)
     printf("x and y are equal.\n");
   else
     printf("x and y are different.\n");
@@ -87,8 +90,12 @@ void five(const int *x, const int *y) {
  *     contains the value of the input parameter.
  */
 float *six(const int *x) {
-  float *p = *x;
-  return p;
+  int x1 = *x;
+
+  float p = (float)x1;
+  float* addr = (float*)malloc(sizeof(float));
+  *addr = p;
+  return addr;
 }
 
 /**
@@ -100,7 +107,7 @@ float *six(const int *x) {
  *
  */
 void seven(const char *a) {
-  if (a >= 'A' && a <= 'z')
+  if ( (*a >= 'A' && *a <= 'Z') || (*a >= 'a' && *a <= 'z') )
     printf("a is a letter.\n");
   else
     printf("a is not a letter.\n");
@@ -129,7 +136,7 @@ void eight() {
  */
 void nine() {
   float *p;
-  p = 12.5;
+  *p = 12.5f;
 
   printf("The value of p is: %f\n", *p);
 }
@@ -140,7 +147,7 @@ void nine() {
  * @param x
  *     Pointer to reset to 0.
  */
-void ten(int *x) { x = 0; }
+void ten(int *x) { *x = 0; }
 
 /**
  * Concatenates "Hello " and the parameter str, which is guaranteed to be a
@@ -149,8 +156,7 @@ void ten(int *x) { x = 0; }
  */
 void eleven(const char *str) {
   char *s = "Hello ";
-  strcat(s, str);
-  printf("%s\n", s);
+  printf("%s%s\n", s, str);
 }
 
 /**
@@ -163,7 +169,7 @@ void twelve() {
   for (i = 0; i < n; i++)
     values[i] = (float)i / n;
 
-  for (i = 0; i < n; i++)
+  for (i = 0; i < n; i++) 
     printf("%f ", values[i]);
   printf("\n");
 }
@@ -175,14 +181,17 @@ void thirteen(int a) {
   int **values;
 
   int i, j;
-  values = malloc(10 * sizeof(int));
-  for (i = 0; i < 10; i++)
-    for (j = 0; j < 10; j++)
+  values = malloc(10 * sizeof(int*));
+  for (i = 0; i < 10; i++) {
+    values[i] = (int*)malloc(10 * sizeof(int*));
+    for (j = 0; j < 10; j++) {
       values[i][j] = i * j * a;
-
+    }
+  }
   for (i = 0; i < 10; i++)
     printf("%d ", values[i][i]);
   printf("\n");
+  free(values);
 }
 
 /**
@@ -192,12 +201,13 @@ void thirteen(int a) {
  *     Input parameter, used to determine which string is printed.
  */
 void fourteen(const char *s) {
-  switch (s) {
-  case "blue":
+  char c1 = *s;
+  switch (c1) {
+  case 'b':
     printf("Orange and BLUE!\n");
     break;
 
-  case "orange":
+  case 'o':
     printf("ORANGE and blue!\n");
     break;
 
@@ -217,12 +227,15 @@ void fifteen(const int value) {
   switch (value) {
   case 1:
     printf("You passed in the value of one!\n");
+    break;
 
   case 2:
     printf("You passed in the value of two!\n");
+    break;
 
   default:
     printf("You passed in some other value!\n");
+    break;
   }
 }
 
@@ -234,7 +247,7 @@ void fifteen(const int value) {
  *     A newly allocated string, stored on the heap, with the value "Hello".
  */
 char *sixteen() {
-  char *s = malloc(5);
+  char *s = malloc(sizeof(char)*5);
   strcpy(s, "Hello");
 }
 
@@ -245,7 +258,7 @@ char *sixteen() {
  *     The diameter of the circle.
  */
 void seventeen(const int d) {
-  printf("The radius of the circle is: %f.\n", d / 2);
+  printf("The radius of the circle is: %f.\n", ((float)d / 2));
 }
 
 /**
@@ -255,12 +268,12 @@ void seventeen(const int d) {
  *     The input parameter to manipulate.
  */
 void eighteen(const int k) {
-  k = k * k;
-  k += k;
-  k *= k;
-  k -= 1;
+  int k1 = k * k;
+  k1 += k1;
+  k1 *= k1;
+  k1 -= 1;
 
-  printf("Result: %d\n", k);
+  printf("Result: %d\n", k1);
 }
 
 /**
@@ -287,7 +300,14 @@ void eighteen(const int k) {
  *     The flag (or mask) used in order to clear bits from "value".
  */
 long int clear_bits(long int value, long int flag) {
-  // TODO clear_bits
+  printf("Value: 0x%05X\n", value);
+  printf("Flag: 0x%05X\n", flag);
+  int r = 0x00;
+  r = ~(value & flag);
+  printf(" Val: 0x%05X\n", r);
+  printf("~Val: 0x%05X\n", ~r);
+  return ~r;
 }
+
 
 
