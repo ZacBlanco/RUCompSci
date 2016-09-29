@@ -17,7 +17,7 @@ test_run: clean	clr mymalloc.o test_malloc.o
 clr:
 	clear
 
-memgrind: mymalloc.o memgrind.o
+memgrind: clean mymalloc.o memgrind.o
 	$(CC) -o $(EXE) memgrind.o mymalloc.o
 
 memgrind.o:
