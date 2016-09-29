@@ -9,7 +9,7 @@ all: main
 
 main: part1_main.o part1_functions.o
 	$(CC) -o main.out part1_main.o part1_functions.o 
-test: clean clear main
+test: clean main
 	clear
 	./main.out
 
