@@ -32,13 +32,13 @@ void *mymalloc(size_t size, char* file, int line) {
     if (isAllocated(s, size)) {
       //printf("Able to allocated %i blocks at %i in mem\n", size, s); //DEBUG
       allocate_mem(s, size);
-      //printf("Allocated memory\n"); //DEBUG
+      printf("Allocated memory\n"); //DEBUG
       c_bucket++;
       printf("Return Pointer: %p\n", &memblock[s]); //DEBUG
       printf("Allocated memspace: %s\n", &allocated[s]); //DEBUG
       return &memblock[s];
     } else {   
-      //printf("Failed to allocate memory\n"); //DEBUG
+      printf("Failed to allocate memory\n"); //DEBUG
       added += size;
       search_start += size;
     }
@@ -66,6 +66,7 @@ void myfree(void* x, char* file, int line) {
             index++;
         }
         allocated[index] = '\0'; // Free the very last byte.
+        free_count++;
         printf("Free'd %d bytes\n", free_count); //DEBUG
         count -= free_count;
         x = NULL;
@@ -106,10 +107,10 @@ void allocate_mem(int start, int size) {
   } else {
     allocated[start] = 'b';
     int i;
-    for(i = start+1; i < size + start; i++) {
+    for(i = start+1; i < size + start - 1; i++) {
       allocated[i] = 'x';
     }
-    allocated[start + size] = 'e';
+    allocated[start + size - 1] = 'e';
   }
 }
 
