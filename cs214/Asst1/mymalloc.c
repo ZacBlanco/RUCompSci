@@ -55,13 +55,20 @@ void myfree(void* x, char* file, int line) {
     printf("Index: %d\n", index);
 
     if (allocated[index] == 'o') {
-        // free one space
-        // count--;
-        // x = NULL;
+        printf("Freeing one byte\n"); //DEBUG
+        memblock[index] == '\0';
+        count--;
+        x = NULL;
     } else if (allocated[index] == 'b') {
-        // iterate through and free all spaces
-        // free_count++ && count -= free_count;
-        // x = NULL;
+        while(allocated[index] != 'e') {
+            allocated[index] = '\0';
+            free_count++;
+            index++;
+        }
+        allocated[index] = '\0'; // Free the very last byte.
+        printf("Free'd %d bytes\n", free_count); //DEBUG
+        count -= free_count;
+        x = NULL;
     } else if (allocated[index] == '\0') {
         printf("Error. Trying to free unallocated memory.\n");
         print_file(file);
@@ -129,7 +136,4 @@ void print_line(int line) {
   printf("Occurred on line No.: %d\n", line);
   return;
 }
-
-
-
 

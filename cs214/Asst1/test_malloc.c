@@ -20,8 +20,22 @@ int main() {
   printf("A: %s\n", a);
   printf("Ptr2: %p\n", a);
   char *c = (char *)malloc(sizeof(char) * 10);
+  char *d = (char *)malloc(sizeof(char) * 10);
+  char *e = (char *)malloc(sizeof(char) * 10);
+  char *f = (char *)malloc(sizeof(char) * 10);
+  char *g = (char *)malloc(sizeof(char) * 10);
+  char *h = (char *)malloc(sizeof(char) * 10);
+  char *k = (char *)malloc(sizeof(char) * 10);
+  char *j = (char *)malloc(sizeof(char) * 10);
   free(a);
   free(c);
+  free(d);
+  free(e);
+  free(f);
+  free(g);
+  free(h);
+  free(k);
+  free(j);
 
   return 0;
   
