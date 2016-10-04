@@ -9,10 +9,11 @@ void workloadC();
 void workloadD();
 void workloadE();
 void workloadF();
+long get_time();
 
 int main() {
   srand(time(NULL));
-
+  float run_times = 100.0f;
   time_t mytime = time(NULL);
   struct timeval tv = {0, 0};
   gettimeofday(&tv, NULL); //Puts time into tv
@@ -21,56 +22,54 @@ int main() {
   int i = 0; //Iterator
 
   //Run Workload A 100 times;
-  gettimeofday(&tv, NULL);
-  long init = tv.tv_usec;
-  for (i = 0; i < 100; i ++) {
+  long init = get_time();
+  //printf("Workload A start time: %ld\n", init);
+  for (i = 0; i < run_times; i ++) {
     workloadA();    //printf("%ld\n", tv.tv_usec);
   }
-  gettimeofday(&tv, NULL);
-  //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
-  total = tv.tv_usec - init;
-  float mean = ((float)total)/100;
+  long stop = get_time();
+  //printf("Total Time: %ld microseconds\n", stop - init);
+  //printf("Workload A Stop Time: %ld\n", stop);
+  total = stop - init;
+  float mean = ((float)total)/run_times;
   printf("Workload A Runtime: %.6f Microseconds\n", mean);
   
   //Run Workload B 100 times;
-  gettimeofday(&tv, NULL);
-  init = tv.tv_usec;
-  for (i = 0; i < 100; i ++) {
+  init = get_time();  
+  for (i = 0; i < run_times; i ++) {
     workloadB();    //printf("%ld\n", tv.tv_usec);
   }
-  gettimeofday(&tv, NULL);
-  //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
-  total = tv.tv_usec - init;
-  mean = ((float)total)/100;
+  stop = get_time();
+  //printf("Total Time: %ld microseconds\n", stop - init);
+  total = stop - init;
+  mean = ((float)total)/run_times;
   printf("Workload B Runtime: %.6f Microseconds\n", mean);
   
   
   
-  //Run Workload C 100 times;=
+  // //Run Workload C 100 times;=
 
-  gettimeofday(&tv, NULL);
-  init = tv.tv_usec;
-  for (i = 0; i < 100; i ++) {
+  init = get_time();
+  for (i = 0; i < run_times; i ++) {
     workloadC();    //printf("%ld\n", tv.tv_usec);
   }
-  gettimeofday(&tv, NULL);
-  //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
-  total = tv.tv_usec - init;
-  mean = ((float)total)/100;
+  stop = get_time();
+  //printf("Total Time: %ld microseconds\n", stop - init);
+  total = stop - init;
+  mean = ((float)total)/run_times;
   printf("Workload C Runtime: %.6f Microseconds\n", mean);
   
   
   
-  //Run Workload D 100 times;
-  gettimeofday(&tv, NULL);
-  init = tv.tv_usec;
-  for (i = 0; i < 100; i ++) {
+  // //Run Workload D 100 times;
+  init = get_time();
+  for (i = 0; i < run_times; i ++) {
     workloadD();    //printf("%ld\n", tv.tv_usec);
   }
-  gettimeofday(&tv, NULL);
+  stop = get_time();
   //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
-  total = tv.tv_usec - init;
-  mean = ((float)total)/100;
+  total = stop - init;
+  mean = ((float)total)/run_times;
   printf("Workload D Runtime: %.6f Microseconds\n", mean);
   //Run Workload E 100 times;
   //Run Workload F 100 times;
@@ -78,6 +77,15 @@ int main() {
 
 
   return 0;
+}
+
+// Returns a long value representing the time in microseconds since epoch
+// Uses gettimeofday to return.
+// Multiplies second by 10^6 and adds the microseconds value.
+long get_time() {
+  struct timeval tv = {0, 0};
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec*(1000000) + tv.tv_usec;
 }
 
 // Case A:
@@ -165,17 +173,17 @@ void workloadD() {
   int totalMalloc = 0;
   char* ptrs[6000];
   int ptrSizes[6000];
-  int r = 0;
-  int r2;
-  int s = -1;
-  int i;
+  int r = 0; //random int for memory block size
+  int r2; //random integer from 0-9
+  int s = -1; //counter in case we get stuck
+  int i; //normal iterator
   for (i = 0; i < 6000; i++) {
     r2 = rand() % 10;
 
     //attempt random malloc only if:
     //freed < bm AND totalMalloc < 5000;
     //else free the last pointer in the next iteration.
-    int cond =(((r2 < 5 && totalMalloc <= 5000) || freed >= bm) && bm <= 3000);
+    int cond =(((r2 < 5 && totalMalloc <= 5000) || freed >= bm) && bm < 3000);
 
     if (cond) { // Randomly allocate a new block;
       r = (rand() % max_size) + 1; // Produces an int in the range [1, max_size]
@@ -185,6 +193,9 @@ void workloadD() {
       bm++;
 
     } else if (freed <= bm){ // Free the last block mallocd
+      if (freed > bm) {
+        printf("Freed: %i; Bytes Mallocd: %i\n", freed, bm);
+      }
       free(ptrs[freed]);
       totalMalloc -= ptrSizes[freed];
       freed++;
@@ -200,6 +211,7 @@ void workloadD() {
     }
     //printf("bm: %6i | freed: %6i | totalMalloc: %6i | i: %5i | s: %5i\n", bm, freed, totalMalloc, i, s);
   }
+  //printf("bm: %6i | freed: %6i | totalMalloc: %6i | i: %5i | s: %5i\n", bm, freed, totalMalloc, i, s);
 }
 
 // Case E:
