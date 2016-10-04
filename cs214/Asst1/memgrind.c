@@ -1,19 +1,19 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
-//#include "mymalloc.h"
+#include "mymalloc.h"
 
 void workloadA();
 void workloadB();
 void workloadC();
-void workloadD();
+void workloadD(int mem_size);
 void workloadE();
 void workloadF();
 long get_time();
 
 int main() {
   srand(time(NULL));
-  float run_times = 100.0f;
+  float run_times = 1.0f;
   time_t mytime = time(NULL);
   struct timeval tv = {0, 0};
   gettimeofday(&tv, NULL); //Puts time into tv
@@ -64,7 +64,7 @@ int main() {
   // //Run Workload D 100 times;
   init = get_time();
   for (i = 0; i < run_times; i ++) {
-    workloadD();    //printf("%ld\n", tv.tv_usec);
+    workloadD(5000);    //printf("%ld\n", tv.tv_usec);
   }
   stop = get_time();
   //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
@@ -166,7 +166,7 @@ void workloadC() {
 //    A randomly sized malloc
 //    A free
 // Ensure all pointers are freed
-void workloadD() {
+void workloadD(int mem_size) {
   int max_size = 100; //Set a max memory size;
   int bm = 0;
   int freed = 0;
@@ -183,7 +183,7 @@ void workloadD() {
     //attempt random malloc only if:
     //freed < bm AND totalMalloc < 5000;
     //else free the last pointer in the next iteration.
-    int cond =(((r2 < 5 && totalMalloc <= 5000) || freed >= bm) && bm < 3000);
+    int cond =(((r2 < 5 && totalMalloc <= mem_size) || freed >= bm) && bm < 3000);
 
     if (cond) { // Randomly allocate a new block;
       r = (rand() % max_size) + 1; // Produces an int in the range [1, max_size]
