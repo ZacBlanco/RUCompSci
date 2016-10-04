@@ -28,14 +28,14 @@ void *mymalloc(size_t size, char* file, int line) {
   int added = 0;
   while (added < 5000) {
     int s = search_start % 5000;
-    printf("Start search at %i\n", s); //DEBUG
+    //printf("Start search at %i\n", s); //DEBUG
     if (isAllocated(s, size)) {
       //printf("Able to allocated %i blocks at %i in mem\n", size, s); //DEBUG
       allocate_mem(s, size);
-      printf("Allocated memory\n"); //DEBUG
+      //printf("Allocated memory\n"); //DEBUG
       c_bucket++;
-      printf("Return Pointer: %p\n", &memblock[s]); //DEBUG
-      printf("Allocated memspace: %s\n", &allocated[s]); //DEBUG
+      //printf("Return Pointer: %p\n", &memblock[s]); //DEBUG
+      //printf("Allocated memspace: %s\n", &allocated[s]); //DEBUG
       return &memblock[s];
     } else {   
       printf("Failed to allocate memory\n"); //DEBUG
@@ -52,10 +52,10 @@ void *mymalloc(size_t size, char* file, int line) {
 void myfree(void* x, char* file, int line) {
     int free_count = 0;
     int index = x - (void *)&memblock;
-    printf("Index: %d\n", index);
+    printf("Index: %d and Allocated Index: %c \n", index, allocated[index]);
 
     if (allocated[index] == 'o') {
-        printf("Freeing one byte\n"); //DEBUG
+        //printf("Freeing one byte\n"); //DEBUG
         memblock[index] == '\0';
         count--;
         x = NULL;
@@ -67,7 +67,7 @@ void myfree(void* x, char* file, int line) {
         }
         allocated[index] = '\0'; // Free the very last byte.
         free_count++;
-        printf("Free'd %d bytes\n", free_count); //DEBUG
+        //printf("Free'd %d bytes\n", free_count); //DEBUG
         count -= free_count;
         x = NULL;
     } else if (allocated[index] == '\0') {
@@ -86,7 +86,7 @@ void myfree(void* x, char* file, int line) {
 // index of _start_ and of size _size
 int isAllocated(int start, int size) {
   if (start < 0 || start > 5000) {
-    printf("Out of bounds for allocation. Return 0;\n"); //DEBUG
+    //printf("Out of bounds for allocation. Return 0;\n"); //DEBUG
     return 0;
   }
   
@@ -107,10 +107,24 @@ void allocate_mem(int start, int size) {
   } else {
     allocated[start] = 'b';
     int i;
-    for(i = start+1; i < size + start - 1; i++) {
+    for(i = start + 1; i < size + start - 1; i++) {
       allocated[i] = 'x';
-    }
+    } 
     allocated[start + size - 1] = 'e';
+  }
+
+  print_memblock(start, size);
+}
+
+void print_memblock(int start, int size) {
+  int i;
+  printf("Printing Allocated from %i to %i", start - 5, start + size - 5);
+  for (i = start - 5; i < size + 5; i++) {
+    if (allocated[i] == '\0') {
+      printf("\\0");
+    } else {
+      printf("%c", allocated[i]);
+    }
   }
 }
 
