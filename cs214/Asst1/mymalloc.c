@@ -30,13 +30,13 @@ void *mymalloc(size_t size, char* file, int line) {
   // start at (c_bucket)*(bucket_size);
   
   int search_start = (c_bucket % buckets)*get_bucket_size(); //Search start
-  printf("Search Start @ %i\n", search_start);
+  // printf("Search Start @ %i\n", search_start);
   int added = 0; // The amount of memory space we've traversed searching for a free contiguous block
   while (added < MEM_SIZE) {
-    int s = search_start % MEM_SIZE;
-    //printf("Start search at %i\n", s); //DEBUG
+    int s = search_start % MEM_SIZE; // Mod the search start to make sure we don't go past MEM_SIZE
+    // printf("Search Start @ %i\n", s); //DEBUG
     if (isAllocated(s, size)) {
-      printf("Able to allocate %zu blocks at %i in mem\n", size, s); //DEBUG
+      //printf("Able to allocate %zu blocks at %i in mem\n", size, s); //DEBUG
       allocate_mem(s, size);
       //printf("Allocated memory\n"); //DEBUG
       c_bucket++;
@@ -106,10 +106,11 @@ int isAllocated(int start, int size) {
   //printf("isAllocated @ Index %i: Value: %i; Search Size: %i\n", start, (int)memblock[i+MEM_SIZE], size); //DEBUG
   while(i - start <= size) {
     //Break if we go over the bounds
-    if ( (int)memblock[i + MEM_SIZE] != 0 || i + start >= MEM_SIZE) {
+    if ( (int)memblock[i + MEM_SIZE] != 0 || i >= MEM_SIZE) {
       // printf("memblock[i + MEM_SIZE] != '\\0' ==> %i\n", (memblock[i + MEM_SIZE] != '\0') );
-      printf("The offending char: \"%i\" \n", (int)memblock[i+MEM_SIZE]);
-      // printf("i + start >= MEM_SIZE ==> %i\n",  (i + start) >= MEM_SIZE);
+      // printf("The offending char: \"%i\" \n", (int)memblock[i+MEM_SIZE]);
+      // printf("i + start >= MEM_SIZE ==> %i, i+start = %i\n",  (i + start) >= MEM_SIZE, i + start);
+      // printf("i = %i; start = %i, size = %i\n", i, start, size);
       //printf("Breaking isAllocated: i: %i; Start: %i\n", i, start);
       break;
     }
