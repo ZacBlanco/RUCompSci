@@ -2,10 +2,8 @@
 #include <stdlib.h>
 #include "mymalloc.h"
 
-#define MEM_SIZE (3500)
-
 static char memblock[MEM_SIZE*2];
-static int count = 0;
+static int count = 0; // The current number of bytes malloc'd
 
 // A nice round number to use for bucketing algorithm
 // Downfall is that we can't really allocate > MEM_SIZE/buckets bytes
@@ -42,6 +40,7 @@ void *mymalloc(size_t size, char* file, int line) {
       c_bucket++;
       //printf("Return Pointer: %p\n", &memblock[s]); //DEBUG
       //printf("Allocated memspace: %s\n", &allocated[s]); //DEBUG
+      //printf("Bytes Allocated: %i\n", count);
       return &memblock[s];
     } else {   
       //printf("isAllocated @ location %i returned False\n", s); //DEBUG
@@ -49,9 +48,9 @@ void *mymalloc(size_t size, char* file, int line) {
       search_start += size;
     }
   }
-  printf("Failed to allocate %zu byte(s)\n", size); //DEBUG
-  print_file(file);
-  print_line(line);
+  //printf("Failed to allocate %zu byte(s)\n", size); //DEBUG
+  //print_file(file);
+  //print_line(line);
   return NULL;
   
 }
@@ -65,29 +64,40 @@ void myfree(void* x, char* file, int line) {
     //printf("Free @ Index: %d; Allocated: %c \n", index, memblock[index + MEM_SIZE]);
 
     if (memblock[index + MEM_SIZE] == 'o') {
-        memblock[index] == '\0';
+        memblock[index] = '\0';
+        memblock[index + MEM_SIZE] = '\0';
         count--;
         //printf("Freed one byte\n"); //DEBUG
     } else if (memblock[index + MEM_SIZE] == 'b') {
-        while(memblock[index + MEM_SIZE] != 'e') {
-            memblock[index + MEM_SIZE] = '\0';
-            free_count++;
-            index++;
-        }
-        memblock[index + MEM_SIZE] = '\0'; // Free the very last byte.
-        free_count++;
-        //printf("Free'd %d bytes\n", free_count); //DEBUG
-        count -= free_count;
+      memblock[index + MEM_SIZE] = '\0';
+      memblock[index] = '\0';
+      index++;
+      while (memblock[index + MEM_SIZE] != 'e') {
+          memblock[index + MEM_SIZE] = '\0';
+          memblock[index] = '\0';
+          free_count++;
+          index++;
+          if(index + MEM_SIZE > MEM_SIZE*2) {
+            printf("Went out of bounds of memblock trying to free. Breaking from free-loop\n");
+            printf("Index: %i, Index+MEM_SIZE: %i\n", index, index + MEM_SIZE);
+            break;
+          }
+      }
+      memblock[index + MEM_SIZE] = '\0'; // Free the very last byte.
+      memblock[index] = '\0';
+      free_count++;
+      //printf("Free'd %d bytes\n", free_count); //DEBUG
+      count -= free_count;
     } else if (memblock[index + MEM_SIZE] == '\0') {
-        printf("Error. Trying to free unallocated memory.\n");
+        printf("Free failed. Memory not was not allocated.\n");
         print_file(file);
         print_line(line);
     } else {
-      printf("Error. Trying to free incorrect pointer.\n");
+      printf("Free Failed. Pointer does not start memory block.\n");
       print_file(file);
       print_line(line);
     }
-  
+
 }
 
 int get_bucket_size() {
@@ -125,20 +135,26 @@ void allocate_mem(int start, size_t size) {
   
   if (size == 1) {
     memblock[start + MEM_SIZE] = 'o';
+    count++;
   } else {
     memblock[start + MEM_SIZE] = 'b';
+    count++;
     int i;
     for(i = start + 1; i < size + start; i++) {
       memblock[i + MEM_SIZE] = 'x';
+      count++;
     }
-    memblock[i + MEM_SIZE] = 'e';
+    memblock[i + MEM_SIZE - 1] = 'e';
+    //printf("Malloc of size %zu\n", size);
+    //print_memblock(start, size);
+    count++;
   }
   //print_memblock(start, size);
 }
 
 void print_memblock(int start, int size) {
   int i;
-  printf("Printing Allocated from %i to %i\n", start, start + size);
+  printf("Printing Metadata from %i to %i\n...", start, start + size);
   for (i = start; i < size + start; i++) {
     if (memblock[i + MEM_SIZE] == '\0') {
       printf("\\0");
@@ -146,7 +162,7 @@ void print_memblock(int start, int size) {
       printf("%c", memblock[i + MEM_SIZE]);
     }
   }
-  printf("\n");
+  printf("...\n");
 }
 
 void free_mem(int start, int size) {
@@ -171,5 +187,17 @@ void print_file(char* filename) {
 void print_line(int line) {
   printf("Occurred on line No.: %d\n", line);
   return;
+}
+
+void print_meta() {
+  int i;
+  for(i = 0; i < MEM_SIZE; i++) {
+    if(memblock[i + MEM_SIZE] == '\0') {
+      printf("\\0");
+    } else {
+      printf("%c", memblock[i + MEM_SIZE]);
+    }
+  }
+  printf("\n");
 }
 

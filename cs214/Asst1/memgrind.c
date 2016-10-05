@@ -13,7 +13,7 @@ long get_time();
 
 int main() {
   srand(time(NULL));
-  float run_times = 1.0f;
+  float run_times = 100.0f;
   time_t mytime = time(NULL);
   struct timeval tv = {0, 0};
   gettimeofday(&tv, NULL); //Puts time into tv
@@ -64,7 +64,7 @@ int main() {
   // //Run Workload D 100 times;
   init = get_time();
   for (i = 0; i < run_times; i ++) {
-    workloadD(5000);    //printf("%ld\n", tv.tv_usec);
+    workloadD(MEM_SIZE);    //printf("%ld\n", tv.tv_usec);
   }
   stop = get_time();
   //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
@@ -183,14 +183,19 @@ void workloadD(int mem_size) {
     //attempt random malloc only if:
     //freed < bm AND totalMalloc < 5000;
     //else free the last pointer in the next iteration.
-    int cond =(((r2 < 5 && totalMalloc <= mem_size) || freed >= bm) && bm < 3000);
+    int cond =(((r2 < 5 && totalMalloc <= mem_size) || freed >= bm) && bm < MEM_SIZE);
 
     if (cond) { // Randomly allocate a new block;
       r = (rand() % max_size) + 1; // Produces an int in the range [1, max_size]
-      ptrs[bm] = (char*)malloc(sizeof(char)*r);
-      totalMalloc += r;
-      ptrSizes[bm] = r;
-      bm++;
+      char *p = (char*)malloc(sizeof(char)*r);
+      if(p != NULL) {
+        ptrs[bm] = p;
+        totalMalloc += r;
+        ptrSizes[bm] = r;
+        bm++;
+      } else {
+        i--; //Don't count this loop if it didn't work.
+      }
 
     } else if (freed <= bm){ // Free the last block mallocd
       if (freed > bm) {
