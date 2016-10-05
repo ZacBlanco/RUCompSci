@@ -15,7 +15,7 @@ static int c_bucket = 0; // Current bucket
 void *mymalloc(size_t size, char* file, int line) {
   
   //Handle case <= 0 or > MEM_SIZE;
-  if (size <= 0 || size > MEM_SIZE || size == NULL){
+  if (size <= 0 || size > MEM_SIZE){
     return NULL;
   }
 
@@ -64,9 +64,9 @@ void myfree(void* x, char* file, int line) {
     //printf("Free @ Index: %d; Allocated: %c \n", index, memblock[index + MEM_SIZE]);
 
     //Make sure that x lies within (0 - MEM_SIZE)
-    if(index > MEM_SIZE || index < MEM_SIZE) {
+    if(index > MEM_SIZE || index < 0) {
       //Out of bounds error -can't free memory used that wasn't malloc'd
-      printf("Unable to free. Pointer was not issued by malloc");
+      printf("Unable to free. Pointer was not issued by malloc\n");
       return;
     }
 
