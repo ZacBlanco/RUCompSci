@@ -71,7 +71,19 @@ int main() {
   total = stop - init;
   mean = ((float)total)/run_times;
   printf("Workload D Runtime: %.6f Microseconds\n", mean);
+  
   //Run Workload E 100 times;
+  init = get_time();
+  for (i = 0; i < run_times; i ++) {
+    workloadE();    //printf("%ld\n", tv.tv_usec);
+  }
+  stop = get_time();
+  //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
+  total = stop - init;
+  mean = ((float)total)/run_times;
+  printf("Workload E Runtime: %.6f Microseconds\n", mean);
+
+  
   //Run Workload F 100 times;
   
 
@@ -220,9 +232,75 @@ void workloadD(int mem_size) {
 }
 
 // Case E:
-// Custom test case (TBD)
+// For Exactly 10,000 iterations do the following:
+// Randomly Pick one of the 7 following choices:
+//  1. Attempt to malloc a large (random) amount of memory (200-1000 bytes)
+//  2. Attempt to malloc a small (random) amount of memory (1-100 bytes)
+//  3. Malloc a size of 0
+//  4. Malloc a number greater than MEMSIZE
+//  5. Malloc a number equal to MEMSIZE
+//  6. Free a Null pointer
+//  7. Free the last malloc'd pointer
+//  8. Free a pointer not in the memblock
+//
+// After the 10k iterations
+// Free the last of the pointers 
 void workloadE() {
+  int i;
+  int m_count = 0;
+  int f_count = 0;
+  char *ptrs[10000];
+  char* a;
+  for(i = 0; i < 10000;i++) {
+    int r = rand() % 8;
+    switch (r) {
+      case 0: //malloc large
+        r = (rand() % 1000) + 1;   
+        a = (char*)malloc(sizeof(char)*r);
+        ptrs[m_count] = a;
+        m_count++;
+        break;
+      case 1: //malloc small
+        r = (rand() % 200) + 1;
+        a = (char*)malloc(sizeof(char)*r);
+        ptrs[m_count] = a;
+        m_count++;
+        break;
+      case 2: //malloc 0
+        a = (char*)malloc(0);
+        ptrs[m_count] = a;
+        m_count++;
+        break;
+      case 3: //malloc > MEM_SIZE
+        a = (char*)malloc(sizeof(char)*MEM_SIZE+500);
+        ptrs[m_count] = a;
+        m_count++;
+        break;
+      case 4: //malloc = MEM_SIZE
+        a = (char*)malloc(sizeof(char)*MEM_SIZE);
+        ptrs[m_count] = a;
+        m_count++;
+        break;
+      case 5: // Free null
+        free(NULL);
+        break;
+      case 6: // free malloc'd pointer
+        free(ptrs[f_count]);
+        f_count++;
+        break;
+      case 7: // Free a malloc outside the memblock
+        {
+          char *b = "Break me";
+          free(b);
+          break;
+        }
+    }
+  }
 
+  while(f_count <= m_count) {
+    free(ptrs[f_count]);
+    f_count++;
+  }
 }
 
 // Case F:

@@ -66,7 +66,7 @@ void myfree(void* x, char* file, int line) {
     //Make sure that x lies within (0 - MEM_SIZE)
     if(index > MEM_SIZE || index < 0) {
       //Out of bounds error -can't free memory used that wasn't malloc'd
-      printf("Unable to free. Pointer was not issued by malloc\n");
+      //printf("Unable to free. Pointer was not issued by malloc\n");
       return;
     }
 
