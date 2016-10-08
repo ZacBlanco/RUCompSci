@@ -85,6 +85,15 @@ int main() {
 
   
   //Run Workload F 100 times;
+  init = get_time();
+  for (i = 0; i < run_times; i ++) {
+    workloadF();    //printf("%ld\n", tv.tv_usec);
+  }
+  stop = get_time();
+  //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
+  total = stop - init;
+  mean = ((float)total)/run_times;
+  printf("Workload F Runtime: %.6f Microseconds\n", mean);
   
 
 
@@ -305,7 +314,34 @@ void workloadE() {
 
 // Case F:
 // Custom test case (TBD)
+// for 20000 times:
+//   malloc the size of our buckets n times
+//   if we get a pointer that isn't null after the 5th iteration (only 5 buckets)
+//   we need to break because that memory isn't ours
+//   
+//   free the mallocs that we made
+//
 void workloadF() {
 
+    char * ptrs[10000];
+    char *current_pointer;
+    int iteration = 20;
+    int i, j, malloc_count;
+    for (j = 0; j < 20000; j++) {
+        malloc_count = 0;
+        for (i = 0; i < iteration; i++) {
+            current_pointer = (char *)malloc(MEM_SIZE / 5);
+            if (i > 5 && current_pointer != NULL) {
+                printf("Malloc'd memory that wasn't ours");
+                break;
+            }
+            ptrs[malloc_count] = current_pointer;
+            malloc_count++;
+        }
+
+        for (i = 0; i < malloc_count; i++) {
+            free(ptrs[i]);
+        }
+    }
 }
 
