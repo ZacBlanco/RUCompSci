@@ -242,7 +242,7 @@ void workloadD(int mem_size) {
 
 // Case E:
 // For Exactly 10,000 iterations do the following:
-// Randomly Pick one of the 7 following choices:
+// Randomly Pick one of the 8 following choices:
 //  1. Attempt to malloc a large (random) amount of memory (200-1000 bytes)
 //  2. Attempt to malloc a small (random) amount of memory (1-100 bytes)
 //  3. Malloc a size of 0
@@ -313,7 +313,6 @@ void workloadE() {
 }
 
 // Case F:
-// Custom test case (TBD)
 // for 20000 times:
 //   malloc the size of our buckets n times
 //   if we get a pointer that isn't null after the 5th iteration (only 5 buckets)
