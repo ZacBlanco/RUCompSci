@@ -1,0 +1,46 @@
+===========================
+| Assignment 1 Test Cases |
+===========================
+
+Note MEM_SIZE = length(memblock)/2
+
+This is due to the fact that our implementation requires exactly 1/2 the memory block size required to store metadata.
+
+==========
+Workload E
+==========
+
+Description:
+    We want to use this test case to try and "break" this implementation of malloc with a combination of "good" inputs and "poor" inputs. In this test case we do the following for 10,000 iterations:
+
+    1. Pick a number, _n_ randomly (between 0 & 7)
+    2. Based on the number, do one of the following:
+        a. Malloc a _large_ block of memory
+        b. Malloc a _small_ block of memory
+        c. Malloc a size 0 pointer
+        d. Malloc a number greater than MEM_SIZE
+        e. Try to malloc a number equal to the size MEM_SIZE
+        f. Free a null pointer.
+        g. Free the last malloc'd pointer
+        h. Free a pointer which is not in the a part of the memblock.
+
+    3. Finally free the last of the pointers which were allocated (if any)
+
+Implementation:
+    We use the value of rand() % 8 to get a random integer between 0 and 7. Using this integer we then compare it in a switch/case statement in order to pick whichever type of allocation should occur. Over 10000 iterations the chance one of them does not is arbitrarily small. In this way we ensure that we hist all of the test case  
+
+
+Workload F
+==========
+
+Description:
+    The goal of this test case is to malloc based on the size of the buckets in our allocation algorithm. We want to make sure that we don't malloc more than the amount of memory we have for each bucket. The workload pseudo-code is as follows;
+
+    For 20,000 iterations
+
+    1. Malloc n (iteration) pointers which are of size MEM_SIZE/5 (because of 5 buckets)
+    2. Check after each malloc whether or not the pointer was null
+        a. If the iteration > 5 and pointer is not null then we should throw an error because our program shouldn't have been able to allocate the memory.
+    3. Free all the pointers in the current iteration
+    5. Go back to 1.
+
