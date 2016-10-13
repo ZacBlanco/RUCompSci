@@ -29,3 +29,6 @@ int get_bytes_malloc();
 
 // Gets the size of a single bucket based on MEM_SIZE
 int get_bucket_size();
+
+static int malloc_count = 0; // The current number of bytes malloc'd
+
