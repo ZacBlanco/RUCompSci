@@ -128,7 +128,7 @@ int isAllocated(int start, int size) {
     //printf("Out of bounds for allocation. Return 0;\n"); //DEBUG
     return 0;
   }
-  
+
   // An integer that tells us if we break due to hitting the MEM_SIZE bounds.
   int broke = 0;
   
@@ -142,7 +142,7 @@ int isAllocated(int start, int size) {
       // printf("i = %i; start = %i, size = %i\n", i, start, size);
       broke = 1;
       break;
-    } else if (memblock[i + MEM_SIZE]) {
+    } else if (memblock[i + MEM_SIZE] != '\0') {
       // printf("memblock[i + MEM_SIZE] != '\\0' ==> %i\n", (memblock[i + MEM_SIZE] != '\0') );
       // printf("The offending char: \"%i\" \n", (int)memblock[i+MEM_SIZE]);
       // printf("BROKE: Breaking isAllocated: i: %i; Start: %i\n", i, start);
