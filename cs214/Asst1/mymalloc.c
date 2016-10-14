@@ -67,7 +67,7 @@ void *mymalloc(size_t size, char* file, int line) {
 
 void myfree(void* x, char* file, int line) {
     int free_count = 0;
-    //Let's call memblock[3500] == allocated[0]
+    //Let's call memblock[MEM_SIZE] == allocated[0]
     //Allocated data is not located at memblock indexes starting @ 3500
     int index = x - (void *)&memblock;
     //printf("Free @ Index: %d; Allocated: %c \n", index, memblock[index + MEM_SIZE]);
@@ -75,7 +75,9 @@ void myfree(void* x, char* file, int line) {
     //Make sure that x lies within (0 - MEM_SIZE)
     if(index > MEM_SIZE || index < 0) {
       //Out of bounds error -can't free memory used that wasn't malloc'd
-      //printf("Unable to free. Pointer was not issued by malloc\n");
+      printf("Unable to free. Pointer was not issued by malloc\n");
+      print_file(file);
+      print_line(line);
       return;
     }
 
@@ -84,6 +86,7 @@ void myfree(void* x, char* file, int line) {
         memblock[index + MEM_SIZE] = '\0';
         free_count++;
         //printf("Freed one byte\n"); //DEBUG
+        malloc_count -= free_count;
     } else if (memblock[index + MEM_SIZE] == 'b') {
       memblock[index + MEM_SIZE] = '\0';
       memblock[index] = '\0';
@@ -104,6 +107,7 @@ void myfree(void* x, char* file, int line) {
       memblock[index] = '\0';
       free_count++;
       //printf("Free'd %d bytes\n", free_count); //DEBUG
+      malloc_count -= free_count;
     } else if (memblock[index + MEM_SIZE] == '\0') {
         printf("Free failed. Memory not was not allocated.\n");
         print_file(file);
@@ -113,7 +117,7 @@ void myfree(void* x, char* file, int line) {
       print_file(file);
       print_line(line);
     }
-    malloc_count -= free_count;
+    // malloc_count -= free_count;
 
 }
 
@@ -211,6 +215,7 @@ void print_line(int line) {
   printf("Occurred on line No.: %d\n", line);
   return;
 }
+
 
 void print_meta() {
   int i;
