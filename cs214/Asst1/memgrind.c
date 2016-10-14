@@ -6,7 +6,7 @@
 void workloadA();
 void workloadB();
 void workloadC();
-void workloadD(int mem_size);
+void workloadD();
 void workloadE();
 void workloadF();
 long get_time();
@@ -64,7 +64,7 @@ int main() {
   // //Run Workload D 100 times;
   init = get_time();
   for (i = 0; i < run_times; i ++) {
-    workloadD(MEM_SIZE);    //printf("%ld\n", tv.tv_usec);
+    workloadD();    //printf("%ld\n", tv.tv_usec);
   }
   stop = get_time();
   //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
@@ -187,7 +187,7 @@ void workloadC() {
 //    A randomly sized malloc
 //    A free
 // Ensure all pointers are freed
-void workloadD(int mem_size) {
+void workloadD() {
   int max_size = 100; //Set a max memory size;
   int bm = 0;
   int freed = 0;
@@ -204,19 +204,13 @@ void workloadD(int mem_size) {
     //attempt random malloc only if:
     //freed < bm AND totalMalloc < 5000;
     //else free the last pointer in the next iteration.
-    int cond =(((r2 < 5 && totalMalloc <= mem_size) || freed >= bm) && bm < MEM_SIZE);
+    int cond =(r2 < 5 ||  freed >= bm);
 
     if (cond) { // Randomly allocate a new block;
       r = (rand() % max_size) + 1; // Produces an int in the range [1, max_size]
       char *p = (char*)malloc(sizeof(char)*r);
-      if(p != NULL) {
-        ptrs[bm] = p;
-        totalMalloc += r;
-        ptrSizes[bm] = r;
-        bm++;
-      } else {
-        i--; //Don't count this loop if it didn't work.
-      }
+      ptrs[bm] = p;
+      bm++;
 
     } else if (freed <= bm){ // Free the last block mallocd
       if (freed > bm) {
@@ -313,7 +307,7 @@ void workloadE() {
 }
 
 // Case F:
-// for 20000 times:
+// for 500 times:
 //   malloc the size of our buckets n times
 //   if we get a pointer that isn't null after the 5th iteration (only 5 buckets)
 //   we need to break because that memory isn't ours
@@ -326,12 +320,12 @@ void workloadF() {
     char *current_pointer;
     int iteration = 20;
     int i, j, malloc_count;
-    for (j = 0; j < 20000; j++) {
+    for (j = 0; j < 500; j++) {
         malloc_count = 0;
         for (i = 0; i < iteration; i++) {
             current_pointer = (char *)malloc(MEM_SIZE / 5);
             if (i > 5 && current_pointer != NULL) {
-                printf("Malloc'd memory that wasn't ours");
+                //printf("Malloc'd memory that wasn't ours");
                 break;
             }
             ptrs[malloc_count] = current_pointer;

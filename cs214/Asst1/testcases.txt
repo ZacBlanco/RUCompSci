@@ -36,7 +36,7 @@ Workload F
 Description:
     The goal of this test case is to malloc based on the size of the buckets in our allocation algorithm. We want to make sure that we don't malloc more than the amount of memory we have for each bucket. The workload pseudo-code is as follows;
 
-    For 20,000 iterations
+    For 500 iterations
 
     1. Malloc n (iteration) pointers which are of size MEM_SIZE/5 (because of 5 buckets)
     2. Check after each malloc whether or not the pointer was null
