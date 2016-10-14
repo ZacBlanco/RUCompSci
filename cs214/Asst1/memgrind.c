@@ -10,92 +10,24 @@ void workloadD();
 void workloadE();
 void workloadF();
 long get_time();
+float workload_time(void (*workload)());
 
 int main() {
-  srand(time(NULL));
-  float run_times = 100.0f;
-  time_t mytime = time(NULL);
-  struct timeval tv = {0, 0};
-  gettimeofday(&tv, NULL); //Puts time into tv
-  //printf("%ld\n", tv.tv_usec);
-  long total = 0;
-  int i = 0; //Iterator
+  
+  float workload[6];
+  workload[0] = workload_time(workloadA);
+  workload[1] = workload_time(workloadB);
+  workload[2] = workload_time(workloadC);
+  workload[3] = workload_time(workloadD);
+  workload[4] = workload_time(workloadE);
+  workload[5] = workload_time(workloadF);
 
-  //Run Workload A 100 times;
-  long init = get_time();
-  //printf("Workload A start time: %ld\n", init);
-  for (i = 0; i < run_times; i ++) {
-    workloadA();    //printf("%ld\n", tv.tv_usec);
+  int i;
+  char workload_name = 'A';
+  for (i = 0; i < 6; i++) {
+      printf("Workload %c Runtime: %.6f Microseconds\n", workload_name, workload[i]);
+      workload_name++;
   }
-  long stop = get_time();
-  //printf("Total Time: %ld microseconds\n", stop - init);
-  //printf("Workload A Stop Time: %ld\n", stop);
-  total = stop - init;
-  float mean = ((float)total)/run_times;
-  printf("Workload A Runtime: %.6f Microseconds\n", mean);
-  
-  //Run Workload B 100 times;
-  init = get_time();  
-  for (i = 0; i < run_times; i ++) {
-    workloadB();    //printf("%ld\n", tv.tv_usec);
-  }
-  stop = get_time();
-  //printf("Total Time: %ld microseconds\n", stop - init);
-  total = stop - init;
-  mean = ((float)total)/run_times;
-  printf("Workload B Runtime: %.6f Microseconds\n", mean);
-  
-  
-  
-  // //Run Workload C 100 times;=
-
-  init = get_time();
-  for (i = 0; i < run_times; i ++) {
-    workloadC();    //printf("%ld\n", tv.tv_usec);
-  }
-  stop = get_time();
-  //printf("Total Time: %ld microseconds\n", stop - init);
-  total = stop - init;
-  mean = ((float)total)/run_times;
-  printf("Workload C Runtime: %.6f Microseconds\n", mean);
-  
-  
-  
-  // //Run Workload D 100 times;
-  init = get_time();
-  for (i = 0; i < run_times; i ++) {
-    workloadD();    //printf("%ld\n", tv.tv_usec);
-  }
-  stop = get_time();
-  //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
-  total = stop - init;
-  mean = ((float)total)/run_times;
-  printf("Workload D Runtime: %.6f Microseconds\n", mean);
-  
-  //Run Workload E 100 times;
-  init = get_time();
-  for (i = 0; i < run_times; i ++) {
-    workloadE();    //printf("%ld\n", tv.tv_usec);
-  }
-  stop = get_time();
-  //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
-  total = stop - init;
-  mean = ((float)total)/run_times;
-  printf("Workload E Runtime: %.6f Microseconds\n", mean);
-
-  
-  //Run Workload F 100 times;
-  init = get_time();
-  for (i = 0; i < run_times; i ++) {
-    workloadF();    //printf("%ld\n", tv.tv_usec);
-  }
-  stop = get_time();
-  //printf("Total Time: %ld microseconds\n", tv.tv_usec - init);
-  total = stop - init;
-  mean = ((float)total)/run_times;
-  printf("Workload F Runtime: %.6f Microseconds\n", mean);
-  
-
 
   return 0;
 }
@@ -107,6 +39,22 @@ long get_time() {
   struct timeval tv = {0, 0};
   gettimeofday(&tv, NULL);
   return tv.tv_sec*(1000000) + tv.tv_usec;
+}
+
+float workload_time(void (*workload)()){
+    long init = get_time();
+    float run_times = 100.0f;
+
+    int i;
+    for (i = 0; i < run_times; i++) {
+        (*workload)();
+    }
+
+    long stop = get_time();
+    long total = stop - init;
+    float mean = ((float)total)/run_times;
+
+    return mean;
 }
 
 // Case A:
