@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "mymalloc.h"
 
+//The memory block.
 static char memblock[MEM_SIZE*2];
 
 // A nice round number to use for bucketing algorithm
@@ -11,7 +12,7 @@ static char memblock[MEM_SIZE*2];
 static int buckets = 5;
 static int c_bucket = 0; // Current bucket
 
-// A Variable only to be modified by the isAllocated method which tells us how far the last search went.
+// A Variable which should only be modified by the isAllocated method which tells us how far the last search went.
 static int isallocated_search_size = 0;
 
 void *mymalloc(size_t size, char* file, int line) {
@@ -30,36 +31,36 @@ void *mymalloc(size_t size, char* file, int line) {
   // start at (c_bucket)*(bucket_size);
   
   int search_start = (c_bucket % buckets)*get_bucket_size(); //Search start
-  // printf("Search Start @ %i\n", search_start);
   int added = 0; // The amount of memory space we've traversed searching for a free contiguous block
   while (added < MEM_SIZE) {
+    
     int s = search_start % MEM_SIZE; // Mod the search start to make sure we don't go past MEM_SIZE
     // printf("Search Start @ %i || Added == %i\n", s, added); //DEBUG
-    if (isAllocated(s, size)) {
-      // printf("Able to allocate %zu blocks at %i in mem\n", size, s); //DEBUG
+    
+    if(s + size > MEM_SIZE) {
+      search_start = 0;
+      added += (MEM_SIZE-s); //Add the difference between current s and MEM_SIZE to the added because we know that further searches to the end won't be successful
+    } else if (isAllocated(s, size)) {
+
+      //Allocate the memory and return the pointer.
       allocate_mem(s, size);
-      //printf("Allocated memory\n"); //DEBUG
       c_bucket++;
-      //printf("Return Pointer: %p\n", &memblock[s]); //DEBUG
-      //printf("Allocated memspace: %s\n", &allocated[s]); //DEBUG
-      // printf("Bytes Allocated: %i\n", malloc_count);
       return &memblock[s];
+
     } else {   
-      //printf("isAllocated @ location %i returned False\n", s); //DEBUG
-      // printf("Number of search locations added: %i\n", isallocated_search_size);
+
       added += isallocated_search_size;
       search_start += isallocated_search_size;
-      //printf("Search_s/mem_size == %i\n", search_start/MEM_SIZE);
+      //If isallocated_search_size is greater than MEM_SIZE, set search start back to the beginning.
       if( search_start / MEM_SIZE >= 1) {
         search_start = 0;
       }
 
-      //printf("ADDED LESS THAN MEMSIZE: %i || added: %i\n", added < MEM_SIZE, added);
     }
   }
-  //printf("Failed to allocate %zu byte(s)\n", size); //DEBUG
-  //print_file(file);
-  //print_line(line);
+  printf("Failed to allocate %zu byte(s)\n", size); //DEBUG
+  print_file(file);
+  print_line(line);
   return NULL;
   
 }
@@ -140,33 +141,31 @@ int isAllocated(int start, int size) {
   //printf("isAllocated @ Index %i: Value: %i; Search Size: %i\n", start, (int)memblock[i+MEM_SIZE], size); //DEBUG
   while(i - start < size) {
     //Break if we go over the bounds
-
     if(i + MEM_SIZE >= MEM_SIZE*2) {
-      // printf("i + start >= MEM_SIZE ==> %i, i+start = %i\n",  (i + start) >= MEM_SIZE, i + start);
-      // printf("i = %i; start = %i, size = %i\n", i, start, size);
       broke = 1;
       break;
+
     } else if (memblock[i + MEM_SIZE] != '\0') {
       // printf("memblock[i + MEM_SIZE] != '\\0' ==> %i\n", (memblock[i + MEM_SIZE] != '\0') );
       // printf("The offending char: \"%i\" \n", (int)memblock[i+MEM_SIZE]);
-      // printf("BROKE: Breaking isAllocated: i: %i; Start: %i\n", i, start);
       break;
     }
     i++;
   }
-  //printf("Went until mem location %i \n", i); //DEBUG
+
   if(broke) {
-    // printf("i > mem_size? %i | i + mem_size: %i \n", i > MEM_SIZE, i + MEM_SIZE);
+    //Set to i-start because i is equal to 5k so we only want to add the amt we searched.
     isallocated_search_size = i-start;
     return 0;
   } else {
     if (i-start == 0) {
+      //End up in an infinite allocation loop if i-start = 0;
       isallocated_search_size = 1;
     } else {
       isallocated_search_size = i-start;
     }
-    //printf("isallocated_search_size == (i - start) == (%i - %i) %i | SIZE: %i\n",i, start, i-start, size);
-    //printf("RETURN: %i\n", (i - start) >= size);
+
+    //Return whether it's possible to allocate
     return ((i - start) >= size);
   }
   
@@ -188,11 +187,10 @@ void allocate_mem(int start, size_t size) {
     memblock[i + MEM_SIZE - 1] = 'e';
     //printf("Malloc of size %zu\n", size);
     //print_memblock(start, size);
-    // malloc_count++;
   }
-  //print_memblock(start, size);
 }
 
+//Prints all the metadata of a memory block section
 void print_memblock(int start, int size) {
   int i;
   printf("Printing Metadata from %i to %i\n...", start, start + size);
@@ -206,17 +204,19 @@ void print_memblock(int start, int size) {
   printf("...\n");
 }
 
+//Print the filename
 void print_file(char* filename) {
   printf("Error in file: %s\n", filename);
   return;
 }
 
+//print the line number.
 void print_line(int line) {
   printf("Occurred on line No.: %d\n", line);
   return;
 }
 
-
+//print all of the metadata
 void print_meta() {
   int i;
   for(i = 0; i < MEM_SIZE; i++) {
@@ -228,7 +228,7 @@ void print_meta() {
   }
   printf("\n");
 }
-
+//return the number of bytes which have been allocated by our malloc.
 int get_bytes_malloc(){
   return malloc_count;  
 }
