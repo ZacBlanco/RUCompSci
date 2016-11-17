@@ -4,13 +4,13 @@ Systems Programming Exam:
 
 - Basic C Syntax
 - Pointers and Memory Management
-  - What pointers?
+  - What are pointers
   - What are memory addresses
   - Pointers and arrays
   - Dereferencing pointers
   - What does ampersand does
   - What does start do
-  - What does the brackets do
+  - What do brackets do
   - What are structs
   - How are structs represented in memory
   - Where is memory allocated and how is it allocated
