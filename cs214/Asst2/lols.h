@@ -4,10 +4,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h> // compile with -pthread
+#include <string.h>
+#include <errno.h>
+#include <ctype.h>
 
 char * lols(char * original_word);
 char * itoa(char * output, int num);
 char * append_string(char * output, int letter_count, char letter);
+int is_number(char * num_string);
+int is_args_valid(int args, char** argv);
+int write_to_file(const const char* str, char* filename);
+char* read_file(char* filename);
 
 /*
  * Takes in a string and compresses it using a modified RLE
@@ -97,5 +105,87 @@ char * append_string(char * output, int letter_count, char letter) {
         
     return output;
 }
+
+// Writes a string to a file
+// returns 0 on failure, 1 on success
+int write_to_file(const char* str, char* filename) {
+    int success = 1; //Assume it to first always be successfull
+    FILE* f = fopen(filename, "w");
+    if (f) { // No error when attempting to open file.
+        if (fputs(str, f) == EOF) { //EOF when error
+            // An Error occurred when writing to file
+            fprintf(stderr, "Error when writing to file %s", filename);
+            success = 0;
+        }
+        fclose(f);
+        // printf("Wrote to file\n");
+    } else {
+        success = 0;
+        fprintf(stderr, "Could not open a pointer to the file %s\n", filename);
+    }
+    
+    return success;
+}
+
+// Returns a char*  (string) with the entire file contents.
+// Returns empty string (single null terminator)
+// Don't forget to free the pointer returned from this function. 
+char* read_file(char* filename) {
+
+    if(filename == NULL) {
+        return NULL;
+    }
+
+    FILE* f = fopen(filename, "r");
+    char* buf;
+    if (f) { // If true opened successfully.
+        fseek(f, 0, SEEK_END);
+        long file_length = ftell(f);
+        fseek(f, 0, SEEK_SET); 
+
+        // printf("File size is %li\n", fsize);
+        buf = malloc(sizeof(char)*(file_length + 1)); // Add 1 for null terminator
+        int chars_read  = fread(buf, sizeof(char), file_length, f);
+        buf[file_length] = '\0'; //Set null terminator as last char
+    } else {
+        printf("Could not open file to read\n");
+        buf = malloc(sizeof(char));
+        *buf = '\0';
+    }
+    return buf;
+}
+
+int is_args_valid(int args, char** argv) {
+    if (args < 3) {
+        fprintf(stderr, "Error - Not enough arguments.\n");
+        return 0;
+    } else if(args > 3) {
+        printf("Warning - too many arguments.\nExtraneous arguments rest will be discarded.\n");
+    }
+    
+    char * file_url = argv[1];
+    int num_of_workers;
+
+    if (is_number(argv[2])) {
+        num_of_workers = atoi(argv[2]);
+    } else {
+        fprintf(stderr, "Error - second argument must be a valid number.\n");
+        return 0;
+    }
+}
+
+
+int is_number(char * num_string) {
+    char character;
+    int i = 0;
+    
+    for (i = 0; i < strlen(num_string); i++) {
+        if (!isdigit(num_string[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 
 #endif
