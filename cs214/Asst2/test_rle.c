@@ -25,7 +25,7 @@ int main() {
     setup();
 
     //Add test methods here
-    example1();
+    // example1();
     //example2();
     //example3();
     //etc....
@@ -42,7 +42,7 @@ void test_file_read_write() {
     char* a = "ABC1234567890DEFGHIJKLMOPQRSTUVWXYZ";
     char* test_file = "test.txt";
 
-    assert(write_to_file(a, test_file), "Should be able to successfully write to a file");
+    assert(write_to_file(a, test_file) == 1, "Should be able to successfully write to a file");
 
     FILE* f1 = fopen(test_file, "r");
     assert(f1 != NULL, "test.txt should exist after writing to file");
@@ -60,7 +60,6 @@ void test_file_read_write() {
     }
 
     free(a2);
-
 }
 
 void test_compresst() {
@@ -72,13 +71,6 @@ void test_compresst() {
 
 }
 
-void example1() {
-    assert(1, "Should be okay");
-    // assert(0, "Should Fail"); //FAILS
-    // assertEqual(2, 3, "This test should fail");
-    assertEqual(5, 5, "This test should pass");
-}
-
 //Perform any setup before running the tests
 void setup() {
     //Add any necessary steps here.
@@ -87,6 +79,20 @@ void setup() {
 // Perform any cleanup after running the tests.
 void teardown() {
     //Add any necessary steps here.
+}
+
+
+
+/* Don't need to worry about this code
+ * Just defines some examples and other code for testings
+ * All tests should be defined *above* this section.
+*/
+
+void example1() {
+    assert(1, "Should be okay");
+    // assert(0, "Should Fail"); //FAILS
+    // assertEqual(2, 3, "This test should fail");
+    assertEqual(5, 5, "This test should pass");
 }
 
 //Print out some summary information

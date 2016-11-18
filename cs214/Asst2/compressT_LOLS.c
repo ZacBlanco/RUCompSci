@@ -1,9 +1,9 @@
 #include "compressT_LOLS.h"
 
-void compressT_LOLS(char * file_url, int num_of_parts) {
+void compressT_LOLS(char * file_url, int num_parts) {
 
     //////////// Check to make sure args are valid ////////////
-    if (num_of_parts <= 0) {
+    if (num_parts <= 0) {
         fprintf(stderr, "Error - Must be split into a positive number");
         return;
     }
@@ -17,36 +17,68 @@ void compressT_LOLS(char * file_url, int num_of_parts) {
     ///////////////////////////////////////////////////////////
 
     // Create n threads 
+    char* file_str = read_file(file_url); // Don't forget to free this
 
-    char* file_str = read_file(file_url);
-    long length = strlen(file_str);
-    int base_len = length / num_of_parts; // Will truncate the decimal values
-    int extra = length - (base_len) * num_of_parts; // Find the difference between length after truncations
-    printf("Extra: %i and Base Len: %i\n", extra, base_len);
-    int start[num_of_parts]; // Indexes where each thread will begin to read.
-    int lengths[num_of_parts]; // Length of string each thread must compress.
-    
-    start[0] = 0;
-    lengths[0] = base_len + extra;
+    CompressionBounds* c = get_indexes(file_str, num_parts); //Don't forget to free this and its members
 
-    printf("String Length: %i\n", length);
     int i;
-    for (i = 1; i < num_of_parts; i++) {
-        start[i] = start[i-1] + lengths[i-1];
-        lengths[i] = base_len;
+    for (i = 0; i < num_parts; i++) {
+        printf("Index: %i, Start index: %i, Length: %i\n", i, c->indexes[i], c->lengths[i]);
+    }
+
+    pthread_t* threads[num_parts];
+
+    i = 0;
+    for(i = 0; i < num_parts; i++) {
+        // It will be up to the worker thread to free this struct since we need one for every thread.
+        // we need to free the filename and the struct for the
+        compression_args* c_args = malloc(sizeof(compression_args));
+        c_args->index = c->indexes[i]
+        c_args->length = c->lengths[i]
+        //c_args->filename = malloc(sizeof(char)*strlen(file_url)) //Need to figure out how long the filename is
+        // Write a function in lols.c to get the filename from the file_url 
+        pthread_create(threads[i], NULL, thread_worker, c_args)
     }
 
 
-    for (i = 0; i < num_of_parts; i++) {
-        printf("Index: %i, Start index: %i, Length: %i\n", i, start[i], lengths[i]);
-    }
-
-    printf("Read string: %s\n", file_str);
 
 
+    free(c->indexes);
+    free(c->lengths);
+    free(c);
+    free(file_str);
 }
 
-void thread_worker(const char* str, int index, int length) {
+// Takes the original (Large) file data, gets a copy of the data and compresses it and writes it to file_name
+void thread_worker(compression_args* ca) {
+    
+    int index      = ca->index;
+    int length     = ca->length;
+    char* str      = ca->str;
+    char* filename = ca->filename;
+    
+    char* orig = malloc(sizeof(char)*length); // Don't forget to free
+    
+    int i;
+    for(i=0; i < length; i++) {
+        orig[i] = str[index + i];
+    }
 
+    char* lold = lols(orig); //Don't forget to free
+
+    //Now we need to write to a file
+    int success = write_to_file(lold, filename);
+    
+    if(success) {
+        //printf("Wrote compressed file");
+    } else {
+        printf("Failed to write compression file");
+    }
+
+
+    free(ca->filename);
+    free(ca);
+    free(orig);
+    free(lold);
 }
 

@@ -169,3 +169,29 @@ int is_number(char * num_string) {
     }
     return 1;
 }
+
+// Returns a CompressionBounds struct (see header file);
+// YOU MUST FREE THE MEMBERS AND THE STRUCT WHEN YOU ARE FINISHED
+CompressionBounds* get_indexes(const char* file_str, const int num_parts) {
+
+    long length = strlen(file_str);
+    int base_len = length / num_parts; // Will truncate the decimal values
+    int extra = length - (base_len) * num_parts; // Find the difference between length after truncations
+
+    CompressionBounds* cb = malloc(sizeof(CompressionBounds));
+    cb->indexes = malloc(sizeof(int)*num_parts); // Indexes where each thread will begin to read.
+    cb->lengths = malloc(sizeof(int)*num_parts); // Length of string each thread must compress.
+    printf("Extra: %i and Base Len: %i\n", extra, base_len);
+    
+    cb->indexes[0] = 0;
+    cb->lengths[0] = base_len + extra;
+
+    printf("String Length: %li\n", length);
+    int i;
+    for (i = 1; i < num_parts; i++) {
+        cb->indexes[i] = cb->indexes[i-1] + cb->lengths[i-1];
+        cb->lengths[i] = base_len;
+    }
+
+    return cb;
+}
