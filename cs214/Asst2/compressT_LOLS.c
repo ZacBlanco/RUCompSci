@@ -31,17 +31,16 @@ void compressT_LOLS(char * file_url, int num_of_parts) {
 
     printf("String Length: %i\n", length);
     int i;
-    for (i = i; i < num_of_parts; i++) {
-        start[i] = start[i-1] + lengths[i-1] + 1;
+    for (i = 1; i < num_of_parts; i++) {
+        start[i] = start[i-1] + lengths[i-1];
         lengths[i] = base_len;
     }
+
 
     for (i = 0; i < num_of_parts; i++) {
         printf("Index: %i, Start index: %i, Length: %i\n", i, start[i], lengths[i]);
     }
 
-
-    printf("Hello World\n");
     printf("Read string: %s\n", file_str);
 
 
