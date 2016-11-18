@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include "lols.h"
-
+#include "compressT_LOLS.h"
 int failed = 0;
 int total_assertions = 0;
 
@@ -18,7 +18,7 @@ int finish();
 
 //Test methods
 void test_file_read_write();
-
+void test_compresst();
 
 int main() {
 
@@ -30,6 +30,7 @@ int main() {
     //example3();
     //etc....
     test_file_read_write();
+    test_compresst();
 
 
     teardown();
@@ -59,6 +60,15 @@ void test_file_read_write() {
     }
 
     free(a2);
+
+}
+
+void test_compresst() {
+
+    char* test_file = "test.txt";
+    write_to_file("wwwoooppppdddeeeddoooooo", test_file);
+    compressT_LOLS(test_file, 2);
+    
 
 }
 
