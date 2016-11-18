@@ -67,7 +67,7 @@ void test_compresst() {
 
     char* test_file = "test.txt";
     write_to_file("wwwoooppppdddeeeddoooooo", test_file);
-    compressT_LOLS(test_file, 2);
+    compressT_LOLS(test_file, 5);
     
 
 }
