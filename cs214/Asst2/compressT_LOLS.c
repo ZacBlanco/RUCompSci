@@ -7,10 +7,18 @@ void compressT_LOLS(char * file_url, int num_parts) {
         fprintf(stderr, "Error - Must be split into a positive number");
         return;
     }
+    
+    if (!is_valid_filename(file_url)) {
+        fprintf(stderr, "Error - filename must end with '.txt'\n");
+        return;
+    }
+
     FILE * file = fopen(file_url, "r");
 
     if (!file) {
         fprintf(stderr, "Error with File(first argument).\n%s\n", strerror(errno));
+        fclose(file);
+        return;
     }
 
     fclose(file);
@@ -33,15 +41,17 @@ void compressT_LOLS(char * file_url, int num_parts) {
         // It will be up to the worker thread to free this struct since we need one for every thread.
         // we need to free the filename and the struct for the
         compression_args* c_args = malloc(sizeof(compression_args));
-        c_args->index = c->indexes[i]
-        c_args->length = c->lengths[i]
-        //c_args->filename = malloc(sizeof(char)*strlen(file_url)) //Need to figure out how long the filename is
+        c_args->index = c->indexes[i];
+        c_args->length = c->lengths[i];
+        c_args->filename = get_filename(file_url, i); //Need to figure out how long the filename is
         // Write a function in lols.c to get the filename from the file_url 
-        pthread_create(threads[i], NULL, thread_worker, c_args)
+        pthread_create(threads[i], NULL, thread_worker, c_args);
     }
 
-
-
+    // Must wait on all threads
+    for (i = 0; i < num_parts; i++) {
+        pthread_join(threads[i], NULL);
+    }
 
     free(c->indexes);
     free(c->lengths);
@@ -80,5 +90,6 @@ void thread_worker(compression_args* ca) {
     free(ca);
     free(orig);
     free(lold);
+    pthread_exit();
 }
 

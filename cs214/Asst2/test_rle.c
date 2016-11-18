@@ -19,6 +19,8 @@ int finish();
 //Test methods
 void test_file_read_write();
 void test_compresst();
+void test_get_filename();
+void test_is_valid_filename();
 
 int main() {
 
@@ -30,6 +32,7 @@ int main() {
     //example3();
     //etc....
     test_file_read_write();
+    test_get_filename();
     test_compresst();
 
 
@@ -62,11 +65,23 @@ void test_file_read_write() {
     free(a2);
 }
 
+void test_get_filename() {
+    char * test_file = "things.txt";
+    char * test_file2 = "otherthings.txt";
+    char * output = get_filename(test_file, 2);
+
+    assert(strcmp(output, "things_txt_LOLS2") == 0, "Should be the same filename");
+    printf("%s\n", output);
+    output = get_filename(test_file2, 4);
+    assert(strcmp(output, "otherthings_txt_LOLS4") == 0, "Should be the same filename");
+    printf("%s\n", output);
+}
+
 void test_compresst() {
 
     char* test_file = "test.txt";
     write_to_file("wwwoooppppdddeeeddoooooo", test_file);
-    compressT_LOLS(test_file, 5);
+    //compressT_LOLS(test_file, 5);
     
 
 }

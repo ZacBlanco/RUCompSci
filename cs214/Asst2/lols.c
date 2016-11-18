@@ -102,8 +102,7 @@ int write_to_file(const char* str, char* filename) {
         }
         fclose(f);
         // printf("Wrote to file\n");
-    } else {
-        success = 0;
+    } else { success = 0;
         fprintf(stderr, "Could not open a pointer to the file %s\n", filename);
     }
     
@@ -194,4 +193,54 @@ CompressionBounds* get_indexes(const char* file_str, const int num_parts) {
     }
 
     return cb;
+}
+
+/*
+ * Returns a string with the filename to write to.
+ * NEEDS TO BE FREE'D WHEN FINISHED.
+ */
+char * get_filename(const char * input_file_name, int num_of_worker) {
+
+    int size_of_string = strlen(input_file_name) + 10; // Add 5 characters for _LOLS, 4 characters for possible integer, and a null value
+    char * output_file_name = (char *)malloc(sizeof(char) * size_of_string);
+
+    char buffer[1000];
+    buffer[0] = '\0';
+
+    char * file_extension = strstr(input_file_name, ".txt");
+    int ext_location = file_extension - input_file_name;
+
+    int i = 0;
+    for (i = 0; i < ext_location; i++) {
+        buffer[i] = input_file_name[i];
+    }
+    buffer[i + 1] = '\0';
+    strcpy(output_file_name, buffer);
+    strcat(output_file_name, "_txt_LOLS");
+    buffer[0] = '\0';
+    strcpy(buffer, itoa(buffer, num_of_worker));
+    strcat(output_file_name, buffer);
+
+    return output_file_name;
+}
+
+/*
+ * Checks to see if the last 4 characters are .txt
+ */
+int is_valid_filename(const char * input_file_name) {
+
+    int txt_location = strlen(input_file_name) - 4;
+    char * file_extension = ".txt";
+
+    char * txt = strstr(input_file_name, file_extension);
+    if (txt == NULL) {
+        return 0;
+    }
+
+    int position = txt - input_file_name;
+    if (position != txt_location) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
