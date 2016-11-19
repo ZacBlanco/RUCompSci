@@ -8,7 +8,7 @@ EXE_ARGS=
 all: rle
 
 clean:
-	rm -rf *.o *.gch $(EXE) $(TEST_EXE)
+	rm -rf *txt_LOLS* *.o *.gch $(EXE) $(TEST_EXE)
 
 test: test_run
 

@@ -26,10 +26,9 @@ void compressT_LOLS(char * file_url, int num_parts) {
 
     // Create n threads 
     char* file_str = read_file(file_url); // Don't forget to free this
-
     CompressionBounds* c = get_indexes(file_str, num_parts); //Don't forget to free this and its members
-
     int i;
+
     for (i = 0; i < num_parts; i++) {
         printf("Index: %i, Start index: %i, Length: %i\n", i, c->indexes[i], c->lengths[i]);
     }
@@ -45,10 +44,11 @@ void compressT_LOLS(char * file_url, int num_parts) {
         compression_args* c_args = malloc(sizeof(compression_args));
         c_args->index = c->indexes[i];
         c_args->length = c->lengths[i];
+        c_args->str = file_str;
         c_args->filename = get_filename(file_url, i); //Need to figure out how long the filename is
         // Write a function in lols.c to get the filename from the file_url 
         // pthread_create(&(threads[i]), NULL, (void *)(&thread_worker)(void *), c_args);
-        printf("Created thread\n");
+        // printf("Created thread\n");
         pthread_create(&(threads[i]), NULL, worker, c_args);
     }
 
@@ -77,16 +77,15 @@ void* thread_worker(compression_args* ca) {
     for(i=0; i < length; i++) {
         orig[i] = str[index + i];
     }
-
     char* lold = lols(orig); //Don't forget to free
 
     //Now we need to write to a file
     int success = write_to_file(lold, filename);
     
     if(success) {
-        printf("Wrote compressed file");
+        // printf("Wrote compressed file\n");
     } else {
-        printf("Failed to write compression file");
+        printf("Failed to write compression file\n");
     }
 
 
@@ -94,6 +93,5 @@ void* thread_worker(compression_args* ca) {
     free(ca);
     free(orig);
     free(lold);
-    // pthread_exit();
 }
 
