@@ -1,5 +1,6 @@
 CC=gcc
-ARGS=-c -pthread
+ARGS=-c
+LIBS=-pthread
 EXE=rle.out
 TEST_EXE=test_rle.out
 EXE_ARGS=
@@ -14,7 +15,7 @@ test: test_run
 debug: gdb_rle
 
 test_run: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c test_rle.o
-	$(CC) -o $(TEST_EXE) lols.o compressR_LOLS.o compressT_LOLS.o test_rle.o
+	$(CC) $(LIBS) -o $(TEST_EXE) lols.o compressR_LOLS.o compressT_LOLS.o test_rle.o
 	./$(TEST_EXE)
 
 clr:

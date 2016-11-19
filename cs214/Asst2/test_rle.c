@@ -21,6 +21,7 @@ void test_file_read_write();
 void test_compresst();
 void test_get_filename();
 void test_is_valid_filename();
+void test_lib_methods();
 
 int main() {
 
@@ -31,6 +32,7 @@ int main() {
     //example2();
     //example3();
     //etc....
+    test_lib_methods();
     test_file_read_write();
     test_get_filename();
     test_compresst();
@@ -83,6 +85,18 @@ void test_compresst() {
     write_to_file("wwwoooppppdddeeeddoooooo", test_file);
     //compressT_LOLS(test_file, 5);
     
+
+}
+
+void test_lib_methods() {
+
+    char* test1 = "./path/to/myfile.txt";
+    char* output = "myfile_txt_LOLS";
+    char* m_out = get_filename(test1);
+    int i;
+    for (i = 0; i < strlen(test1); i++) {
+        assert(test1[i] = m_out[i], "filenames should be equal");
+    }
 
 }
 

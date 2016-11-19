@@ -17,6 +17,6 @@ typedef struct {
 } compression_args;
 
 void compressT_LOLS(char * file_url, int num_of_parts);
-void thread_worker(compression_args* ca);
+void* thread_worker(compression_args* ca);
 
 #endif

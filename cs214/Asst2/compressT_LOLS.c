@@ -60,7 +60,7 @@ void compressT_LOLS(char * file_url, int num_parts) {
 }
 
 // Takes the original (Large) file data, gets a copy of the data and compresses it and writes it to file_name
-void thread_worker(compression_args* ca) {
+void* thread_worker(compression_args* ca) {
     
     int index      = ca->index;
     int length     = ca->length;
