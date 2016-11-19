@@ -47,7 +47,7 @@ char * lols(char * original_word) {
  */
 char * itoa(char * output, int num) {
     int mod = 10;
-    char buffer[1000];
+    char buffer[50];
     buffer[0] = '\0';
     
     while (num != 0) {
@@ -199,29 +199,71 @@ CompressionBounds* get_indexes(const char* file_str, const int num_parts) {
  * Returns a string with the filename to write to.
  * NEEDS TO BE FREE'D WHEN FINISHED.
  */
-char * get_filename(const char * input_file_name, int num_of_worker) {
+char * get_filename(const char * file_url, int num) {
 
-    int size_of_string = strlen(input_file_name) + 10; // Add 5 characters for _LOLS, 4 characters for possible integer, and a null value
-    char * output_file_name = (char *)malloc(sizeof(char) * size_of_string);
+    // int size_of_string = strlen(input_file_name) + 10; // Add 5 characters for _LOLS, 4 characters for possible integer, and a null value
+    // char * output_file_name = (char *)malloc(sizeof(char) * size_of_string);
 
-    char buffer[1000];
-    buffer[0] = '\0';
+    // char buffer[1000];
+    // buffer[0] = '\0';
 
-    char * file_extension = strstr(input_file_name, ".txt");
-    int ext_location = file_extension - input_file_name;
+    // char * file_extension = strstr(input_file_name, ".txt");
+    // int ext_location = file_extension - input_file_name;
 
-    int i = 0;
-    for (i = 0; i < ext_location; i++) {
-        buffer[i] = input_file_name[i];
+    // int i = 0;
+    // for (i = 0; i < ext_location; i++) {
+    //     buffer[i] = input_file_name[i];
+    // }
+    // buffer[i + 1] = '\0';
+    // strcpy(output_file_name, buffer);
+    // strcat(output_file_name, "_txt_LOLS");
+    // buffer[0] = '\0';
+    // strcpy(buffer, itoa(buffer, num_of_worker));
+    // strcat(output_file_name, buffer);
+
+    // return output_file_name;
+
+    int len = strlen(file_url);
+    //find the last occurrence of '/' - if it doesn't exist then we start at index 0
+    int i;
+    int start_index = 0;
+    for(i = len; i >= 0; i--) {
+        if (file_url[i] == '/') {
+            start_index = i + 1;
+            break;
+        }
     }
-    buffer[i + 1] = '\0';
-    strcpy(output_file_name, buffer);
-    strcat(output_file_name, "_txt_LOLS");
-    buffer[0] = '\0';
-    strcpy(buffer, itoa(buffer, num_of_worker));
-    strcat(output_file_name, buffer);
+    int digits = 0;
+    if (num >  0 && num/10 > 1) {
+        digits += 2;
+    } else if (num > 0) {
+        digits++;
+    }
 
-    return output_file_name;
+    int filename_len = len - start_index + digits + 5; // +5 for "_LOLS", +1 for '\0'
+    char* t_lols = "_LOLS";
+    char* filename = malloc(sizeof(char)*(filename_len + 1)); // add one for null terminator
+    for(i = 0; i < filename_len; i++) {
+        if(file_url[i + start_index] == '.') {
+            filename[i] = '_';
+            // printf("Setting underscore char: %c\n", file_url[i+start_index]);
+        } else if (i + start_index > len - 1) {
+            int ind = i + start_index - len;
+            filename[i] = t_lols[i + start_index - len];
+            // printf("Setting LOLS char: %c with index: %i\n", t_lols[ind], ind);
+            // printf("LOLS Filename: %s\n", filename);
+        } else {
+            filename[i] = file_url[i + start_index];
+            // printf("Setting normal char: %c\n", file_url[i+start_index]);
+        }
+    }
+    if (digits > 0) {
+        char* dig = malloc(sizeof(char)*10);
+        sprintf(dig, "%i", num);
+        strcat(filename, dig);
+        free(dig);
+    }    
+    return filename;
 }
 
 /*

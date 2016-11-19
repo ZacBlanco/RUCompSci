@@ -73,17 +73,17 @@ void test_get_filename() {
     char * output = get_filename(test_file, 2);
 
     assert(strcmp(output, "things_txt_LOLS2") == 0, "Should be the same filename");
-    printf("%s\n", output);
+    // printf("%s\n", output);
     output = get_filename(test_file2, 4);
     assert(strcmp(output, "otherthings_txt_LOLS4") == 0, "Should be the same filename");
-    printf("%s\n", output);
+    // printf("%s\n", output);
 }
 
 void test_compresst() {
 
     char* test_file = "test.txt";
     write_to_file("wwwoooppppdddeeeddoooooo", test_file);
-    //compressT_LOLS(test_file, 5);
+    // compressT_LOLS(test_file, 5);
     
 
 }
@@ -92,12 +92,25 @@ void test_lib_methods() {
 
     char* test1 = "./path/to/myfile.txt";
     char* output = "myfile_txt_LOLS";
-    char* m_out = get_filename(test1);
-    int i;
-    for (i = 0; i < strlen(test1); i++) {
-        assert(test1[i] = m_out[i], "filenames should be equal");
-    }
+    char* m_out = get_filename(test1, 0);
+    assert(strcmp(m_out, output) == 0, "Filenames should be equal");
+    free(m_out);
 
+    char* output2 = "myfile_txt_LOLS2";
+    m_out = get_filename(test1, 2);
+    assert(strcmp(m_out, output2) == 0, "Filenames should be equal for 2 parts");
+    free(m_out);
+
+    output2 = "myfile_txt_LOLS100";
+    m_out = get_filename(test1, 100);
+    assert(strcmp(m_out, output2) == 0, "Filenames should be equal for 100");
+    free(m_out);
+
+    output2 = "myfile_txt_LOLS99909";
+    m_out = get_filename(test1, 99909);
+    assert(strcmp(m_out, output2) == 0, "Filenames should be equal for 99909");
+    free(m_out);
+    
 }
 
 //Perform any setup before running the tests

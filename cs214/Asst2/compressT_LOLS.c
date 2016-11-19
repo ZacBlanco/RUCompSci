@@ -34,9 +34,11 @@ void compressT_LOLS(char * file_url, int num_parts) {
         printf("Index: %i, Start index: %i, Length: %i\n", i, c->indexes[i], c->lengths[i]);
     }
 
-    pthread_t* threads[num_parts];
+    pthread_t threads[num_parts];
 
     i = 0;
+    void * (*worker)(void *);
+    worker = thread_worker;
     for(i = 0; i < num_parts; i++) {
         // It will be up to the worker thread to free this struct since we need one for every thread.
         // we need to free the filename and the struct for the
@@ -45,7 +47,9 @@ void compressT_LOLS(char * file_url, int num_parts) {
         c_args->length = c->lengths[i];
         c_args->filename = get_filename(file_url, i); //Need to figure out how long the filename is
         // Write a function in lols.c to get the filename from the file_url 
-        pthread_create(threads[i], NULL, thread_worker, c_args);
+        // pthread_create(&(threads[i]), NULL, (void *)(&thread_worker)(void *), c_args);
+        printf("Created thread\n");
+        pthread_create(&(threads[i]), NULL, worker, c_args);
     }
 
     // Must wait on all threads
@@ -80,7 +84,7 @@ void* thread_worker(compression_args* ca) {
     int success = write_to_file(lold, filename);
     
     if(success) {
-        //printf("Wrote compressed file");
+        printf("Wrote compressed file");
     } else {
         printf("Failed to write compression file");
     }
@@ -90,6 +94,6 @@ void* thread_worker(compression_args* ca) {
     free(ca);
     free(orig);
     free(lold);
-    pthread_exit();
+    // pthread_exit();
 }
 
