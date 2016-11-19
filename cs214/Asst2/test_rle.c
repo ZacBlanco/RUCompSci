@@ -84,13 +84,16 @@ void test_compresst() {
     char* test_file = "test.txt";
     write_to_file("wwwoooppppdddeeeddoooooo", test_file);
     compressT_LOLS(test_file, 5);
+    test_file = "bunchastuff.txt";
+    write_to_file("bbboooddbbod", test_file);
+    compressT_LOLS(test_file, 1);
 
 }
 
 void test_lib_methods() {
 
     char* test1 = "./path/to/myfile.txt";
-    char* output = "myfile_txt_LOLS";
+    char* output = "myfile_txt_LOLS0";
     char* m_out = get_filename(test1, 0);
     assert(strcmp(m_out, output) == 0, "Filenames should be equal");
     free(m_out);

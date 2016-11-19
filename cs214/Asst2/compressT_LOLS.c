@@ -45,7 +45,11 @@ void compressT_LOLS(char * file_url, int num_parts) {
         c_args->index = c->indexes[i];
         c_args->length = c->lengths[i];
         c_args->str = file_str;
-        c_args->filename = get_filename(file_url, i); //Need to figure out how long the filename is
+        if (num_parts == 1) {
+            c_args->filename = get_filename(file_url, -1);
+        } else {
+            c_args->filename = get_filename(file_url, i); //Need to figure out how long the filename is
+        }
         // Write a function in lols.c to get the filename from the file_url 
         // pthread_create(&(threads[i]), NULL, (void *)(&thread_worker)(void *), c_args);
         // printf("Created thread\n");

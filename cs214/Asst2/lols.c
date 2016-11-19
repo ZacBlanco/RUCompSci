@@ -236,7 +236,7 @@ char * get_filename(const char * file_url, int num) {
     int digits = 0;
     if (num >  0 && num/10 > 1) {
         digits += 2;
-    } else if (num > 0) {
+    } else if (num >= 0) {
         digits++;
     }
 
@@ -262,7 +262,7 @@ char * get_filename(const char * file_url, int num) {
         sprintf(dig, "%i", num);
         strcat(filename, dig);
         free(dig);
-    }    
+    } 
     return filename;
 }
 
