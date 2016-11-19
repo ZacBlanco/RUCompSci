@@ -180,12 +180,12 @@ CompressionBounds* get_indexes(const char* file_str, const int num_parts) {
     CompressionBounds* cb = malloc(sizeof(CompressionBounds));
     cb->indexes = malloc(sizeof(int)*num_parts); // Indexes where each thread will begin to read.
     cb->lengths = malloc(sizeof(int)*num_parts); // Length of string each thread must compress.
-    printf("Extra: %i and Base Len: %i\n", extra, base_len);
+    // printf("Extra: %i and Base Len: %i\n", extra, base_len);
     
     cb->indexes[0] = 0;
     cb->lengths[0] = base_len + extra;
 
-    printf("String Length: %li\n", length);
+    // printf("String Length: %li\n", length);
     int i;
     for (i = 1; i < num_parts; i++) {
         cb->indexes[i] = cb->indexes[i-1] + cb->lengths[i-1];
@@ -201,28 +201,6 @@ CompressionBounds* get_indexes(const char* file_str, const int num_parts) {
  */
 char * get_filename(const char * file_url, int num) {
 
-    // int size_of_string = strlen(input_file_name) + 10; // Add 5 characters for _LOLS, 4 characters for possible integer, and a null value
-    // char * output_file_name = (char *)malloc(sizeof(char) * size_of_string);
-
-    // char buffer[1000];
-    // buffer[0] = '\0';
-
-    // char * file_extension = strstr(input_file_name, ".txt");
-    // int ext_location = file_extension - input_file_name;
-
-    // int i = 0;
-    // for (i = 0; i < ext_location; i++) {
-    //     buffer[i] = input_file_name[i];
-    // }
-    // buffer[i + 1] = '\0';
-    // strcpy(output_file_name, buffer);
-    // strcat(output_file_name, "_txt_LOLS");
-    // buffer[0] = '\0';
-    // strcpy(buffer, itoa(buffer, num_of_worker));
-    // strcat(output_file_name, buffer);
-
-    // return output_file_name;
-
     int len = strlen(file_url);
     //find the last occurrence of '/' - if it doesn't exist then we start at index 0
     int i;
@@ -234,7 +212,7 @@ char * get_filename(const char * file_url, int num) {
         }
     }
     int digits = 0;
-    if (num >  0 && num/10 > 1) {
+    if (num >  0 && num/10 >= 1) {
         digits += 2;
     } else if (num >= 0) {
         digits++;
@@ -257,12 +235,13 @@ char * get_filename(const char * file_url, int num) {
             // printf("Setting normal char: %c\n", file_url[i+start_index]);
         }
     }
+    filename[i] = '\0';
     if (digits > 0) {
         char* dig = malloc(sizeof(char)*10);
         sprintf(dig, "%i", num);
         strcat(filename, dig);
         free(dig);
-    } 
+    }
     return filename;
 }
 

@@ -84,15 +84,40 @@ void test_compresst() {
     char* test_file = "test.txt";
     write_to_file("wwwoooppppdddeeeddoooooo", test_file);
     compressT_LOLS(test_file, 5);
+    FILE* one = fopen("test_txt_LOLS0", "r");
+    assert( one != NULL, "File pointer to LOLS0 should exist");
+    fclose(one);
+    one = fopen("test_txt_LOLS1", "r");
+    assert( one != NULL, "File pointer to LOLS1 should exist");
+    fclose(one);
+    one = fopen("test_txt_LOLS2", "r");
+    assert( one != NULL, "File pointer to LOLS2 should exist");
+    fclose(one);
+    one = fopen("test_txt_LOLS3", "r");
+    assert( one != NULL, "File pointer to LOLS3 should exist");
+    fclose(one);
+    one = fopen("test_txt_LOLS4", "r");
+    assert( one != NULL, "File pointer to LOLS4 should exist");
+    fclose(one);
+    
     test_file = "bunchastuff.txt";
     write_to_file("bbboooddbbod", test_file);
     compressT_LOLS(test_file, 1);
+    FILE* two = fopen("bunchastuff_txt_LOLS", "r");
+    assert( two != NULL, "File pointer to compressed file should exist");
+    fclose(two);
+
+    // If you make a dir named 'newdir' this will work.
+    // test_file = "./newdir/test.txt";
+    // write_to_file("Rrrrrrruuuuuuttggggggeeeeerrrrrsssss coooommmmpppuuuuuuuuuuuuuuuuuuuttttteerrrrrrrrssscccciiiiieeeeennnnnceeeee", test_file);
+    // compressT_LOLS(test_file, 2);
 
 }
 
 void test_lib_methods() {
 
     char* test1 = "./path/to/myfile.txt";
+
     char* output = "myfile_txt_LOLS0";
     char* m_out = get_filename(test1, 0);
     assert(strcmp(m_out, output) == 0, "Filenames should be equal");
@@ -111,6 +136,17 @@ void test_lib_methods() {
     output2 = "myfile_txt_LOLS99909";
     m_out = get_filename(test1, 99909);
     assert(strcmp(m_out, output2) == 0, "Filenames should be equal for 99909");
+    free(m_out);
+
+    output2 = "myfile_txt_LOLS";
+    m_out = get_filename(test1, -1);
+    assert(strcmp(m_out, output2) == 0, "Filenames should have no number for < 0");
+    free(m_out);
+
+    char* file2 = "no_slashes_here.txt";
+    output2 = "no_slashes_here_txt_LOLS";
+    m_out = get_filename(file2, -1);
+    assert(strcmp(m_out, output2) == 0, "No slash in filename should still pass");
     free(m_out);
     
 }

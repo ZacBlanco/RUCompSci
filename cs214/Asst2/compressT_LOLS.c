@@ -4,7 +4,7 @@ void compressT_LOLS(char * file_url, int num_parts) {
 
     //////////// Check to make sure args are valid ////////////
     if (num_parts <= 0) {
-        fprintf(stderr, "Error - Must be split into a positive number");
+        fprintf(stderr, "Error - Must have positive number of parts");
         return;
     }
     
@@ -17,7 +17,6 @@ void compressT_LOLS(char * file_url, int num_parts) {
 
     if (!file) {
         fprintf(stderr, "Error with File(first argument).\n%s\n", strerror(errno));
-        fclose(file);
         return;
     }
 
@@ -29,15 +28,15 @@ void compressT_LOLS(char * file_url, int num_parts) {
     CompressionBounds* c = get_indexes(file_str, num_parts); //Don't forget to free this and its members
     int i;
 
-    for (i = 0; i < num_parts; i++) {
-        printf("Index: %i, Start index: %i, Length: %i\n", i, c->indexes[i], c->lengths[i]);
-    }
+    // for (i = 0; i < num_parts; i++) {
+    //     printf("Index: %i, Start index: %i, Length: %i\n", i, c->indexes[i], c->lengths[i]);
+    // }
 
     pthread_t threads[num_parts];
 
     i = 0;
     void * (*worker)(void *);
-    worker = thread_worker;
+    worker = (void *)(&thread_worker);
     for(i = 0; i < num_parts; i++) {
         // It will be up to the worker thread to free this struct since we need one for every thread.
         // we need to free the filename and the struct for the
@@ -50,9 +49,6 @@ void compressT_LOLS(char * file_url, int num_parts) {
         } else {
             c_args->filename = get_filename(file_url, i); //Need to figure out how long the filename is
         }
-        // Write a function in lols.c to get the filename from the file_url 
-        // pthread_create(&(threads[i]), NULL, (void *)(&thread_worker)(void *), c_args);
-        // printf("Created thread\n");
         pthread_create(&(threads[i]), NULL, worker, c_args);
     }
 
