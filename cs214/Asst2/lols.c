@@ -222,14 +222,13 @@ char * get_filename(const char * file_url, int num) {
     char* t_lols = "_LOLS";
     char* filename = malloc(sizeof(char)*(filename_len + 1)); // add one for null terminator
     for(i = 0; i < filename_len; i++) {
-        if(file_url[i + start_index] == '.') {
-            filename[i] = '_';
-            // printf("Setting underscore char: %c\n", file_url[i+start_index]);
-        } else if (i + start_index > len - 1) {
+        if (i + start_index > len - 1) {
             int ind = i + start_index - len;
             filename[i] = t_lols[i + start_index - len];
             // printf("Setting LOLS char: %c with index: %i\n", t_lols[ind], ind);
             // printf("LOLS Filename: %s\n", filename);
+        } else if(file_url[i + start_index] == '.') {
+            filename[i] = '_';
         } else {
             filename[i] = file_url[i + start_index];
             // printf("Setting normal char: %c\n", file_url[i+start_index]);
@@ -264,4 +263,31 @@ int is_valid_filename(const char * input_file_name) {
     } else {
         return 1;
     }
+}
+
+
+//Returns the number of digits in a number
+int get_digits(const int a) {
+    int d = 1;
+    int b = a;
+    while(b >= 10) {
+        b /= 10;
+        d++;
+    }
+    return d;
+}
+
+// converts a string to an integer
+// only works for numbers >= 0
+int c2i(const char* str) {
+    int i = 1;
+    int len = strlen(str);
+    int iter = len - 1;
+    int num = 0;
+    while(iter >= 0) {
+        num += i*((int)str[iter] - '0');
+        i *= 10;
+        iter--;
+    }
+    return num;
 }

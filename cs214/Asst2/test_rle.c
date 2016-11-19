@@ -22,6 +22,7 @@ void test_compresst();
 void test_get_filename();
 void test_is_valid_filename();
 void test_lib_methods();
+void test_compressr();
 
 int main() {
 
@@ -36,7 +37,7 @@ int main() {
     test_file_read_write();
     test_get_filename();
     test_compresst();
-
+    test_compressr();
 
     teardown();
     return finish();
@@ -114,6 +115,15 @@ void test_compresst() {
 
 }
 
+void test_compressr() {
+
+    char* test1 = "zzzzzzaaaaaccccc aaaa nnnnnnnn dddddd mmiiiiikkeeee";
+    char* fname = "compr_t.txt";
+    write_to_file(test1, fname);
+    compressR_LOLS(fname, 3);
+
+}
+
 void test_lib_methods() {
 
     char* test1 = "./path/to/myfile.txt";
@@ -148,6 +158,17 @@ void test_lib_methods() {
     m_out = get_filename(file2, -1);
     assert(strcmp(m_out, output2) == 0, "No slash in filename should still pass");
     free(m_out);
+
+    file2 = "compr_t.txt";
+    output2 = "compr_t_txt_LOLS";
+    m_out = get_filename(file2, -1);
+    assert(strcmp(m_out, output2) == 0, "Interesting case");
+    free(m_out);
+
+    assert(c2i("1234") == 1234, "Nums should be equal");
+    assert(c2i("0") == 0, "Nums should equal zero");
+    assert(c2i("10") == 10, "Nums should equal ten");
+    assert(c2i("104") == 104, "Nums should equal 104");
     
 }
 

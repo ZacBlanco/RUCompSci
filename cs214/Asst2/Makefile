@@ -14,7 +14,7 @@ test: test_run
 
 debug: gdb_rle
 
-test_run: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c test_rle.o
+test_run: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c test_rle.o compressR_worker_LOLS.o
 	$(CC) $(LIBS) -o $(TEST_EXE) lols.o compressR_LOLS.o compressT_LOLS.o test_rle.o
 	./$(TEST_EXE)
 
@@ -28,7 +28,7 @@ compressR_LOLS.o: lols.o
 	$(CC) $(ARGS) compressR_LOLS.c
 
 compressR_worker_LOLS.o: lols.o
-	$(CC) $(ARGS) compressR_worker_LOLS.c
+	$(CC) -o comp_proc compressR_worker_LOLS.c lols.o
 
 lols.o:
 	$(CC) $(ARGS) lols.c

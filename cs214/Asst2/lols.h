@@ -25,6 +25,7 @@ char* read_file(char* filename);
 CompressionBounds* get_indexes(const char* file_str, const int num_parts);
 char * get_filename(const char * input_file_name, int num_of_worker);
 int is_valid_filename(const char * input_file_name);
-
+int get_digits(const int a);
+int c2i(const char* str);
 
 #endif
