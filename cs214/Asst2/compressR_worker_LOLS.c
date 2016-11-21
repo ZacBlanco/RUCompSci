@@ -16,8 +16,12 @@ int main(int argc, char** argv) {
     }
 
     char* fstr = read_file(argv[0]);
-    int ind = c2i(argv[1]);
-    int len = c2i(argv[2]);
+    if (strcmp(fstr, "") == 0) {
+        free(fstr);
+        _Exit(EXIT_FAILURE);
+    }
+    int ind = atoi(argv[1]);
+    int len = atoi(argv[2]);
     char* filename = argv[3];
     // char* sect = malloc()
 

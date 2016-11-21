@@ -25,6 +25,13 @@ void compressT_LOLS(char * file_url, int num_parts) {
 
     // Create n threads 
     char* file_str = read_file(file_url); // Don't forget to free this
+    if (strcmp(file_str, "") == 0) {
+        free(file_str);
+        return;
+    } else if( strlen(file_str) < num_parts) {
+        fprintf(stderr, "Error - too many parts for string.\n");
+        return;
+    }
     CompressionBounds* c = get_indexes(file_str, num_parts); //Don't forget to free this and its members
     int i;
 
@@ -69,6 +76,10 @@ void* thread_worker(compression_args* ca) {
     int index      = ca->index;
     int length     = ca->length;
     char* fstr      = read_file(ca->file);
+    if (strcmp(fstr, "") == 0) {
+        free(fstr);
+        pthread_exit(NULL);
+    }
     char* filename = ca->filename;
     
     char* orig = malloc(sizeof(char)*length); // Don't forget to free

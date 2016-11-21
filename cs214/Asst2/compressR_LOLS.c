@@ -28,6 +28,13 @@ void compressR_LOLS(char * file_url, int num_parts) {
     ///////////////////////////////////////////////////////////
 
     char* file_str = read_file(file_url); // Don't forget to free this
+    if (strcmp(file_str, "") == 0) {
+        free(file_str);
+        return;
+    } else if (strlen(file_str) < num_parts) {
+        fprintf(stderr, "Error - too many splits for string.\n");
+        return;
+    }
     CompressionBounds* c = get_indexes(file_str, num_parts); //Don't forget to free this and its members
     free(file_str);
     pid_t pids[num_parts];

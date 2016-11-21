@@ -17,6 +17,7 @@ typedef struct {
 
 char * lols(char * original_word);
 char * itoa(char * output, int num);
+void reverse_string(char * output);
 char * append_string(char * output, int letter_count, char letter);
 int is_number(char * num_string);
 int is_args_valid(int args, char** argv);

@@ -11,7 +11,9 @@ char * lols(char * original_word) {
     if (string_length == 0 || 
             string_length == 1 || 
             string_length == 2) {
-        return original_word;
+        char * str = (char *)malloc(sizeof(char) * 3);
+        strcpy(str, original_word);
+        return str;
     }
     
     char current_letter, previous_letter;
@@ -58,8 +60,21 @@ char * itoa(char * output, int num) {
         num /= mod;
     }
 
+    reverse_string(output);
+
     return output;
 
+}
+
+void reverse_string(char * output){
+    char * start = output;
+    char * end = output + strlen(output) - 1;
+
+    while(start < end) {
+        char tmp = *start;
+        *start++ = *end;
+        *end-- = tmp;
+    }
 }
 
 /*
@@ -128,6 +143,12 @@ char* read_file(char* filename) {
         // printf("File size is %li\n", fsize);
         buf = malloc(sizeof(char)*(file_length + 1)); // Add 1 for null terminator
         int chars_read  = fread(buf, sizeof(char), file_length, f);
+        if (chars_read <= 0) {
+            fprintf(stderr, "No characters read. Empty file.\n");
+            buf = malloc(sizeof(char));
+            *buf = '\0';
+            return buf;
+        }
         buf[file_length] = '\0'; //Set null terminator as last char
     } else {
         printf("Could not open file to read\n");

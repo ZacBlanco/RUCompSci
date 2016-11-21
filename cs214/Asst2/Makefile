@@ -37,7 +37,7 @@ test_rle.o:
 	$(CC) $(ARGS) test_rle.c
 
 gdb_rle: gdb_test_rle.o
-	$(CC) -g $(EXE_ARGS) -o $(EXE) lols.o test_rle.o compressT_LOLS.o compressR_worker_LOLS.o compressR_LOLS.o 
+	$(CC) -g $(LIBS) $(EXE_ARGS) -o $(EXE) lols.o test_rle.o compressT_LOLS.o compressR_LOLS.o 
 
 gdb_compressT_LOLS.o: gdb_lols.o
 	$(CC) -g $(ARGS) compressT_LOLS.c

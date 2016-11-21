@@ -102,11 +102,31 @@ void test_compresst() {
     fclose(one);
     
     test_file = "bunchastuff.txt";
-    write_to_file("bbboooddbbod", test_file);
+    write_to_file("bb   boooddbbod", test_file);
     compressT_LOLS(test_file, 1);
     FILE* two = fopen("bunchastuff_txt_LOLS", "r");
     assert( two != NULL, "File pointer to compressed file should exist");
     fclose(two);
+
+    //printf("-------------------------\nTesting unexisting file.\n-------------------------\n");
+    test_file = "thisdoesnotexist.txt";
+    compressT_LOLS(test_file, 2);
+
+    //printf("-------------------------\nTesting bad file.\n-------------------------\n");
+    test_file = "badfile.jpg";
+    compressT_LOLS(test_file, 3);
+
+    //printf("-------------------------\nTesting empty file.\n-------------------------\n");
+    test_file = "emptyfile.txt";
+    compressT_LOLS(test_file, 2);
+
+    //printf("-------------------------\nTesting large split.\n-------------------------\n");
+    test_file = "bunchastuff.txt";
+    compressT_LOLS(test_file, 300);
+
+    //printf("-------------------------\nTesting exact split.\n-------------------------\n");
+    test_file = "10a.txt";
+    compressT_LOLS(test_file, 10);
 
     // If you make a dir named 'newdir' this will work.
     // test_file = "./newdir/test.txt";
@@ -121,6 +141,31 @@ void test_compressr() {
     char* fname = "compr_t.txt";
     write_to_file(test1, fname);
     compressR_LOLS(fname, 3);
+    char * test_file = "aaaaaaaaaa";
+    fname = "10a.txt";
+    write_to_file(test_file, fname);
+    compressR_LOLS(fname, 1);
+
+    //printf("-------------------------\nTesting unexisting file.\n-------------------------\n");
+    test_file = "thisdoesnotexist.txt";
+    compressR_LOLS(test_file, 2);
+
+    //printf("-------------------------\nTesting bad file.\n-------------------------\n");
+    test_file = "badfile.jpg";
+    compressR_LOLS(test_file, 3);
+
+    //printf("-------------------------\nTesting empty file.\n-------------------------\n");
+    test_file = "emptyfile.txt";
+    compressR_LOLS(test_file, 2);
+
+    //printf("-------------------------\nTesting large split.\n-------------------------\n");
+    test_file = "bunchastuff.txt";
+    compressR_LOLS(test_file, 300);
+
+    //printf("-------------------------\nTesting exact split.\n-------------------------\n");
+    test_file = "10a.txt";
+    compressR_LOLS(test_file, 10);
+
 
 }
 
