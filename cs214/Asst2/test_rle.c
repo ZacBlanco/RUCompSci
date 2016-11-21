@@ -83,13 +83,11 @@ void test_get_filename() {
     assert(strcmp(output, "things_txt_LOLS2") == 0, "Should be the same filename for LOLS2");
     free(output);
     // printf("%s\n", output);
-    free(output);
     output = get_filename(test_file2, 4);
     assert(strcmp(output, "otherthings_txt_LOLS4") == 0, "Should be the same filename for LOLS4");
     free(output);
     // printf("%s\n", output);
 
-    free(output);
 }
 
 void test_compresst() {
@@ -204,11 +202,6 @@ void test_compressr() {
 }
 
 void test_lib_methods() {
-
-    // int k;
-    // for(k=10; k > 0;k--){
-    //     printf("%i", k);
-    // }
     char* test1 = "./path/to/myfile.txt";
 
     char* output = "myfile_txt_LOLS0";
