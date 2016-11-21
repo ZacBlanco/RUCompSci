@@ -13,5 +13,6 @@ cs214/**/*.o
 cs214/Asst1.tar.gz
 cs214/Asst2/test.txt
 cs214/Asst2/bunchastuff.txt
-cs214/Asst2/comp_proc.bin
 cs214/Asst2/10a.txt
+cs214/Asst2/comp_proc
+cs214/Asst2/comp_proc.bin

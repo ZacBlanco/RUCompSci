@@ -65,7 +65,7 @@ void compressR_LOLS(char * file_url, int num_parts) {
             sprintf(index, "%i", ind);
             sprintf(length, "%i", len);
             // printf("I'm about to Exec\n");
-            execl("./comp_proc", file_url, index, length, filename, NULL);
+            execl("./comp_proc.bin", file_url, index, length, filename, NULL);
             exit(1);
         } else if (f == -1) {
             printf("Child processe(s) could not be created. Aborting...\n");

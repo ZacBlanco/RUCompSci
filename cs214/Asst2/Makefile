@@ -28,7 +28,7 @@ compressR_LOLS.o: lols.o
 	$(CC) $(ARGS) compressR_LOLS.c
 
 compressR_worker_LOLS.o: lols.o
-	$(CC) -o comp_proc compressR_worker_LOLS.c lols.o
+	$(CC) -o comp_proc.bin  compressR_worker_LOLS.c lols.o
 
 lols.o:
 	$(CC) $(ARGS) lols.c
