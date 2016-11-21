@@ -17,7 +17,7 @@ char * lols(char * original_word) {
     }
     
     char current_letter, previous_letter;
-    char * compressed_string = (char *)malloc(sizeof(char) * string_length);
+    char * compressed_string = (char *)malloc(sizeof(char) *(string_length + 1));
     compressed_string[0] = '\0';
     int i = 1, letter_count = 1;
     previous_letter = original_word[0];
@@ -48,7 +48,6 @@ char * itoa(char * output, int num) {
     int mod = 10;
     char buffer[50];
     buffer[0] = '\0';
-    
     while (num != 0) {
         char c = (num % mod) + '0';
         buffer[0] = c;
@@ -56,8 +55,9 @@ char * itoa(char * output, int num) {
         strcat(output, buffer);
         num /= mod;
     }
-
+    // printf("itoa non reversed: %s", output);
     reverse_string(output);
+    // printf("itoa reversed: %s\n", output);
 
     return output;
 
@@ -91,8 +91,14 @@ char * append_string(char * output, int letter_count, char letter) {
         strcat(output, buffer);
         return output;
     }
-
-    strcpy(buffer, itoa(buffer, letter_count));
+    int digits = get_digits(letter_count);
+    char* it = malloc(sizeof(char)*(digits + 2) );
+    it[0] = '\0';
+    it[digits] = '\0';
+    strcpy(buffer, itoa(it, letter_count));
+    // printf("it[0] %c; it[1] %c\n", it[0], it[1]);
+    // printf("strcpy buffer: %s\n", buffer);
+    free(it);
     strcat(output, buffer);
     buffer[0] = letter;
     buffer[1] = '\0';

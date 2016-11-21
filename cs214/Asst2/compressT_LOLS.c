@@ -73,15 +73,14 @@ void compressT_LOLS(char * file_url, int num_parts) {
 // Takes the original (Large) file data, gets a copy of the data and compresses it and writes it to file_name
 void* thread_worker(compression_args* ca) {
     
-    int index      = ca->index;
-    int length     = ca->length;
+    int index       = ca->index;
+    int length      = ca->length;
     char* fstr      = read_file(ca->file);
 
     if (strcmp(fstr, "") == 0) {
         free(fstr);
         free(ca->filename);
         free(ca);
-        pthread_exit(NULL);
         return;
     }
 
@@ -101,10 +100,8 @@ void* thread_worker(compression_args* ca) {
 
     free(fstr);
     free(ca->filename);
-    // printf("ca->file ptr: %p --- %s\n", ca->file, ca->file);
     free(ca);
     free(orig);
     free(lold);
-    pthread_exit(0);
 }
 
