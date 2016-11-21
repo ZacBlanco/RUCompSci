@@ -10,7 +10,7 @@
 
 
 typedef struct {
-    char* str;
+    char* file;
     int index;
     int length;
     char* filename;

@@ -43,7 +43,7 @@ void compressT_LOLS(char * file_url, int num_parts) {
         compression_args* c_args = malloc(sizeof(compression_args));
         c_args->index = c->indexes[i];
         c_args->length = c->lengths[i];
-        c_args->str = file_str;
+        c_args->file = file_url;
         if (num_parts == 1) {
             c_args->filename = get_filename(file_url, -1);
         } else {
@@ -68,15 +68,12 @@ void* thread_worker(compression_args* ca) {
     
     int index      = ca->index;
     int length     = ca->length;
-    char* str      = ca->str;
+    char* fstr      = read_file(ca->file);
     char* filename = ca->filename;
     
     char* orig = malloc(sizeof(char)*length); // Don't forget to free
     
-    int i;
-    for(i=0; i < length; i++) {
-        orig[i] = str[index + i];
-    }
+    strncpy(orig, (fstr + index), length);
     char* lold = lols(orig); //Don't forget to free
 
     //Now we need to write to a file
