@@ -18,10 +18,9 @@ char * lols(char * original_word) {
     
     char current_letter, previous_letter;
     char * compressed_string = (char *)malloc(sizeof(char) * string_length);
+    compressed_string[0] = '\0';
     int i = 1, letter_count = 1;
-    
     previous_letter = original_word[0];
-
     for (i = 1; i < string_length; i++) {
         current_letter = original_word[i];
 		
@@ -38,9 +37,7 @@ char * lols(char * original_word) {
             letter_count = 1;
         }
     }
-
     compressed_string = append_string(compressed_string, letter_count, previous_letter);
-    
     return compressed_string;
 }
 
@@ -145,14 +142,15 @@ char* read_file(char* filename) {
         int chars_read  = fread(buf, sizeof(char), file_length, f);
         if (chars_read <= 0) {
             fprintf(stderr, "No characters read. Empty file.\n");
-            buf = malloc(sizeof(char));
+            buf = realloc(buf, sizeof(char));
             *buf = '\0';
             return buf;
         }
         buf[file_length] = '\0'; //Set null terminator as last char
+        fclose(f);
     } else {
         printf("Could not open file to read\n");
-        buf = malloc(sizeof(char));
+        buf = realloc(buf, sizeof(char));
         *buf = '\0';
     }
     return buf;
@@ -226,7 +224,7 @@ char * get_filename(const char * file_url, int num) {
     //find the last occurrence of '/' - if it doesn't exist then we start at index 0
     int i;
     int start_index = 0;
-    for(i = len; i >= 0; i--) {
+    for(i = len - 1; i >= 0; i--) {
         if (file_url[i] == '/') {
             start_index = i + 1;
             break;
@@ -234,12 +232,13 @@ char * get_filename(const char * file_url, int num) {
     }
     int digits = 0;
     if (num >  0 && num/10 >= 1) {
-        digits += 2;
+        digits += get_digits(num);
     } else if (num >= 0) {
         digits++;
     }
 
     int filename_len = len - start_index + digits + 5; // +5 for "_LOLS", +1 for '\0'
+    
     char* t_lols = "_LOLS";
     char* filename = malloc(sizeof(char)*(filename_len + 1)); // add one for null terminator
     for(i = 0; i < filename_len; i++) {
@@ -255,10 +254,11 @@ char * get_filename(const char * file_url, int num) {
             // printf("Setting normal char: %c\n", file_url[i+start_index]);
         }
     }
+
     filename[i] = '\0';
     if (digits > 0) {
         char* dig = malloc(sizeof(char)*10);
-        sprintf(dig, "%i", num);
+        sprintf(dig, "%i\0", num);
         strcat(filename, dig);
         free(dig);
     }

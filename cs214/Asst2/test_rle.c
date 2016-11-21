@@ -23,6 +23,7 @@ void test_get_filename();
 void test_is_valid_filename();
 void test_lib_methods();
 void test_compressr();
+void test_lols();
 
 int main() {
 
@@ -33,14 +34,24 @@ int main() {
     //example2();
     //example3();
     //etc....
+    test_lols();
     test_lib_methods();
     test_file_read_write();
     test_get_filename();
     test_compresst();
-    test_compressr();
+    // test_compressr();
 
     teardown();
     return finish();
+}
+
+void test_lols() {
+
+    char* str1 = "aaabbbccc";
+    char* a1 = lols(str1);
+    assert(strcmp(a1, "3a3b3c") == 0, "aaabbbccc should lols to 3a3b3c");
+    free(a1);
+
 }
 
 void test_file_read_write() {
@@ -72,11 +83,12 @@ void test_get_filename() {
     char * test_file = "things.txt";
     char * test_file2 = "otherthings.txt";
     char * output = get_filename(test_file, 2);
-
-    assert(strcmp(output, "things_txt_LOLS2") == 0, "Should be the same filename");
+    assert(strcmp(output, "things_txt_LOLS2") == 0, "Should be the same filename for LOLS2");
+    free(output);
     // printf("%s\n", output);
     output = get_filename(test_file2, 4);
-    assert(strcmp(output, "otherthings_txt_LOLS4") == 0, "Should be the same filename");
+    assert(strcmp(output, "otherthings_txt_LOLS4") == 0, "Should be the same filename for LOLS4");
+    free(output);
     // printf("%s\n", output);
 }
 
@@ -88,12 +100,26 @@ void test_compresst() {
     FILE* one = fopen("test_txt_LOLS0", "r");
     assert( one != NULL, "File pointer to LOLS0 should exist");
     fclose(one);
+    char* f = read_file("test_txt_LOLS0");
+    assert(strcmp(f, "3w3opp") == 0, "First section should be '3w3opp'");
+    // printf("Got: %s\n", f);
+    free(f);
+
     one = fopen("test_txt_LOLS1", "r");
     assert( one != NULL, "File pointer to LOLS1 should exist");
     fclose(one);
+    f = read_file("test_txt_LOLS1");
+    assert(strcmp(f, "ppdd") == 0, "First section should be 'ppee'");
+    // printf("Got: %s\n", f);
+    free(f);
+
     one = fopen("test_txt_LOLS2", "r");
     assert( one != NULL, "File pointer to LOLS2 should exist");
     fclose(one);
+    f = read_file("test_txt_LOLS2");
+    assert(strcmp(f, "d3e") == 0, "First section should be 'd3e'");
+    free(f);
+
     one = fopen("test_txt_LOLS3", "r");
     assert( one != NULL, "File pointer to LOLS3 should exist");
     fclose(one);
@@ -171,6 +197,10 @@ void test_compressr() {
 
 void test_lib_methods() {
 
+    // int k;
+    // for(k=10; k > 0;k--){
+    //     printf("%i", k);
+    // }
     char* test1 = "./path/to/myfile.txt";
 
     char* output = "myfile_txt_LOLS0";

@@ -82,9 +82,9 @@ void* thread_worker(compression_args* ca) {
     }
     char* filename = ca->filename;
     
-    char* orig = malloc(sizeof(char)*length); // Don't forget to free
-    
+    char* orig = malloc(sizeof(char)*(length + 1)); // Don't forget to free
     strncpy(orig, (fstr + index), length);
+    orig[length] = '\0';
     char* lold = lols(orig); //Don't forget to free
 
     //Now we need to write to a file
