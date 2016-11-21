@@ -53,9 +53,7 @@ void test_file_read_write() {
     FILE* f1 = fopen(test_file, "r");
     assert(f1 != NULL, "test.txt should exist after writing to file");
     fclose(f1);
-
     char* a2 = read_file(test_file);
-    // printf("%s\n", a2);
     assert(strlen(a2) == strlen(a), "Written and read strings should be the same size.");
     if (strlen(a2) == strlen(a)) {
         int l  = strlen(a);
@@ -64,7 +62,6 @@ void test_file_read_write() {
             assert(a[i] == a2[i], "File read and write characters not equal");
         }
     }
-
     free(a2);
 }
 
@@ -75,9 +72,12 @@ void test_get_filename() {
 
     assert(strcmp(output, "things_txt_LOLS2") == 0, "Should be the same filename");
     // printf("%s\n", output);
+    free(output);
     output = get_filename(test_file2, 4);
     assert(strcmp(output, "otherthings_txt_LOLS4") == 0, "Should be the same filename");
     // printf("%s\n", output);
+
+    free(output);
 }
 
 void test_compresst() {
@@ -85,9 +85,11 @@ void test_compresst() {
     char* test_file = "test.txt";
     write_to_file("wwwoooppppdddeeeddoooooo", test_file);
     compressT_LOLS(test_file, 5);
+    
     FILE* one = fopen("test_txt_LOLS0", "r");
     assert( one != NULL, "File pointer to LOLS0 should exist");
     fclose(one);
+
     one = fopen("test_txt_LOLS1", "r");
     assert( one != NULL, "File pointer to LOLS1 should exist");
     fclose(one);
@@ -137,10 +139,17 @@ void test_compresst() {
 
 void test_compressr() {
 
+    /* Basic Test of Process Compression */
     char* test1 = "zzzzzzaaaaaccccc aaaa nnnnnnnn dddddd mmiiiiikkeeee";
     char* fname = "compr_t.txt";
     write_to_file(test1, fname);
     compressR_LOLS(fname, 3);
+    char* inp = read_file("compr_t_txt_LOLS0");
+    assert(strcmp("6z5a5c", inp) == 0, "Strings should be equal.");
+    free(inp);
+    inp = read_file("compr_t_txt_LOLS1");
+    assert(strcmp("4a8n3d", inp) == 0, "Strings should be equal.");
+    free(inp);
     char * test_file = "aaaaaaaaaa";
     fname = "10a.txt";
     write_to_file(test_file, fname);
@@ -226,7 +235,6 @@ void setup() {
 void teardown() {
     //Add any necessary steps here.
 }
-
 
 
 /* Don't need to worry about this code

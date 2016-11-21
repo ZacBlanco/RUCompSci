@@ -144,13 +144,16 @@ char* read_file(char* filename) {
         buf = malloc(sizeof(char)*(file_length + 1)); // Add 1 for null terminator
         int chars_read  = fread(buf, sizeof(char), file_length, f);
         if (chars_read <= 0) {
+            free(buf);
             fprintf(stderr, "No characters read. Empty file.\n");
             buf = malloc(sizeof(char));
             *buf = '\0';
             return buf;
         }
         buf[file_length] = '\0'; //Set null terminator as last char
+        fclose(f);
     } else {
+        free(buf);
         printf("Could not open file to read\n");
         buf = malloc(sizeof(char));
         *buf = '\0';
@@ -234,7 +237,11 @@ char * get_filename(const char * file_url, int num) {
     }
     int digits = 0;
     if (num >  0 && num/10 >= 1) {
-        digits += 2;
+        char* c1 = malloc(10*sizeof(char));
+        sprintf(c1, "%i", num);
+        // printf("num: %i, length num: %i\n", num, strlen(c1));
+        digits += strlen(c1);
+        free(c1);
     } else if (num >= 0) {
         digits++;
     }

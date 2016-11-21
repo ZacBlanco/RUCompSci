@@ -30,11 +30,12 @@ void compressT_LOLS(char * file_url, int num_parts) {
         return;
     } else if( strlen(file_str) < num_parts) {
         fprintf(stderr, "Error - too many parts for string.\n");
+        free(file_str);
         return;
     }
     CompressionBounds* c = get_indexes(file_str, num_parts); //Don't forget to free this and its members
+    free(file_str);
     int i;
-
     // for (i = 0; i < num_parts; i++) {
     //     printf("Index: %i, Start index: %i, Length: %i\n", i, c->indexes[i], c->lengths[i]);
     // }
@@ -67,7 +68,6 @@ void compressT_LOLS(char * file_url, int num_parts) {
     free(c->indexes);
     free(c->lengths);
     free(c);
-    free(file_str);
 }
 
 // Takes the original (Large) file data, gets a copy of the data and compresses it and writes it to file_name
@@ -76,30 +76,35 @@ void* thread_worker(compression_args* ca) {
     int index      = ca->index;
     int length     = ca->length;
     char* fstr      = read_file(ca->file);
+
     if (strcmp(fstr, "") == 0) {
         free(fstr);
+        free(ca->filename);
+        free(ca);
         pthread_exit(NULL);
+        return;
     }
+
     char* filename = ca->filename;
-    
     char* orig = malloc(sizeof(char)*length); // Don't forget to free
-    
     strncpy(orig, (fstr + index), length);
+    // printf("Orig: %s\n", orig);
     char* lold = lols(orig); //Don't forget to free
 
     //Now we need to write to a file
     int success = write_to_file(lold, filename);
-    
     if(success) {
         // printf("Wrote compressed file\n");
     } else {
         printf("Failed to write compression file\n");
     }
 
-
+    free(fstr);
     free(ca->filename);
+    // printf("ca->file ptr: %p --- %s\n", ca->file, ca->file);
     free(ca);
     free(orig);
     free(lold);
+    pthread_exit(0);
 }
 
