@@ -147,16 +147,15 @@ char* read_file(char* filename) {
         buf = malloc(sizeof(char)*(file_length + 1)); // Add 1 for null terminator
         int chars_read  = fread(buf, sizeof(char), file_length, f);
         if (chars_read <= 0) {
-            free(buf);
             fprintf(stderr, "No characters read. Empty file.\n");
             buf = realloc(buf, sizeof(char));
             *buf = '\0';
+            fclose(f);
             return buf;
         }
         buf[file_length] = '\0'; //Set null terminator as last char
         fclose(f);
     } else {
-        free(buf);
         printf("Could not open file to read\n");
         buf = realloc(buf, sizeof(char));
         *buf = '\0';
