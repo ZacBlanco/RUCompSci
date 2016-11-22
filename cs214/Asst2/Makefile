@@ -8,7 +8,7 @@ EXE_ARGS=
 all: lols
 
 clean:
-	rm -rf *txt_LOLS* *.o *.gch $(EXE) $(TEST_EXE)
+	rm -rf *txt_LOLS* *.o *.gch *.bin $(EXE) $(TEST_EXE)
 
 test: test_run
 
