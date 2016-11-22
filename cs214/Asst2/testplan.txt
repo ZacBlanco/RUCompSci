@@ -31,5 +31,5 @@ Testing Large String
 We tested an extremely large string to see if it would compress.
 
 **************************************
-* FOR MORE TEST CASES SEE test_rle.c *
+* FOR MORE TEST CASES SEE test_lols.c *
 **************************************

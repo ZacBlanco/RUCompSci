@@ -159,6 +159,11 @@ void test_lols() {
     assert(strcmp(a1, "a") == 0, "234982734092742347 a should lols to a");
     free(a1);
 
+    str1 = "123456789/.,';\\][=-`~?><:\"]'|}{+_)(*&^%$#@!)}";
+    a1 = lols(str1);
+    assert(strcmp(a1, "") == 0, "All nonalpha characters should be ignored.");
+    free(a1);
+
 }
 
 void test_file_read_write() {
@@ -411,7 +416,7 @@ int finish() {
 void lassert(int c1, char* msg, int line) {
     if(!c1) {
         printf("============================================\n");
-        printf("Assert condition failed %i != 1. on line %i of test_rle\n", c1, line);
+        printf("Assert condition failed %i != 1. on line %i of test_lols\n", c1, line);
         printf("%s\n", msg);
         printf("============================================\n");
         failed++;
@@ -424,7 +429,7 @@ void lassertEqual(int c1, int c2, char* msg, int line) {
     total_assertions++;
     if(c1 != c2) {
         printf("============================================\n");
-        printf("Assert condition failed %i != %i on line %i of test_rle\n", c1, c2, line);
+        printf("Assert condition failed %i != %i on line %i of test_lols\n", c1, c2, line);
         printf("%s\n", msg);
         printf("============================================\n");
         failed++;

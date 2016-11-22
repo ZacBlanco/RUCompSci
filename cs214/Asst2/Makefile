@@ -2,7 +2,7 @@ CC=gcc
 ARGS=-c
 LIBS=-pthread
 EXE=rle.out
-TEST_EXE=test_rle.out
+TEST_EXE=test_lols.out
 EXE_ARGS=
 
 all: lols
@@ -14,15 +14,15 @@ test: test_run
 
 debug: gdb_lols
 
-test_run: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c test_rle.o compressR_worker_LOLS.o
-	$(CC) $(LIBS) -o $(TEST_EXE) lols.o compressR_LOLS.o compressT_LOLS.o test_rle.o
+test_run: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c test_lols.o compressR_worker_LOLS.o
+	$(CC) $(LIBS) -o $(TEST_EXE) lols.o compressR_LOLS.o compressT_LOLS.o test_lols.o
 	./$(TEST_EXE)
 
 clr:
 	clear
 
-lols: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c test_rle.o compressR_worker_LOLS.o
-	$(CC) $(LIBS) -o $(TEST_EXE) lols.o compressR_LOLS.o compressT_LOLS.o test_rle.o
+lols: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c test_lols.o compressR_worker_LOLS.o
+	$(CC) $(LIBS) -o $(TEST_EXE) lols.o compressR_LOLS.o compressT_LOLS.o test_lols.o
 
 
 compressT_LOLS.o: lols.o
@@ -37,11 +37,11 @@ compressR_worker_LOLS.o: lols.o
 lols.o:
 	$(CC) $(ARGS) lols.c
 
-test_rle.o:
-	$(CC) $(ARGS) test_rle.c
+test_lols.o:
+	$(CC) $(ARGS) test_lols.c
 
-gdb_lols: gdb_test_rle.o
-	$(CC) -g $(LIBS) $(EXE_ARGS) -o $(EXE) lols.o test_rle.o compressT_LOLS.o compressR_LOLS.o 
+gdb_lols: gdb_test_lols.o
+	$(CC) -g $(LIBS) $(EXE_ARGS) -o $(EXE) lols.o test_lols.o compressT_LOLS.o compressR_LOLS.o 
 
 gdb_compressT_LOLS.o: gdb_lols.o
 	$(CC) -g $(ARGS) compressT_LOLS.c
@@ -52,8 +52,8 @@ gdb_compressR_LOLS.o: gdb_lols.o
 gdb_compressR_worker_LOLS.o: gdb_lols.o
 	$(CC) -g $(ARGS) compressR_worker_LOLS.c
 
-gdb_test_rle.o: gdb_compressT_LOLS.o gdb_compressR_worker_LOLS.o gdb_compressR_LOLS.o
-	$(CC) -g $(ARGS) test_rle.c
+gdb_test_lols.o: gdb_compressT_LOLS.o gdb_compressR_worker_LOLS.o gdb_compressR_LOLS.o
+	$(CC) -g $(ARGS) test_lols.c
 
 gdb_lols.o:
 	$(CC) -g $(ARGS) lols.c
