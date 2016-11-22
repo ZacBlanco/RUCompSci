@@ -32,11 +32,13 @@ void compressR_LOLS(char * file_url, int num_parts) {
         free(file_str);
         return;
     } else if (strlen(file_str) < num_parts) {
+        free(file_str);
         fprintf(stderr, "Error - too many splits for string.\n");
         return;
     }
     CompressionBounds* c = get_indexes(file_str, num_parts); //Don't forget to free this and its members
     free(file_str);
+    
     pid_t pids[num_parts];
     int is_parent = 1;
     int i;
@@ -80,7 +82,14 @@ void compressR_LOLS(char * file_url, int num_parts) {
             // printf("waiting on %i\n", pids[i]);
             waitpid(pids[i], &a, 0);
         }
+
+        free(c->indexes);
+        free(c->lengths);
+        free(c);
+
+        return;
     }
+    return;
     
     
 }
