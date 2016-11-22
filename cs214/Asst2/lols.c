@@ -252,20 +252,19 @@ char * get_filename(const char * file_url, int num) {
         digits++;
     }
 
-    int filename_len = len - start_index + digits + 5; // +5 for "_LOLS", +1 for '\0'
+    int filename_len = len + digits + 5; // +5 for "_LOLS", +1 for '\0'
     
     char* t_lols = "_LOLS";
     char* filename = malloc(sizeof(char)*(filename_len + 1)); // add one for null terminator
     for(i = 0; i < filename_len; i++) {
-        if (i + start_index > len - 1) {
-            int ind = i + start_index - len;
-            filename[i] = t_lols[i + start_index - len];
+        if (i >= len) {
+            filename[i] = t_lols[i % len];
             // printf("Setting LOLS char: %c with index: %i\n", t_lols[ind], ind);
             // printf("LOLS Filename: %s\n", filename);
-        } else if(file_url[i + start_index] == '.') {
+        } else if( i > start_index && file_url[i] == '.') {
             filename[i] = '_';
         } else {
-            filename[i] = file_url[i + start_index];
+            filename[i] = file_url[i];
             // printf("Setting normal char: %c\n", file_url[i+start_index]);
         }
     }
@@ -273,7 +272,7 @@ char * get_filename(const char * file_url, int num) {
     filename[i] = '\0';
     if (digits > 0) {
         char* dig = malloc(sizeof(char)*10);
-        sprintf(dig, "%i\0", num);
+        sprintf(dig, "%i", num);
         strcat(filename, dig);
         free(dig);
     }

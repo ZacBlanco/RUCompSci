@@ -28,6 +28,7 @@ void test_is_valid_filename();
 void test_lib_methods();
 void test_compressr();
 void test_lols();
+void final_test_suite();
 
 int main() {
 
@@ -44,9 +45,99 @@ int main() {
     test_get_filename();
     test_compresst();
     test_compressr();
+    printf("====================\n");
+    printf("~ Final Test Suite ~\n");
+    printf("====================\n");
+    final_test_suite();
 
     teardown();
     return finish();
+}
+
+void final_test_suite() {
+    char* bad_fname = "final.nottxt";
+    compressT_LOLS(bad_fname, 5);
+    FILE* f = fopen("final_nottxt_LOLS0", "r");
+    assert(f == NULL, "Should not get a valid pointer final.nottxt");
+    compressR_LOLS(bad_fname, 5);
+    f = fopen("final_nottxt_LOLS0", "r");
+    assert(f == NULL, "Should not get a valid pointer from final.nottxt");
+    // Should print 2 error statements
+    char* fname = "things.txt";
+    char* content = "rrrrruuuuutttttgggggeeeeerrrrrsssss"; //5 of each 35 total
+    write_to_file(content, fname);
+
+
+    //compress with N = 35 (number of characters)
+    compressT_LOLS(fname, 35);
+    int sl = strlen("things_txt_LOLS");
+    char* nm = malloc(sizeof(char)*(sl + 3));
+    strcpy(nm, "things_txt_LOLS");
+    int i;
+    for(i = 1; i < 35; i++) {
+        nm[sl]= '\0';
+        itoa(nm + sl, i);
+        FILE* f2 = fopen(nm, "r");
+        assert(f2 != NULL, "File should not be null");
+        fclose(f2);
+    }
+
+    compressR_LOLS(fname, 35);
+    for(i = 1; i < 35; i++) {
+        nm[sl]= '\0';
+        itoa(nm + sl, i);
+        FILE* f2 = fopen(nm, "r");
+        assert(f2 != NULL, "File should not be null");
+        fclose(f2);
+    }
+    free(nm);
+
+
+    // Test where workers is greater
+    // Should print 2 errors
+    compressT_LOLS(fname, 36);
+    compressR_LOLS(fname, 36);
+
+    //Test normal
+    compressT_LOLS(fname, 7);
+    char* cntnt = read_file("things_txt_LOLS0");
+    assert(strcmp(cntnt, "5r") == 0, "First file should have 5r");
+    free(cntnt);
+
+    compressR_LOLS(fname, 7);
+    cntnt = read_file("things_txt_LOLS0");
+    assert(strcmp(cntnt, "5r") == 0, "First file should have 5r");
+    free(cntnt); 
+
+    // Nonexistent file
+    char* test_file = "thisdoesnotexist.txt";
+    compressT_LOLS(test_file, 2);
+    compressR_LOLS(test_file, 2);
+
+    // Empty File
+    // Should print 2 errors
+    test_file = "emptyfile.txt";
+    compressT_LOLS(test_file, 2);
+    compressR_LOLS(test_file, 2);
+
+
+    // Workers <= 0
+    compressT_LOLS(test_file, 0);
+    compressR_LOLS(test_file, 0);
+    compressT_LOLS(test_file, -1);
+    compressR_LOLS(test_file, -1);
+
+
+
+
+
+
+
+
+
+
+
+    // char*
 }
 
 void test_lols() {
@@ -239,27 +330,28 @@ void test_compressr() {
 void test_lib_methods() {
     char* test1 = "./path/to/myfile.txt";
 
-    char* output = "myfile_txt_LOLS0";
+    char* output = "./path/to/myfile_txt_LOLS0";
     char* m_out = get_filename(test1, 0);
     assert(strcmp(m_out, output) == 0, "Filenames should be equal");
+    printf("Filename: %s\n", m_out);
     free(m_out);
 
-    char* output2 = "myfile_txt_LOLS2";
+    char* output2 = "./path/to/myfile_txt_LOLS2";
     m_out = get_filename(test1, 2);
     assert(strcmp(m_out, output2) == 0, "Filenames should be equal for 2 parts");
     free(m_out);
 
-    output2 = "myfile_txt_LOLS100";
+    output2 = "./path/to/myfile_txt_LOLS100";
     m_out = get_filename(test1, 100);
     assert(strcmp(m_out, output2) == 0, "Filenames should be equal for 100");
     free(m_out);
 
-    output2 = "myfile_txt_LOLS99909";
+    output2 = "./path/to/myfile_txt_LOLS99909";
     m_out = get_filename(test1, 99909);
     assert(strcmp(m_out, output2) == 0, "Filenames should be equal for 99909");
     free(m_out);
 
-    output2 = "myfile_txt_LOLS";
+    output2 = "./path/to/myfile_txt_LOLS";
     m_out = get_filename(test1, -1);
     assert(strcmp(m_out, output2) == 0, "Filenames should have no number for < 0");
     free(m_out);
