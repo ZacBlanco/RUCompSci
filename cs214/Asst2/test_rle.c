@@ -6,11 +6,15 @@
 #include <ctype.h>
 #include "lols.h"
 #include "compressT_LOLS.h"
+
+#define assert(x, y) lassert(x, y, __LINE__)
+#define assertEqual(x, y, z) lassertEqual(x, y, z, __LINE__)
+
 int failed = 0;
 int total_assertions = 0;
 
-void assert(int c1, char* msg);
-void assertEqual(int c1, int c2, char* msg);
+void lassert(int c1, char* msg, int line);
+void lassertEqual(int c1, int c2, char* msg, int line);
 void example1();
 void setup();
 void teardown();
@@ -39,7 +43,7 @@ int main() {
     test_file_read_write();
     test_get_filename();
     test_compresst();
-    // test_compressr();
+    test_compressr();
 
     teardown();
     return finish();
@@ -133,7 +137,7 @@ void test_compresst() {
     assert( two != NULL, "File pointer to compressed file should exist");
     fclose(two);
 
-    //printf("-------------------------\nTesting unexisting file.\n-------------------------\n");
+    // printf("-------------------------\nTesting unexisting file.\n-------------------------\n");
     test_file = "thisdoesnotexist.txt";
     compressT_LOLS(test_file, 2);
 
@@ -149,7 +153,7 @@ void test_compresst() {
     test_file = "bunchastuff.txt";
     compressT_LOLS(test_file, 300);
 
-    //printf("-------------------------\nTesting exact split.\n-------------------------\n");
+    // //printf("-------------------------\nTesting exact split.\n-------------------------\n");
     test_file = "10a.txt";
     compressT_LOLS(test_file, 10);
 
@@ -173,6 +177,7 @@ void test_compressr() {
     inp = read_file("compr_t_txt_LOLS1");
     assert(strcmp("4a8n3d", inp) == 0, "Strings should be equal.");
     free(inp);
+    
     char * test_file = "aaaaaaaaaa";
     fname = "10a.txt";
     write_to_file(test_file, fname);
@@ -281,10 +286,10 @@ int finish() {
     return failed > 0;
 }
 
-void assert(int c1, char* msg) {
+void lassert(int c1, char* msg, int line) {
     if(!c1) {
         printf("============================================\n");
-        printf("Assert condition failed %i != 1.\n", c1);
+        printf("Assert condition failed %i != 1. on line %i of test_rle\n", c1, line);
         printf("%s\n", msg);
         printf("============================================\n");
         failed++;
@@ -293,11 +298,11 @@ void assert(int c1, char* msg) {
     
 }
 
-void assertEqual(int c1, int c2, char* msg) {
+void lassertEqual(int c1, int c2, char* msg, int line) {
     total_assertions++;
     if(c1 != c2) {
         printf("============================================\n");
-        printf("Assert condition failed %i != %i.\n", c1, c2);
+        printf("Assert condition failed %i != %i on line %i of test_rle\n", c1, c2, line);
         printf("%s\n", msg);
         printf("============================================\n");
         failed++;
