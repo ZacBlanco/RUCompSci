@@ -5,14 +5,14 @@ EXE=rle.out
 TEST_EXE=test_rle.out
 EXE_ARGS=
 
-all: rle
+all: lols
 
 clean:
 	rm -rf *txt_LOLS* *.o *.gch $(EXE) $(TEST_EXE)
 
 test: test_run
 
-debug: gdb_rle
+debug: gdb_lols
 
 test_run: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c test_rle.o compressR_worker_LOLS.o
 	$(CC) $(LIBS) -o $(TEST_EXE) lols.o compressR_LOLS.o compressT_LOLS.o test_rle.o
@@ -20,6 +20,10 @@ test_run: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c te
 
 clr:
 	clear
+
+lols: clean	clr compressR_LOLS.o compressT_LOLS.o compressR_worker_LOLS.c test_rle.o compressR_worker_LOLS.o
+	$(CC) $(LIBS) -o $(TEST_EXE) lols.o compressR_LOLS.o compressT_LOLS.o test_rle.o
+
 
 compressT_LOLS.o: lols.o
 	$(CC) $(ARGS) compressT_LOLS.c
@@ -36,7 +40,7 @@ lols.o:
 test_rle.o:
 	$(CC) $(ARGS) test_rle.c
 
-gdb_rle: gdb_test_rle.o
+gdb_lols: gdb_test_rle.o
 	$(CC) -g $(LIBS) $(EXE_ARGS) -o $(EXE) lols.o test_rle.o compressT_LOLS.o compressR_LOLS.o 
 
 gdb_compressT_LOLS.o: gdb_lols.o
