@@ -8,7 +8,7 @@ void compressR_LOLS(char * file_url, int num_parts) {
 
     //////////// Check to make sure args are valid ////////////
     if (num_parts <= 0) {
-        fprintf(stderr, "Error - Must have positive number of parts");
+        fprintf(stderr, "Error - Must have positive number of parts\n");
         return;
     }
     
