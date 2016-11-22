@@ -1,0 +1,35 @@
+Testing Unexisting Files
+----------------------------
+We tested files that don't exist in our directory. Our program will attempt to open the file, and if it comes across any errors, it will print an error and stop the program before it attempts anything else.
+
+Testing Bad Files
+----------------------------
+We tested files that might possibly exist, but don't have the right extension. For example we tested files that have the extension '.jpg' or '.docx'. If the last 4 characters aren't '.txt' the program will print an error message and then exit.
+
+Testing Empty Files
+----------------------------
+We tested files that exist but don't have anything inside of them, so there would be nothing to compress. The file would be successfully opened but if there is nothing read it'll print an error and exit the program. 
+
+Testing Larger Split than Characters
+-----------------------------
+We tested to see if the amount of times we intended on splitting was greater than the amount of characters available in the original file. If it was greater than we would print an error and exit the program.
+
+Testing Files with all Bad Characters
+------------------------------
+Our algorithm will scan the given string for the first alphabetic character. If none exists it'll still split up the files, but they will write empty strings to them.
+
+Testing Files with Some Bad Characters
+------------------------------
+Our algorithm will just skip over the characters as if they never existed and continue with the compression algorithm. The characters that are ignored get accounted for when determining where files get split up.
+
+Testing N split to N characters
+--------------------------------
+We tested an exact split (i.e. 10 characters split 10 times) to see if it would produce the correct output.
+
+Testing Large String 
+--------------------------------
+We tested an extremely large string to see if it would compress.
+
+**************************************
+* FOR MORE TEST CASES SEE test_rle.c *
+**************************************

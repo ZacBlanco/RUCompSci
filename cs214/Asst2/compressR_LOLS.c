@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "lols.h"
-#include "compressR_worker_LOLS.h"
+#include "compressT_LOLS.h"
 
 void compressR_LOLS(char * file_url, int num_parts) {
 

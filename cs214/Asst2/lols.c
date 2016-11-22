@@ -16,17 +16,23 @@ char * lols(char * original_word) {
         return str;
     }
     
-    char current_letter, previous_letter;
+    char current_letter, previous_letter = '\0';
     char * compressed_string = (char *)malloc(sizeof(char) *(string_length + 1));
     compressed_string[0] = '\0';
-    int i = 1, letter_count = 1;
-    previous_letter = original_word[0];
-    for (i = 1; i < string_length; i++) {
+    int i = 0, letter_count = 0;
+
+    for (i = 0; i < string_length; i++) {
         current_letter = original_word[i];
 		
 		if (!isalpha(current_letter)) {
 			continue;
 		}
+
+        if (letter_count == 0) {
+            previous_letter = current_letter;
+            letter_count++;
+            continue;
+        }
 
         if (current_letter == previous_letter) {
             letter_count++;
@@ -37,7 +43,9 @@ char * lols(char * original_word) {
             letter_count = 1;
         }
     }
-    compressed_string = append_string(compressed_string, letter_count, previous_letter);
+    if (previous_letter != '\0') {
+        compressed_string = append_string(compressed_string, letter_count, previous_letter);
+    }
     return compressed_string;
 }
 

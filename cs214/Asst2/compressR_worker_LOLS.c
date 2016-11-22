@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "compressR_worker_LOLS.h"
+#include "compressT_LOLS.h"
 #include "lols.h"
 
 int main(int argc, char** argv) {

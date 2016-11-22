@@ -55,6 +55,18 @@ void test_lols() {
     char* a1 = lols(str1);
     assert(strcmp(a1, "3a3b3c") == 0, "aaabbbccc should lols to 3a3b3c");
     free(a1);
+    str1 = "12322093";
+    a1 = lols(str1);
+    assert(strcmp(a1, "") == 0, "12322093 should lols to nothing");
+    free(a1);
+    str1 = "a 2345243523452";
+    a1 = lols(str1);
+    assert(strcmp(a1, "a") == 0, "a 2345243523452 should lols to a");
+    free(a1);
+    str1 = "234982734092742347 a";
+    a1 = lols(str1);
+    assert(strcmp(a1, "a") == 0, "234982734092742347 a should lols to a");
+    free(a1);
 
 }
 
@@ -144,18 +156,36 @@ void test_compresst() {
     //printf("-------------------------\nTesting bad file.\n-------------------------\n");
     test_file = "badfile.jpg";
     compressT_LOLS(test_file, 3);
+    test_file = "lol.docx";
+    compressT_LOLS(test_file, 10);
 
     //printf("-------------------------\nTesting empty file.\n-------------------------\n");
     test_file = "emptyfile.txt";
+    write_to_file("", test_file);
     compressT_LOLS(test_file, 2);
 
     //printf("-------------------------\nTesting large split.\n-------------------------\n");
     test_file = "bunchastuff.txt";
     compressT_LOLS(test_file, 300);
 
+    //printf("-------------------------\nTesting bad content.\n-------------------------\n");
+    test_file = "badcontent.txt";
+    write_to_file("123423  !!3433939", test_file);
+    compressT_LOLS(test_file, 4);
+
+    //printf("-------------------------\nTesting some bad content.\n-------------------------\n");
+    test_file = "somebadcontent.txt";
+    write_to_file("a                      3434343       aa", test_file);
+    compressT_LOLS(test_file, 3);
+
     // //printf("-------------------------\nTesting exact split.\n-------------------------\n");
     test_file = "10a.txt";
     compressT_LOLS(test_file, 10);
+
+    // //printf("-------------------------\nTesting large characters and split.\n-------------------------\n");
+    test_file = "giant.txt";
+    write_to_file("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb              cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc;;;;;;;;dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggglolhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh", test_file);
+    compressT_LOLS(test_file, 1);
 
     // If you make a dir named 'newdir' this will work.
     // test_file = "./newdir/test.txt";
