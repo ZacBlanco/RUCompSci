@@ -1,11 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h> // compile with -pthread
-#include <string.h>
-#include <errno.h>
-#include <ctype.h>
-#include "lols.h"
 #include "compressT_LOLS.h"
+#include <time.h>
 
 #define assert(x, y) lassert(x, y, __LINE__)
 #define assertEqual(x, y, z) lassertEqual(x, y, z, __LINE__)
@@ -29,6 +23,8 @@ void test_lib_methods();
 void test_compressr();
 void test_lols();
 void final_test_suite();
+void get_running_times();
+long get_time();
 
 int main() {
 
@@ -49,6 +45,10 @@ int main() {
     printf("~ Final Test Suite ~\n");
     printf("====================\n");
     final_test_suite();
+    printf("====================\n");
+    printf("~  Running Timers  ~\n");
+    printf("====================\n");
+    get_running_times();
 
     teardown();
     return finish();
@@ -431,4 +431,89 @@ void lassertEqual(int c1, int c2, char* msg, int line) {
     }
 }
 
+void get_running_times() {
+    
+    char * test_file;
+    long start, stop, total;
 
+    printf("Running single compression with 1 split\n");
+    printf("----------------------------------------\n");
+    test_file = "things.txt";
+    write_to_file("aaaabbbbccccddddeeee", test_file);
+    start = get_time();
+    compressR_LOLS(test_file, 1);
+    stop = get_time();
+    total = stop - start;
+    printf("Process Time: %ld microseconds\n", total);
+    write_to_file("aaaabbbbccccddddeeee", test_file);
+    start = get_time();
+    compressT_LOLS(test_file, 1);
+    stop = get_time();
+    total = stop - start;
+    printf("Thread Time : %ld microseconds\n", total);
+    printf("----------------------------------------\n");
+
+    printf("Running single compression with 5 splits\n");
+    printf("----------------------------------------\n");
+    test_file = "things.txt";
+    write_to_file("aaaabbbbccccddddeeee", test_file);
+    start = get_time();
+    compressR_LOLS(test_file, 5);
+    stop = get_time();
+    total = stop - start;
+    printf("Process Time: %ld microseconds\n", total);
+    write_to_file("aaaabbbbccccddddeeee", test_file);
+    start = get_time();
+    compressT_LOLS(test_file, 5);
+    stop = get_time();
+    total = stop - start;
+    printf("Thread Time : %ld microseconds\n", total);
+    printf("----------------------------------------\n");
+
+    printf("Running single compression with 50 splits\n");
+    printf("----------------------------------------\n");
+    test_file = "things.txt";
+    write_to_file("aaaabbbbccccddddeeeeffffffffffffffffggggggggggggggggggggggggggeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalllllllllllllllllllllllllllllllllllllllllllddddddddddddddddddddddddddddddd", test_file);
+    start = get_time();
+    compressR_LOLS(test_file, 50);
+    stop = get_time();
+    total = stop - start;
+    printf("Process Time: %ld microseconds\n", total);
+    write_to_file("aaaabbbbccccddddeeeeffffffffffffffffggggggggggggggggggggggggggeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalllllllllllllllllllllllllllllllllllllllllllddddddddddddddddddddddddddddddd", test_file);
+    start = get_time();
+    compressT_LOLS(test_file, 50);
+    stop = get_time();
+    total = stop - start;
+    printf("Thread Time : %ld microseconds\n", total);
+    printf("----------------------------------------\n");
+
+    printf("Running 50 compressions with 50 splits\n");
+    printf("----------------------------------------\n");
+    test_file = "things.txt";
+    write_to_file("aaaabbbbccccddddeeeeffffffffffffffffggggggggggggggggggggggggggeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalllllllllllllllllllllllllllllllllllllllllllddddddddddddddddddddddddddddddd", test_file);
+    start = get_time();
+    int i = 0;
+    for (i = 0; i < 50; i++) {
+        compressR_LOLS(test_file, 50);
+    }
+    stop = get_time();
+    total = stop - start;
+    printf("Process Time: %ld microseconds\n", total);
+    write_to_file("aaaabbbbccccddddeeeeffffffffffffffffggggggggggggggggggggggggggeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalllllllllllllllllllllllllllllllllllllllllllddddddddddddddddddddddddddddddd", test_file);
+    start = get_time();
+    i = 0;
+    for (i = 0; i < 50; i++) {
+        compressT_LOLS(test_file, 50);
+    }
+    stop = get_time();
+    total = stop - start;
+    printf("Thread Time : %.6ld microseconds\n", total);
+    printf("----------------------------------------\n");
+
+}
+
+long get_time() {
+    struct timeval tv = {0, 0};
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec*(1000000) + tv.tv_usec;
+}
