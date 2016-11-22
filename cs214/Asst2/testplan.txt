@@ -1,4 +1,4 @@
-Testing Unexisting Files
+Testing Non-Existent Files
 ----------------------------
 We tested files that don't exist in our directory. Our program will attempt to open the file, and if it comes across any errors, it will print an error and stop the program before it attempts anything else.
 
