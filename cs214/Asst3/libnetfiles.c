@@ -2,7 +2,6 @@
 
 
 
-
 // RETURN VALUE
 // netopen() returns the new file descriptor, or -1 if an error occurred (in which case, errno is set
 // appropriately)

@@ -12,6 +12,13 @@
 #define O_WRONLY 2
 #define O_RDWR   6
 
+#define BUFF_SIZE 512
+
+#define NFS_UN 97 //Unrestricted mode
+#define NFS_EX 98 //Exclusive write mode
+#define NFS_TR 99 //Transactional mode
+
+#define INVALID_FILE_MODE 700
 
 #endif
 
