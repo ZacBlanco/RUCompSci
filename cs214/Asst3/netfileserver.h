@@ -30,6 +30,7 @@ int process_msg(int sock, const char* buffer, ssize_t sz);
 void add_filedata(file_data* head, file_data* node);
 file_data* remove_filedata(file_data* head, int fd_selector);
 file_data* search_filedata(file_data* head, int fd_selector);
+file_data* new_node(char* filename, int sockfd, int file_fd, int file_connection, int flags);
 void free_filedata(file_data* node);
 
 int close_op(int sock, const char* buffer, ssize_t sz);

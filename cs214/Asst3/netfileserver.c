@@ -9,8 +9,10 @@ int main(int argc, char** argv) {
 
 
     printf("I am the fileserver\n");
-
     int sfd = socket(AF_INET, SOCK_STREAM, 0); // socket fd
+    int optval = 1;
+    setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
     if (sfd < 0) {
         perror("Server failed to start. Error on socket()");
         exit(1);
@@ -235,11 +237,11 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
     int return_code = 0;
     switch(buffer[0]) {
         case '0':
-            init_op(sock, buffer, sz);
+            return_code = init_op(sock, buffer, sz);
             break;
 
         case '1':
-            open_op(sock, buffer, sz);
+            return_code = open_op(sock, buffer, sz);
             break;
 
         case '2':
@@ -268,19 +270,29 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
 
 // Returns the number of bytes written back to the client.
 int close_op(int sock, const char* buffer, ssize_t sz) {
+    
+    printf("--------------------------\n");
+    printf("Close operation received.\n");
+    printf("--------------------------\n");
+
     int badf = 0; // true if we need to send an error; 
     int sz_wr = 0;
     printf("handling close:\n");
     if (sz < 5) {
         // Message did not contain enough bytes to process
+        printf("Size less than 5: %d\n", (int)sz);
         badf = 1;
     } else {
         int fd = retr_int( buffer + 1 );
+        printf("fd received for close: %i\n", fd);
         file_data* closen = search_filedata(head, fd);
+        printf("Search completed.\n");
         if (closen == NULL) {
             //File did not exist.
+            printf("File did not exist.\n");
             badf = 1;
         } else {
+            printf("Found file.\n");
             remove_filedata(head, fd);
             free_filedata(closen);
             close(fd);
@@ -297,7 +309,9 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
         strcpy(&(msg[5]), mg);
         sz_wr = write(sock, msg, len);
     } else {
-        char msg[1] = { '1' };
+        printf("Success\n");
+        char msg[5];
+        store_int(&(msg[1]), 1);
         sz_wr = write(sock, &msg, 1);
     }
 
@@ -318,7 +332,10 @@ int init_op(int sock, const char* buffer, ssize_t sz) {
 
 int open_op(int sock, const char* buffer, ssize_t sz) {
 
+    printf("--------------------------\n");
     printf("Open Operation Received\n");
+    printf("--------------------------\n");
+
     int wrsz = 0;
     int fmode = retr_int(buffer + 1);
     int flags = retr_int(buffer + 5);
@@ -353,18 +370,29 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
         printf("Bad File. Errno - %s\n", strerror(err));
         wrsz = write_socket_err(sock, err);
     } else {
+        file_data * node = new_node(filepath, sock, fd, 0, flags);
+        add_filedata(head, node);
         char a[5];
         a[0] = '1';
         store_int(&( a[1] ), fd);
-        wrsz = send(sock, &a, 5, 0);
+        wrsz = send(sock, &a, 5, 0); // wrsz = write size
         printf("fd: %i\n", fd);
     }
 
-    printf("Skips if statements\n");
     return wrsz;
 }
 
+file_data * new_node(char * filename, int sockfd, int file_fd, int file_connection, int flags) {
 
+    file_data * node = malloc(sizeof(file_data));
+    node -> filename = filename;
+    node -> sockfd = sockfd;
+    node -> file_fd = file_fd;
+    node -> file_connection = file_connection;
+    node -> flags = flags;
+
+    return node;
+}
 
 
 void add_filedata(file_data* head, file_data* node) {
