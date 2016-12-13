@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <string.h>
 
+
 #define BUFF_SIZE 512
 
 #define NFS_UN 97 //Unrestricted mode
@@ -14,6 +15,7 @@
 #define NFS_TR 99 //Transactional mode
 
 #define INVALID_FILE_MODE 700
+#define INVALID_FLAG 800
 
 // RETURN VALUE
 // netopen() returns the new file descriptor, or -1 if an error occurred (in which case, errno is set

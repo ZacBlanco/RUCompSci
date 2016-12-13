@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "libnetfiles.h"
@@ -24,12 +26,17 @@ typedef struct file_data {
 void* client_handler(void* fd);
 int process_msg(int sock, const char* buffer, ssize_t sz);
 
+
 void add_filedata(file_data* head, file_data* node);
 file_data* remove_filedata(file_data* head, int fd_selector);
 file_data* search_filedata(file_data* head, int fd_selector);
 void free_filedata(file_data* node);
 
 int close_op(int sock, const char* buffer, ssize_t sz);
+int init_op(int sock, const char* buffer, ssize_t sz);
+int open_op(int sock, const char* buffer, ssize_t sz);
 
+int write_socket_err(int sock, int err);
 
 #endif
+
