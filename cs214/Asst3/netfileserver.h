@@ -12,27 +12,24 @@
 
 #define PORT (9797)
 
-#endif
-
-typedef struct {
+typedef struct file_data {
     char* filename;
-    int fd;
-    int file_mode;
-    int conn_mode;
-    struct filenode* next;
-} filenode;
-
-union int_to_char {
-    int a;
-    char b[4];
-};
-
+    int sockfd;
+    int file_fd;
+    int file_connection;
+    int flags;
+    struct file_data* next;
+} file_data;
 
 void* client_handler(void* fd);
 int process_msg(int sock, const char* buffer, ssize_t sz);
-void store_int(char* dest, int i);
-int retr_int(char* src);
 
-void add_filenode(filenode* head, filenode* node);
-filenode* remove_filenode(filenode* head, int fd_selector);
-void free_filenode(filenode* node);
+void add_filedata(file_data* head, file_data* node);
+file_data* remove_filedata(file_data* head, int fd_selector);
+file_data* search_filedata(file_data* head, int fd_selector);
+void free_filedata(file_data* node);
+
+int close_op(int sock, const char* buffer, ssize_t sz);
+
+
+#endif

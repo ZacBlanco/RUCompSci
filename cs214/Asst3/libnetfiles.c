@@ -72,4 +72,22 @@ int netserverinit(char * hostname) {
     return -1;
 }
 
+void store_int(char* dest, int i) {
+    union int_to_char t;
+    t.a = i;
+    dest[0] = t.b[0];
+    dest[1] = t.b[1];
+    dest[2] = t.b[2];
+    dest[3] = t.b[3];
+}
+
+int retr_int(const char* src) {
+    union int_to_char t;
+    t.b[0] = src[0];
+    t.b[1] = src[1];
+    t.b[2] = src[2];
+    t.b[3] = src[3];
+    return t.a;    
+}
+
 

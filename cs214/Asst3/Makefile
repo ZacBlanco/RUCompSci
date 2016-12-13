@@ -19,8 +19,8 @@ test_run: clean	clr libnet
 clr:
 	clear
 
-server: libnetserver.o
-	$(CC) $(LIBS) -o server.out netfileserver.o
+server:  libnetfiles.o libnetserver.o 
+	$(CC) $(LIBS) -o server.out netfileserver.o libnetfiles.o
 	./server.out
 
 libnet: clr clr netfileserver.o libnetfiles.o

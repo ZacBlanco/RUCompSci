@@ -2,7 +2,7 @@
 
 pthread_mutex_t mode_mutex;
 
-filenode* head = NULL;
+file_data* head = NULL;
 
 int main(int argc, char** argv) {
 
@@ -247,19 +247,8 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
                 // Bad mode type
                 unsigned char msg[19];
                 msg[0] = (char)'0';
-                union int_to_char t;
-                t.a = INVALID_FILE_MODE;
-                msg[1] = t.b[0];
-                msg[2] = t.b[1];
-                msg[3] = t.b[2];
-                msg[4] = t.b[3];
-                printf("filemode: %i\n", (int)(msg + 1));
-                union int_to_char g;
-                g.b[0] = msg[1];
-                g.b[1] = msg[2];
-                g.b[2] = msg[3];
-                g.b[3] = msg[4];
-                printf("filemode: %i\n", g.a);
+                store_int(&(msg[1]), INVALID_FILE_MODE);
+                printf("byte1: %i\n", retr_int(&(msg[1])));
                 strcpy(&msg[5], "Bad mode type\n");
                 write(sock, &msg, 19);
             }
@@ -273,7 +262,7 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
             break;
         case '2':
             printf("Close Operation Received\n");
-            return_code = -1;
+            return_code = close_op(sock, buffer, sz);
             break;
         case '3':
             printf("Read Operation Received\n");
@@ -292,12 +281,52 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
 }
 
 
-void add_filenode(filenode* head, filenode* node) {
+// Returns the number of bytes written back to the client.
+int close_op(int sock, const char* buffer, ssize_t sz) {
+    int badf = 0; // true if we need to send an error; 
+    int sz_wr = 0;
+    printf("handling close:\n");
+    if (sz < 5) {
+        // Message did not contain enough bytes to process
+        badf = 1;
+    } else {
+        int fd = retr_int( buffer + 1 );
+        file_data* closen = search_filedata(head, fd);
+        if (closen == NULL) {
+            //File did not exist.
+            badf = 1;
+        } else {
+            remove_filedata(head, fd);
+            free_filedata(closen);
+            close(fd);
+        }
+    }
+
+    // Write depending on whether file descriptor was bad.
+    if (badf) {
+        char* mg = "Bad file descriptor";
+        int len = 5 + strlen(mg);
+        char msg[len];
+        msg[0] = '0';
+        store_int(&(msg[1]), EBADF);
+        strcpy(&(msg[5]), mg);
+        sz_wr = write(sock, msg, len);
+    } else {
+        char msg[1] = { '1' };
+        sz_wr = write(sock, &msg, 1);
+    }
+
+    return sz_wr;
+
+}
+
+
+void add_filedata(file_data* head, file_data* node) {
     if (head == NULL) {
         head = node;
     } else {
-        filenode* curr = head;
-        filenode* prev = head;
+        file_data* curr = head;
+        file_data* prev = head;
         while(curr != NULL) {
             prev = curr;
             curr = curr->next;
@@ -308,12 +337,28 @@ void add_filenode(filenode* head, filenode* node) {
     }
 }
 
-// Returns 0 on success, -1 if wasn't found.
-filenode* remove_filenode(filenode* head, int fd_selector) {
-    filenode* curr = head;
-    filenode* prev = head;
+file_data* search_filedata(file_data* head, int fd_selector) {
+    file_data* curr = head;
+    while( curr != NULL ) {
+        if (curr->file_fd == fd_selector) {
+            return curr;
+        }
+    }
+    return NULL;
+}
+
+// Returns removed node on success, NULL if not found.
+file_data* remove_filedata(file_data* head, int fd_selector) {
+    file_data* curr = head;
+    file_data* prev = head;
+
+    if (curr->file_fd == fd_selector) {
+        head = head->next;
+        return curr;
+    } 
+
     while(curr != NULL) {
-        if(curr->fd == fd_selector) {
+        if(curr->file_fd == fd_selector) {
             break;
         }
         prev = curr;
@@ -324,30 +369,14 @@ filenode* remove_filenode(filenode* head, int fd_selector) {
         return NULL;
     } else {
         prev->next = curr->next;
+        return curr;
     }
-
 }
 
-void free_filenode(filenode* node) {
+
+
+void free_filedata(file_data* node) {
     free(node->filename);
     node->next = NULL;
     free(node);
-}
-
-void store_int(char* dest, int i) {
-    union int_to_char t;
-    t.a = i;
-    dest[0] = t.b[0];
-    dest[1] = t.b[1];
-    dest[2] = t.b[2];
-    dest[3] = t.b[3];
-}
-
-int retr_int(char* src) {
-    union int_to_char t;
-    t.b[0] = src[0];
-    t.b[1] = src[1];
-    t.b[2] = src[2];
-    t.b[3] = src[3];
-    return t.a;    
 }

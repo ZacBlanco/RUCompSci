@@ -7,11 +7,6 @@
 #include <pthread.h>
 #include <string.h>
 
-// rw0 ===> r-0-0 = 4 ===> 0-w-0 = 2 ===> r-w-0 = 6
-#define O_RDONLY 4
-#define O_WRONLY 2
-#define O_RDWR   6
-
 #define BUFF_SIZE 512
 
 #define NFS_UN 97 //Unrestricted mode
@@ -19,9 +14,6 @@
 #define NFS_TR 99 //Transactional mode
 
 #define INVALID_FILE_MODE 700
-
-#endif
-
 
 // RETURN VALUE
 // netopen() returns the new file descriptor, or -1 if an error occurred (in which case, errno is set
@@ -54,6 +46,18 @@ int netclose(int fd);
 int netserverinit(char * hostname);
 // netserverinit(char * hostname, int filemode) (for ext. A only)
 
+
+
+union int_to_char {
+    int a;
+    char b[4];
+};
+
+
+void store_int(char* dest, int i);
+int retr_int(const char* src);
+
+#endif
 
 
 
