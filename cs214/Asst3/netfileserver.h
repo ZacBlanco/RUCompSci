@@ -30,6 +30,8 @@ union int_to_char {
 
 void* client_handler(void* fd);
 int process_msg(int sock, const char* buffer, ssize_t sz);
+void store_int(char* dest, int i);
+int retr_int(char* src);
 
 void add_filenode(filenode* head, filenode* node);
 filenode* remove_filenode(filenode* head, int fd_selector);
