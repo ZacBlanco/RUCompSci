@@ -109,7 +109,7 @@ First char (byte) always describes operation.
 
     Expected Message
     +---------+-----------+--------------+--------------------+
-    | op. (1) | flags (4) | fmode (4)    | filepath (n)       |
+    | op. (1) | fmode (4) | flags (4)    | filepath (n)       |
     +---------+-----------+--------------+--------------------+
 
     - Responses differ in type based on failure/success
@@ -235,41 +235,11 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
     int return_code = 0;
     switch(buffer[0]) {
         case '0':
-        
-
-            printf("Init Operation received\n");
-
-            int mode = (int)*(buffer + 1);
-            if (mode == NFS_UN || mode == NFS_EX || mode == NFS_TR) {
-                // Set the server type
-                write(sock, "1\n", strlen("1\n"));
-            } else {
-                // Bad mode type
-                unsigned char msg[19];
-                msg[0] = (char)'0';
-                union int_to_char t;
-                t.a = INVALID_FILE_MODE;
-                msg[1] = t.b[0];
-                msg[2] = t.b[1];
-                msg[3] = t.b[2];
-                msg[4] = t.b[3];
-                printf("filemode: %i\n", (int)(msg + 1));
-                union int_to_char g;
-                g.b[0] = msg[1];
-                g.b[1] = msg[2];
-                g.b[2] = msg[3];
-                g.b[3] = msg[4];
-                printf("filemode: %i\n", g.a);
-                strcpy(&msg[5], "Bad mode type\n");
-                write(sock, &msg, 19);
-            }
+            init_op(sock, buffer);
             break;
 
-
-
         case '1':
-            printf("Open Operation Received\n");
-            return_code = -1;
+            open_op(sock, buffer);
             break;
         case '2':
             printf("Close Operation Received\n");
@@ -317,8 +287,7 @@ filenode* remove_filenode(filenode* head, int fd_selector) {
             break;
         }
         prev = curr;
-        curr = curr->next;
-    }
+        curr = curr->next; }
 
     if (curr == NULL) {
         return NULL;
@@ -350,4 +319,88 @@ int retr_int(char* src) {
     t.b[2] = src[2];
     t.b[3] = src[3];
     return t.a;    
+}
+
+void init_op(int sock, const char* buffer) {
+
+    printf("Init Operation received\n");
+
+    int mode = (int)*(buffer + 1);
+    
+    if (check_filemode(sock, mode)){}
+
+}
+
+void open_op(int sock, const char* buffer) {
+
+    printf("Open Operation Received\n");
+    int fmode = retr_int(buffer + 1);
+    int flags = retr_int(buffer + 5);
+    char * filepath[100];
+    filepath[0] = '\0';
+    strcpy(filepath, buffer + 9);
+    printf("fmode: %i flags: %i filepath: %s\n", fmode, flags, filepath);
+
+    if (check_filemode(sock, fmode)){}
+
+    if (check_flags(sock, flags)){}
+
+    int fd;
+
+    switch (flags) {
+        case O_RDWR:
+            fd = open(filepath, O_RDWR); 
+            break;
+        case O_RDONLY:
+            fd = open(filepath, O_RDONLY);
+            break;
+        case O_WRONLY:
+            fd = open(filepath, O_WRONLY);
+            break;
+    } 
+
+    if (!fd) {
+        printf("Bad File. Errno - %s\n", strerror(errno));
+        write(sock, 0, sizeof(int));
+    } else {
+        write(sock, fd, sizeof(int));
+    }
+
+}
+
+int check_filemode(int sock, int mode) {
+    
+    if (mode == NFS_UN || mode == NFS_EX || mode == NFS_TR) {
+        // Set the server type
+        write(sock, "1\n", strlen("1\n"));
+    } else {
+        // Bad mode type
+        unsigned char msg[19];
+        msg[0] = (char)'0';
+        store_int(msg + 1, INVALID_FILE_MODE);
+        printf("filemode: %i\n", (int)(msg + 1));
+        int num = retr_int(msg + 1);
+        printf("filemode: %i\n", num);
+        strcpy(&msg[5], "Bad mode type\n");
+        write(sock, &msg, 19);
+        return 0;
+    }
+    return 1;
+}
+
+int check_flags(int sock, int flags) {
+
+    if (flags == O_RDONLY || flags == O_WRONLY || flags == O_RDWR) {
+        write(sock, "1\n", strlen("1\n"));
+    } else {
+        // Bad flags
+        unsigned char msg[19];
+        msg[0] = (char)'0';
+        store_int(msg + 1, INVALID_FLAG);
+        int num = retr_int(msg + 1);
+        strcpy(&msg[5], "Bad mode type\n");
+        write(sock, &msg, 19);
+        return 0;
+    }
+    return 1;
 }

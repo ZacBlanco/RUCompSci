@@ -7,10 +7,6 @@
 #include <pthread.h>
 #include <string.h>
 
-// rw0 ===> r-0-0 = 4 ===> 0-w-0 = 2 ===> r-w-0 = 6
-#define O_RDONLY 4
-#define O_WRONLY 2
-#define O_RDWR   6
 
 #define BUFF_SIZE 512
 
@@ -19,6 +15,7 @@
 #define NFS_TR 99 //Transactional mode
 
 #define INVALID_FILE_MODE 700
+#define INVALID_FLAG 800
 
 #endif
 

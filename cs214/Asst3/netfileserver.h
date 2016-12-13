@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "libnetfiles.h"
@@ -36,3 +38,4 @@ int retr_int(char* src);
 void add_filenode(filenode* head, filenode* node);
 filenode* remove_filenode(filenode* head, int fd_selector);
 void free_filenode(filenode* node);
+void init_op(int sock, const char* buffer);
