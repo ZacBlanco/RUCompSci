@@ -11,6 +11,10 @@ int main(int argc, char** argv) {
     printf("I am the fileserver\n");
 
     int sfd = socket(AF_INET, SOCK_STREAM, 0); // socket fd
+    // set SO_REUSEADDR on a socket to true (1):
+    int optval = 1;
+    setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
     if (sfd < 0) {
         perror("Server failed to start. Error on socket()");
         exit(1);
@@ -78,6 +82,7 @@ First char (byte) always describes operation.
 
 
     ~~~~~~~~ SERVER SIDE ~~~~~~~~ 
+    ~~~~~~~~ SERVER SIDE ~~~~~~~~ 
  
     ------ '0' - INIT Operation ------ 
 
@@ -109,14 +114,14 @@ First char (byte) always describes operation.
 
     Expected Message
     +---------+-----------+--------------+--------------------+
-    | op. (1) | fmode (4) | flags (4)    | filepath (n)       |
+    | op. (1) | flags (4) | fmode (4)    | filepath (n)       |
     +---------+-----------+--------------+--------------------+
 
     - Responses differ in type based on failure/success
 
     Expected Response on Success
     +-----------+----------------+----------------------------+
-    | suc=1 (1) | descriptor (4) |                            |
+    | suc=1 (1) | descriptor (8) |                            |
     +-----------+----------------+----------------------------+
     Expected Response on Failure
     +-----------+-----------+----------------+----------------+
@@ -180,9 +185,9 @@ First char (byte) always describes operation.
     - Responses differ in type based on failure/success
 
     Expected Response on Success
-    +-----------+---------------------------------------------+
-    | suc=1 (1) |                                             |
-    +-----------+---------------------------------------------+
+    +-----------+---------+-----------------------------------+
+    | suc=1 (1) | size(4) |                                   |
+    +-----------+---------+-----------------------------------+
     Expected Response on Failure
     +-----------+-----------+----------------+----------------+
     | suc=0 (1) | errno (4) | errm messg (n) |                |
@@ -210,10 +215,8 @@ void* client_handler(void* fd) {
             printf("Got: %s\n", (char*)buff);
             if (process_msg(sock, (char *)buff, bytes) < 0) {
                 break;
-            }
-            
+            }   
         }
-
     }
     
     close(sock);
@@ -235,11 +238,11 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
     int return_code = 0;
     switch(buffer[0]) {
         case '0':
-            init_op(sock, buffer, sz);
+            return_code = init_op(sock, buffer, sz);
             break;
 
         case '1':
-            open_op(sock, buffer, sz);
+            return_code = open_op(sock, buffer, sz);
             break;
 
         case '2':
@@ -247,13 +250,11 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
             break;
 
         case '3':
-            printf("Read Operation Received\n");
-            return_code = -1;
+            return_code = read_op(sock, buffer, sz);
             break;
 
         case '4':
-            printf("Write Operation Received\n");
-            return_code = -1;
+            return_code = write_op(sock, buffer, sz);
             break;
 
         default:
@@ -270,7 +271,7 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
 int close_op(int sock, const char* buffer, ssize_t sz) {
     int badf = 0; // true if we need to send an error; 
     int sz_wr = 0;
-    printf("handling close:\n");
+    printf("Close Operation Received:\n");
     if (sz < 5) {
         // Message did not contain enough bytes to process
         badf = 1;
@@ -316,55 +317,136 @@ int init_op(int sock, const char* buffer, ssize_t sz) {
 
 }
 
+//Return number of bytes written to client.
 int open_op(int sock, const char* buffer, ssize_t sz) {
 
     printf("Open Operation Received\n");
-    int wrsz = 0;
-    int fmode = retr_int(buffer + 1);
-    int flags = retr_int(buffer + 5);
-    char* filepath = malloc(sizeof(char) * (sz - 9)); //sz-9 is the number of chars for filename
-    filepath[0] = '\0';
-    strncpy(filepath, buffer + 9, sz-9);
-    printf("buffer: %s fmode: %i flags: %i filepath: %s\n", buffer, fmode, flags, filepath);
+    int wrsz = 0; //write size;
+    if (sz < 9) {
+        wrsz = write_socket_err(sock, EINVAL);
+    } else {
+        int fmode = retr_int(buffer + 1);
+        int flags = retr_int(buffer + 5);
+        char* filepath = malloc(sizeof(char) * (sz - 9)); //sz-9 is the number of chars for filename
+        filepath[0] = '\0';
+        strncpy(filepath, buffer + 9, sz-9);
+        // printf("buffer: %s fmode: %i flags: %i filepath: %s\n", buffer, fmode, flags, filepath);
 
-    int fd = 0;
-    int err = 0;
-    // err = check_filemode(sock, fmode);
-    if ( !err ) {
-        err = check_flags(sock, flags);
-    }
+        int fd = 0;
+        int err = 0;
+        // err = check_filemode(sock, fmode);
+        if ( !err ) {
+            err = check_flags(sock, flags);
+        }
 
-    // If there was no error on filemode or flags then we're ok.
-    if (!err) {
-        switch (flags) {
-            case O_RDWR:
-                fd = open(filepath, O_RDWR); 
-                break;
-            case O_RDONLY:
-                fd = open(filepath, O_RDONLY);
-                break;
-            case O_WRONLY:
-                fd = open(filepath, O_WRONLY);
-                break;
+        // If there was no error on filemode or flags then we're ok.
+        if (!err) {
+            switch (flags) {
+                case O_RDWR:
+                    fd = open(filepath, O_RDWR); 
+                    break;
+                case O_RDONLY:
+                    fd = open(filepath, O_RDONLY);
+                    break;
+                case O_WRONLY:
+                    fd = open(filepath, O_WRONLY);
+                    break;
+            }
+        }
+
+        if (!fd) { // open failed - get error
+            printf("Bad File. Errno - %s\n", strerror(errno));
+            wrsz = write_socket_err(sock, errno);
+        } else {
+
+            char a[5];
+            a[0] = '1';
+            store_int(&( a[1] ), fd);
+            wrsz = send(sock, &a, 5, 0);
+            // printf("fd: %i\n", fd);
         }
     }
-
-    if (!fd) { // open failed - get error
-        printf("Bad File. Errno - %s\n", strerror(err));
-        wrsz = write_socket_err(sock, err);
-    } else {
-        char a[5];
-        a[0] = '1';
-        store_int(&( a[1] ), fd);
-        wrsz = send(sock, &a, 5, 0);
-        printf("fd: %i\n", fd);
-    }
-
-    printf("Skips if statements\n");
     return wrsz;
 }
 
+int read_op(int sock, const char* buffer, ssize_t sz){
+    printf("Read Operation Received\n");
+    int wrsz = 0;
+    file_data* entry = NULL;
+    if (sz < 9) {
+        wrsz = write_socket_err(sock, EINVAL);    
+    } else {
 
+        int ffd = retr_int(buffer + 1);
+        entry = search_filedata(head, ffd);
+        
+    }
+
+    if (entry == NULL) {
+        wrsz = write_socket_err(sock, EINVAL);
+    } else if ( entry->flags == O_RDONLY || entry->flags == O_RDWR ){
+
+        int rd_sz = retr_int(buffer + 5);
+        int datasz = rd_sz + 5; // 1 for success and 4 for bytes read.
+        // Entry not null -  read and return data        
+        char* data = malloc(sizeof(char)*(datasz));
+        ssize_t bts_read = read(entry->file_fd, data + 5, datasz);
+
+        if(bts_read < 0) {
+            wrsz = write_socket_err(sock, errno);
+        } else {
+            data[0] = '1';
+            store_int(data + 1, bts_read);
+            wrsz = write(sock, data, datasz);
+
+            if (wrsz < 0) {
+                wrsz = write_socket_err(sock, errno);
+            }
+        }
+        free(data);
+    } else { //File descriptor was write only
+        wrsz = write_socket_err(sock, EPERM);
+    }
+    return wrsz;
+
+}
+
+int write_op(int sock, const char* buffer, ssize_t sz) {
+    printf("Write Operation Received\n");
+    int wrsz = 0;
+    file_data* entry = NULL;
+    if (sz < 9) {
+        wrsz = write_socket_err(sock, EINVAL);    
+    } else {
+
+        int ffd = retr_int(buffer + 1);
+        entry = search_filedata(head, ffd);
+        
+    }
+    printf("Entry is: %p.\n", entry);
+
+    if (entry == NULL) {
+        wrsz = write_socket_err(sock, EINVAL);
+    } else if(entry->flags == O_RDWR || entry->flags == O_WRONLY){
+
+        int write_amount = retr_int(buffer + 5);
+        ssize_t bts_written = write(entry->file_fd, buffer + 9, write_amount);
+
+        if(bts_written < 0) {
+            wrsz = write_socket_err(sock, errno);
+        } else {
+            char a[5];
+            a[0] = '1';
+            store_int(a + 1, bts_written);
+            wrsz = write(sock, a, write_amount);
+
+            if (wrsz < 0) {
+                wrsz = write_socket_err(sock, errno);
+            }
+        }
+    }
+    return wrsz;
+}
 
 
 void add_filedata(file_data* head, file_data* node) {
@@ -417,8 +499,6 @@ file_data* remove_filedata(file_data* head, int fd_selector) {
         return curr;
     }
 }
-
-
 
 void free_filedata(file_data* node) {
     free(node->filename);

@@ -15,17 +15,16 @@
 #define PORT (9797)
 
 typedef struct file_data {
-    char* filename;
-    int sockfd;
-    int file_fd;
-    int file_connection;
-    int flags;
+    char* filename; // filename
+    int sockfd; //client ID
+    int file_fd; //file descriptor
+    int file_connection; // Connection type (ext A)
+    int flags; // O_RDONLY, O_WRONLY, or O_RDWR
     struct file_data* next;
 } file_data;
 
 void* client_handler(void* fd);
 int process_msg(int sock, const char* buffer, ssize_t sz);
-
 
 void add_filedata(file_data* head, file_data* node);
 file_data* remove_filedata(file_data* head, int fd_selector);
@@ -35,6 +34,8 @@ void free_filedata(file_data* node);
 int close_op(int sock, const char* buffer, ssize_t sz);
 int init_op(int sock, const char* buffer, ssize_t sz);
 int open_op(int sock, const char* buffer, ssize_t sz);
+int read_op(int sock, const char* buffer, ssize_t sz);
+int write_op(int sock, const char* buffer, ssize_t sz);
 
 int write_socket_err(int sock, int err);
 
