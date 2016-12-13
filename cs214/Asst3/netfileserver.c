@@ -319,13 +319,25 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
 
 
 int init_op(int sock, const char* buffer, ssize_t sz) {
-
+    printf("--------------------------\n");
     printf("Init Operation received\n");
-
-    int mode = (int)*(buffer + 1);
-    
-    if (check_filemode(sock, mode)){}
-
+    printf("--------------------------\n");
+    int wrsz = 0;
+    if (sz < 5) {
+        printf("Size lt 5: %zu\n", sz);
+        wrsz = write_socket_err(sock, EINVAL);    
+    } else {
+        int mode = retr_int(buffer + 1);
+        char a;
+        if (mode == NFS_EX || mode == NFS_TR || mode == NFS_UN) {
+            a = '1';
+            wrsz = write(sock, &a, 1);
+        } else {
+            a = '0';
+            wrsz = write(sock, &a, 1);
+        }   
+    }
+    return wrsz;
 }
 
 //Return number of bytes written to client.
@@ -391,7 +403,9 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
 }
 
 int read_op(int sock, const char* buffer, ssize_t sz){
+    printf("--------------------------\n");
     printf("Read Operation Received\n");
+    printf("--------------------------\n");
     int wrsz = 0;
     file_data* entry = NULL;
     if (sz < 9) {
@@ -433,7 +447,9 @@ int read_op(int sock, const char* buffer, ssize_t sz){
 }
 
 int write_op(int sock, const char* buffer, ssize_t sz) {
+    printf("--------------------------\n");
     printf("Write Operation Received\n");
+    printf("--------------------------\n");
     int wrsz = 0;
     file_data* entry = NULL;
     if (sz < 9) {
