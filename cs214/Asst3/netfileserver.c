@@ -207,7 +207,7 @@ void* client_handler(void* fd) {
             perror("Error on recv() of bytes");
         } else {
             // We got a good message
-            printf("Got: %s", (char*)buff);
+            printf("Got: %s\n", (char*)buff);
             if (process_msg(sock, (char *)buff, bytes) < 0) {
                 break;
             }
@@ -322,10 +322,10 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
     int wrsz = 0;
     int fmode = retr_int(buffer + 1);
     int flags = retr_int(buffer + 5);
-    char* filepath = malloc(sizeof(char) * (sz-9)); //sz-9 is the number of chars for filename
+    char* filepath = malloc(sizeof(char) * (sz - 9)); //sz-9 is the number of chars for filename
     filepath[0] = '\0';
     strncpy(filepath, buffer + 9, sz-9);
-    // printf("fmode: %i flags: %i filepath: %s\n", fmode, flags, filepath);
+    printf("buffer: %s fmode: %i flags: %i filepath: %s\n", buffer, fmode, flags, filepath);
 
     int fd = 0;
     int err = 0;
@@ -333,7 +333,7 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
     if ( !err ) {
         err = check_flags(sock, flags);
     }
-    
+
     // If there was no error on filemode or flags then we're ok.
     if (!err) {
         switch (flags) {
@@ -356,8 +356,11 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
         char a[5];
         a[0] = '1';
         store_int(&( a[1] ), fd);
-        wrsz = write(sock, fd, sizeof(int));
+        wrsz = send(sock, &a, 5, 0);
+        printf("fd: %i\n", fd);
     }
+
+    printf("Skips if statements\n");
     return wrsz;
 }
 

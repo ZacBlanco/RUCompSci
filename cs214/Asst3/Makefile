@@ -13,7 +13,7 @@ clean:
 test: test_run
 
 test_run: clean	clr libnet
-	$(CC) $(LIBS) -o $(TEST_EXE) netfileserver.o libnetfiles.o
+	$(CC) $(LIBS) -o $(TEST_EXE) libnetfiles.o test_files.o
 	./$(TEST_EXE)
 
 clr:
@@ -23,8 +23,8 @@ server:  libnetfiles.o libnetserver.o
 	$(CC) $(LIBS) -o server.out netfileserver.o libnetfiles.o
 	./server.out
 
-libnet: clr clr netfileserver.o libnetfiles.o
-	$(CC) $(LIBS) -o $(TEST_EXE) netfileserver.o libnetfiles.o
+libnet: clr clr netfileserver.o libnetfiles.o test_files.o
+	$(CC) $(LIBS) -o $(TEST_EXE) libnetfiles.o test_files.o
 
 
 libnetserver.o: libnetfiles.o
@@ -33,3 +33,5 @@ libnetserver.o: libnetfiles.o
 libnetfiles.o:
 	$(CC) $(ARGS) libnetfiles.c
 
+test_files.o:
+	$(CC) $(ARGS) test_files.c

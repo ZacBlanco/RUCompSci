@@ -17,7 +17,52 @@
 // EWOULDBLOCK
 // EPERM
 int netopen(const char *pathname, int flags) {
-    return -1;
+
+    int sockfd;
+    struct sockaddr_in server;
+    char buffer[BUFF_SIZE], * data_received, num[10];
+    
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (sockfd == -1) {
+        printf("Could not create socket.\n");
+        return -1;
+    }
+
+    bzero((char *) &server, sizeof(server));
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_family = AF_INET;
+    server.sin_port = htons( 9797 );
+
+    if (connect(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        printf("Connection error\n");
+        return -1;
+    } else {
+        printf("Connection worked!\n");
+    }
+
+    buffer[0] = '1';
+    store_int(buffer + 1, 97);
+    store_int(buffer + 5, O_RDONLY);
+    char * filepath = "./test.txt";
+    memcpy(buffer + 9, filepath, strlen(filepath));
+    if ( send(sockfd, buffer, strlen(filepath) + 9, 0) < 0) {
+        printf("Data sent failed.\n");
+    } else {
+        printf("Data sent success.\n");
+    }
+
+    if ( recv(sockfd, data_received, strlen(data_received), 0) < 0) {
+        printf("Recv failed.\n");
+    } else {
+        printf("Recv success.\n");
+    }
+    int test = retr_int(data_received + 1);
+    printf("fd: %i\n", test);
+    
+    close(sockfd);
+    return 0;
+
 }
 
 
