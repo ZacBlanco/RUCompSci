@@ -9,9 +9,8 @@ int main(int argc, char** argv) {
 
 
     printf("I am the fileserver\n");
-
     int sfd = socket(AF_INET, SOCK_STREAM, 0); // socket fd
-    // set SO_REUSEADDR on a socket to true (1):
+    // set SO_REUSEADDR on a socket to true ==> 1:
     int optval = 1;
     setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
@@ -269,19 +268,29 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
 
 // Returns the number of bytes written back to the client.
 int close_op(int sock, const char* buffer, ssize_t sz) {
+    
+    printf("--------------------------\n");
+    printf("Close operation received.\n");
+    printf("--------------------------\n");
+
     int badf = 0; // true if we need to send an error; 
     int sz_wr = 0;
     printf("Close Operation Received:\n");
     if (sz < 5) {
         // Message did not contain enough bytes to process
+        printf("Size less than 5: %d\n", (int)sz);
         badf = 1;
     } else {
         int fd = retr_int( buffer + 1 );
+        printf("fd received for close: %i\n", fd);
         file_data* closen = search_filedata(head, fd);
+        printf("Search completed.\n");
         if (closen == NULL) {
             //File did not exist.
+            printf("File did not exist.\n");
             badf = 1;
         } else {
+            printf("Found file.\n");
             remove_filedata(head, fd);
             free_filedata(closen);
             close(fd);
@@ -298,7 +307,9 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
         strcpy(&(msg[5]), mg);
         sz_wr = write(sock, msg, len);
     } else {
-        char msg[1] = { '1' };
+        printf("Success\n");
+        char msg[5];
+        store_int(&(msg[1]), 1);
         sz_wr = write(sock, &msg, 1);
     }
 
@@ -320,8 +331,12 @@ int init_op(int sock, const char* buffer, ssize_t sz) {
 //Return number of bytes written to client.
 int open_op(int sock, const char* buffer, ssize_t sz) {
 
+    printf("--------------------------\n");
     printf("Open Operation Received\n");
+    printf("--------------------------\n");
     int wrsz = 0; //write size;
+    int fd = 0;
+    int err = 0;
     if (sz < 9) {
         wrsz = write_socket_err(sock, EINVAL);
     } else {
@@ -338,27 +353,33 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
         if ( !err ) {
             err = check_flags(sock, flags);
         }
-
-        // If there was no error on filemode or flags then we're ok.
-        if (!err) {
-            switch (flags) {
-                case O_RDWR:
-                    fd = open(filepath, O_RDWR); 
-                    break;
-                case O_RDONLY:
-                    fd = open(filepath, O_RDONLY);
-                    break;
-                case O_WRONLY:
-                    fd = open(filepath, O_WRONLY);
-                    break;
-            }
+        
+        // err = check_filemode(sock, fmode);
+        if ( !err ) {
+            err = check_flags(sock, flags);
         }
+
+            // If there was no error on filemode or flags then we're ok.
+            if (!err) {
+                switch (flags) {
+                    case O_RDWR:
+                        fd = open(filepath, O_RDWR); 
+                        break;
+                    case O_RDONLY:
+                        fd = open(filepath, O_RDONLY);
+                        break;
+                    case O_WRONLY:
+                        fd = open(filepath, O_WRONLY);
+                        break;
+                }
+            }
 
         if (!fd) { // open failed - get error
             printf("Bad File. Errno - %s\n", strerror(errno));
             wrsz = write_socket_err(sock, errno);
         } else {
-
+            file_data * node = new_node(filepath, sock, fd, 0, flags);
+            add_filedata(head, node);
             char a[5];
             a[0] = '1';
             store_int(&( a[1] ), fd);
@@ -407,8 +428,8 @@ int read_op(int sock, const char* buffer, ssize_t sz){
     } else { //File descriptor was write only
         wrsz = write_socket_err(sock, EPERM);
     }
+    
     return wrsz;
-
 }
 
 int write_op(int sock, const char* buffer, ssize_t sz) {
@@ -446,6 +467,18 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
         }
     }
     return wrsz;
+}
+
+file_data * new_node(char * filename, int sockfd, int file_fd, int file_connection, int flags) {
+
+    file_data * node = malloc(sizeof(file_data));
+    node -> filename = filename;
+    node -> sockfd = sockfd;
+    node -> file_fd = file_fd;
+    node -> file_connection = file_connection;
+    node -> flags = flags;
+
+    return node;
 }
 
 

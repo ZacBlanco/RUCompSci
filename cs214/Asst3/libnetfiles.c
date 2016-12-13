@@ -18,6 +18,11 @@
 // EPERM
 int netopen(const char *pathname, int flags) {
 
+    printf("----------------------------------\n");
+    printf(" ~          NET OPEN             ~\n");
+    printf("----------------------------------\n");
+
+
     int sockfd;
     struct sockaddr_in server;
     char buffer[BUFF_SIZE], * data_received, num[10];
@@ -57,11 +62,11 @@ int netopen(const char *pathname, int flags) {
     } else {
         printf("Recv success.\n");
     }
-    int test = retr_int(data_received + 1);
-    printf("fd: %i\n", test);
+    int fd = retr_int(data_received + 1);
+    printf("fd: %i\n", fd);
     
     close(sockfd);
-    return 0;
+    return fd;
 
 }
 
@@ -98,7 +103,57 @@ ssize_t netwrite(int fildes, const void *buf, size_t nbyte) {
 // RETURN VALUE
 // netclose() returns zero on success. On error, -1 is returned, and errno is set appropriately.
 int netclose(int fd) {
-    return -1;
+
+    printf("----------------------------------\n");
+    printf(" ~          NET CLOSE            ~\n");
+    printf("----------------------------------\n");
+
+    int sockfd;
+    struct sockaddr_in server;
+    char buffer[BUFF_SIZE], * data_received;
+    
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (sockfd == -1) {
+        printf("Could not create socket.\n");
+        return -1;
+    }
+
+    bzero((char *) &server, sizeof(server));
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_family = AF_INET;
+    server.sin_port = htons( 9797 );
+
+    if (connect(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        printf("Connection error\n");
+        return -1;
+    } else {
+        printf("Connection worked!\n");
+    }
+
+    buffer[0] = '2';
+    store_int(buffer + 1, fd);
+    if ( send(sockfd, buffer, sizeof(char) + sizeof(int), 0) < 0) {
+        printf("Data sent failed.\n");
+    } else {
+        printf("Data sent success.\n");
+    }
+
+    if ( recv(sockfd, data_received, strlen(data_received), 0) < 0) {
+        printf("Recv failed.\n");
+    } else {
+        printf("Recv success.\n");
+    }
+    if (data_received[0] == '0') {
+        int err = retr_int(data_received + 1);
+        printf("Error on netclose. %s\n", strerror(err));
+    } else {
+        printf("Netclose success.\n");
+        return 1;
+    }
+    
+    close(sockfd);
+    return 0;
 }
 
 
