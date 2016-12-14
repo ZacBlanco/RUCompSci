@@ -67,7 +67,7 @@ int socket_connect(char* host, int port) {
 // INVALID_FILE_MODE (be sure to include #define of this error code in your .h if you
 // implement it)
 int netserverinit(char * hostname) {
-    int sfd = socket_connect(hostname);
+    int sfd = socket_connect(hostname, PORT);
     int ret = 0;
     printf("Socket desc: %i, errno: %i\n", sfd, errno);
     if ( errno != 0 ) { //errno is already set
@@ -194,14 +194,12 @@ ssize_t netread(int fildes, void *buf, size_t nbyte) {
             int pn = 0;
             for(pn = 0; pn < pn; pn++) {
                 ssize_t r = read_func(start_port + pn, (buf + ret) );
-                if (r == -1) {
+                if (r == -1 && r + ret <= nbyte) {
                     errno = EIO;
                     break;
                 }
-
                 ret += r;
             }
-            
 
         } else {
             errno = EBADMSG;
@@ -217,7 +215,7 @@ ssize_t netread(int fildes, void *buf, size_t nbyte) {
 
 ssize_t read_func(int port, void *buf) {
     ssize_t ret = 0;
-    int data_size = BUFF_SIZE + 5
+    int data_size = BUFF_SIZE + 5;
     char buffer[data_size];
     int sockfd = socket_connect(host_server, port); //implicitly sets errno=0
 
@@ -458,5 +456,21 @@ void free_filedata(file_data* node) {
     free(node->filename);
     node->next = NULL;
     free(node);
+}
+
+int max(int i1, int i2) {
+    if (i1 > i2) {
+        return i1;
+    } else {
+        return i2;
+    }
+}
+
+int min(int i1, int i2) {
+    if (i1 > i2) {
+        return i2;
+    } else {
+        return i1;
+    }
 }
 

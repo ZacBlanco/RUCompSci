@@ -14,7 +14,7 @@
 
 #define PORT (9797)
 
-#define BUFF_SIZE 512
+#define BUFF_SIZE 2048
 
 #define NFS_UN 97 //Unrestricted mode
 #define NFS_EX 98 //Exclusive write mode
@@ -34,6 +34,12 @@ typedef struct file_data {
     int flags; // O_RDONLY, O_WRONLY, or O_RDWR
     struct file_data* next;
 } file_data;
+
+typedef struct thread_rd {
+    int sockfd;
+    char* data;
+    ssize_t data_size;
+} thread_rd;
 
 // Open a socket connection to a host with a port.
 int socket_connect(char* host, int port);
@@ -87,6 +93,10 @@ file_data* search_filedata(file_data** head, int fd_selector);
 file_data* new_node(char* filename, int sockfd, int file_fd, int file_connection, int flags);
 void free_filedata(file_data* node);
 
+int max(int i1, int i2);
+int min(int i1, int i2);
+
+ssize_t read_func(int port, void *buf);
 
 #endif
 

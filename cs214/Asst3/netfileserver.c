@@ -1,6 +1,9 @@
 #include "netfileserver.h"
 
 file_data* head = NULL;
+pthread_t multiplex_threads[10];
+static int thread_taken[10];
+pthread_mutex_t multiplex_lock;
 
 int main(int argc, char** argv) {
 
@@ -427,7 +430,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
     file_data* entry = NULL;
     if (sz < 9) {
         wrsz = write_socket_err(sock, EINVAL);
-        printf("Wrote err\n");    
+        printf("Read Size not great enough.\n");    
     } else {
 
         int ffd = retr_int(buffer + 1);
@@ -441,33 +444,205 @@ int read_op(int sock, const char* buffer, ssize_t sz){
     if (entry == NULL) {
         wrsz = write_socket_err(sock, EBADF);
         printf("No entry\n");
-
     } else if ( entry->flags == O_RDONLY || entry->flags == O_RDWR ){
 
         int rd_sz = retr_int(buffer + 5);
         printf("Size to read is %i\n", rd_sz);
-        int datasz = rd_sz + 5; // 1 for success and 4 for bytes read.
-        // Entry not null -  read and return data        
-        char* data = malloc(sizeof(char)*(datasz));
-        ssize_t bts_read = read(entry->file_fd, data + 5, rd_sz);
-        printf("read bytes %zd\n", bts_read);
-        if(bts_read < 0) {
-            wrsz = write_socket_err(sock, errno);
-        } else {
-            data[0] = '1';
-            store_int(data + 1, bts_read);
-            wrsz = write(sock, data, datasz);
 
-            if (wrsz < 0) {
-                wrsz = write_socket_err(sock, errno);
+        if (rd_sz > 2000) {
+            printf("Multiplexing the read");
+
+            pthread_mutex_lock(&multiplex_lock);
+            int nt = get_max_multiplex(rd_sz, 0); // Num threads
+            int st = get_max_multiplex(rd_sz, 1); // Index where we can start from.
+            if  (nt < 0) {
+                wrsz = write_socket_err(sock, EFBIG);
+                return wrsz;    
             }
+            int i;
+            for (i = 0; i < nt; i++) {
+                thread_taken[i + st] = 1;
+            }
+            pthread_mutex_unlock(&multiplex_lock);
+
+            // we now have exclusive access to multiplex threads st through (st + nt)
+            int socks[nt];
+            errno = 0;
+            for(i = 0; i < nt; i++) {
+                int s = create_listen_socket( PORT + i + 1 );
+                if (s == -1) { // uh oh -- error close all sockets.
+                    i--;
+                    while (i >= 0) {
+                        close(socks[i]);
+                        i--; 
+                    }
+                    break;
+                }
+                socks[i] = s;
+            }
+
+            if ( errno != 0 ) {
+                //Shouldn't create threads -sockets are closed
+                wrsz = write_socket_err(sock, errno);
+            } else {
+                //Go on ahead and create the threads.
+                size_t data_per_thread = sz / nt;
+                size_t rem = sz - (data_per_thread * nt); 
+
+                void * (*worker)(void *);
+                worker = (void *)(&handle_read);
+                for(i = 0; i < nt - 1; i++) {
+                    char* a = malloc(sizeof(char)*(data_per_thread + 5));
+                    thread_rd* s = malloc(sizeof(thread_rd));
+                    ssize_t r = read(entry->file_fd, a+5, data_per_thread);
+                    if (r < 0) {
+                        a[0] = '0';
+                        store_int(a +1, errno);
+                        s -> sockfd = socks[i + 1];
+                        s -> data = a;
+                    } else {
+                        a[0] = '1';
+                        store_int(a + 1, data_per_thread);
+                        s -> sockfd = socks[i];
+                        s -> data = a;
+                        s -> data_size = r;
+                        //Now send off to the threads.
+                    }
+                    
+                    pthread_create(&(multiplex_threads[i]), NULL, worker, s);
+                }
+                    char* a = malloc(sizeof(char)*(rem + 5));
+                    thread_rd* s = malloc(sizeof(thread_rd));
+                    ssize_t r = read(entry->file_fd, a+5, rem);
+                    if (r < 0) {
+                        a[0] = '0';
+                        store_int(a + 1, errno);
+                        s -> sockfd = socks[i + 1];
+                        s -> data = a;
+                    } else {
+                        a[0] = '1';
+                        store_int(a + 1, data_per_thread);
+                        s -> sockfd = socks[i + 1];
+                        s -> data = a;
+                        s -> data_size = r;
+                        //Now send off to the threads.
+                    }
+                    pthread_create(&(multiplex_threads[i]), NULL, worker, s);
+
+            }
+
+
+
+        } else {
+
+            int datasz = rd_sz + 5; // 1 for success and 4 for bytes read.
+            // Entry not null -  read and return data        
+            char* data = malloc(sizeof(char)*(datasz));
+            ssize_t bts_read = read(entry->file_fd, data + 5, rd_sz);
+            printf("read bytes %zd\n", bts_read);
+            if(bts_read < 0) {
+                wrsz = write_socket_err(sock, errno);
+            } else {
+                data[0] = '1';
+                store_int(data + 1, bts_read);
+                wrsz = write(sock, data, datasz);
+
+                if (wrsz < 0) {
+                    wrsz = write_socket_err(sock, errno);
+                }
+            }
+            free(data);
+
         }
-        free(data);
+
     } else { //File descriptor was write only
         wrsz = write_socket_err(sock, EPERM);
     }
     
     return wrsz;
+}
+
+
+void handle_read(thread_rd* args) {
+    size_t c = sizeof(struct sockaddr_in);
+    struct sockaddr_in client;
+    int conn; 
+    conn = accept(args->sockfd, (struct sockaddr *)&client, (socklen_t*)&c);
+    if (conn < 0) {
+        perror("Failed on accept()");
+    } else {
+        printf("Conneción Accepted\n");
+        write(args->sockfd, args->data, args->data_size);
+    }
+    free(args->data);
+    free(args);
+    
+    
+}
+
+//Returns either the index of where we're allowed to start listening
+// Or returns the max number of threads we're allowed to open.
+// set type == 0 to get the number of threads
+// set type == 1 to get the index of the ports
+int get_max_multiplex(size_t data, int type) {
+    int i = 0;
+    int max_needed = min( (data / 2000) + 1, 10); 
+    int num = 0; // current available in a row.
+    int max_threads = 0; //max available we've found
+    int bad_last = 0;
+    int start_index = 0;
+    int max_index = 0;
+    for(i = 0; i < 10; i++) {
+        if (bad_last == 1) {
+            start_index = i;
+        }
+        if(thread_taken[i] == 0) {
+            num++;
+        } else {
+            max_threads = min( max(num, max_threads), max_needed);
+            max_index = start_index;
+            num = 0;
+        } 
+    }
+    if( type == 0 ) {
+        return max_threads;
+    } else {
+        return max_index;
+    }
+    
+}
+
+//Creates a bunch of new sockets listening on (port)
+int create_listen_socket(int port) {
+    int sfd = socket(AF_INET, SOCK_STREAM, 0); // socket fd
+    // set SO_REUSEADDR on a socket to true ==> 1:
+    int optval = 1;
+    setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
+    if (sfd < 0) {
+        perror("Could not open multiplex port. Error on socket()");
+        return -1;
+    }
+
+    //Code borrowed from http://www.binarytides.com/socket-programming-c-linux-tutorial/
+    struct sockaddr_in server_info;
+    server_info.sin_family = AF_INET;
+    server_info.sin_addr.s_addr = INADDR_ANY;
+    server_info.sin_port = htons( port );
+
+    if (bind(sfd , (struct sockaddr *)&server_info , sizeof(struct sockaddr_in)) < 0) {
+        perror("Could not bind() socket");
+        return -1;
+    }
+    //Code borrowed from http://www.binarytides.com/socket-programming-c-linux-tutorial/
+
+    //We're bound now and good to go
+    if ( listen(sfd, 5) == -1) {
+        perror("Error listen() on multiplex port");
+        return -1;
+    } else {
+        return sfd;
+    }
 }
 
 int write_op(int sock, const char* buffer, ssize_t sz) {
