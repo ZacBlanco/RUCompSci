@@ -120,7 +120,7 @@ int netopen(const char *pathname, int flags) {
     if( !errno ) {
         buffer[0] = '1';
         store_int(buffer + 1, 97);
-        store_int(buffer + 5, O_RDONLY);
+        store_int(buffer + 5, flags);
         char * filepath = "./test.txt";
         memcpy(buffer + 9, filepath, strlen(filepath));
         if ( send(sockfd, buffer, strlen(filepath) + 9, 0) < 0) {
@@ -217,26 +217,34 @@ ssize_t netwrite(int fildes, const void *buf, size_t nbyte) {
     int sockfd = socket_connect(host_server); //implicitly sets errno=0
 
     if ( errno == 0 ) {
+        printf("Error is none\n");
         buffer[0] = '4'; //4 for write.
         store_int(&( buffer[1] ), fildes);
         store_int(&( buffer[5] ), (int)nbyte);
-        memcpy(buffer, buf + 9, nbyte);
+        memcpy(buffer + 9, buf, nbyte);
         if ( write(sockfd, buffer, 9 + nbyte)  < 0) { //errno is set.
+            printf("Error in write\n");
             ret = -1;
         }
 
+        printf("No error in write\n");
+
         if (ret == -1 || recv(sockfd, buffer, BUFF_SIZE, 0) < 0) { //erno is set
+            printf("Ret is equal -1");
             ret = -1;
         } else if (buffer[0] == '0') {
+            printf("Buffer[0] == 0\n");
             // Failed to read
             errno = retr_int(&( buffer[1] ));
             ret = -1;
         } else if (buffer[0] == '1') {
+            printf("Buffer[0] == 1\n");
 
             int sz = retr_int(&( buffer[1] ));
             ret = sz;
 
         } else {
+            printf("Error in receive\n");
             errno = EBADMSG;
             ret = -1;
         }

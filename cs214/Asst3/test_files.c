@@ -61,6 +61,7 @@ void test_netopenclose() {
 
 void test_write() {
     netserverinit("localhost");
+    printf("Flag sent with open: %i\n", O_RDWR);
     int fd = netopen("./things.txt", O_RDWR);
     char* msg = "overwriting rutgers.";
     int len = strlen(msg);
