@@ -362,17 +362,15 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
     } else {
         int fmode = retr_int(buffer + 1);
         int flags = retr_int(buffer + 5);
-        char* filepath = malloc(sizeof(char) * (sz - 9)); //sz-9 is the number of chars for filename
+        char* filepath = malloc(sizeof(char) * (sz - 9 + 1)); //sz-9 is the number of chars for filename + null
         filepath[0] = '\0';
         strncpy(filepath, buffer + 9, sz-9);
+        filepath[sz-9] = '\0';
+        printf("filepath: %s\n", filepath);
         // printf("buffer: %s fmode: %i flags: %i filepath: %s\n", buffer, fmode, flags, filepath);
 
         int fd = 0;
         int err = 0;
-        // err = check_filemode(sock, fmode);
-        if ( !err ) {
-            err = check_flags(sock, flags);
-        }
         
         // err = check_filemode(sock, fmode);
         if ( !err ) {
@@ -394,7 +392,8 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
                 }
             }
 
-        if (!fd) { // open failed - get error
+        if ( fd < 0) { // open failed - get error
+            perror("fd is lt 0");
             printf("Bad File. Errno - %s\n", strerror(errno));
             wrsz = write_socket_err(sock, errno);
         } else {
@@ -404,6 +403,7 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
             printf("Flag set from node: %i\n", node -> flags);
             char a[5];
             a[0] = '1';
+            printf("Returning fd from open_op %i\n", fd);
             store_int(&( a[1] ), fd);
             wrsz = send(sock, &a, 5, 0);
             // printf("fd: %i\n", fd);
@@ -425,12 +425,16 @@ int read_op(int sock, const char* buffer, ssize_t sz){
 
         int ffd = retr_int(buffer + 1);
         entry = search_filedata(&head, ffd);
+        if (entry != NULL) {
+            printf("Entry flags: %i", entry->flags);
+        }
         
     }
 
     if (entry == NULL) {
         wrsz = write_socket_err(sock, EBADF);
         printf("No entry\n");
+
     } else if ( entry->flags == O_RDONLY || entry->flags == O_RDWR ){
 
         int rd_sz = retr_int(buffer + 5);
@@ -479,8 +483,6 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
         printf("Entry is null.\n");
         wrsz = write_socket_err(sock, EINVAL);
     } else if(entry->flags == O_RDWR || entry->flags == O_WRONLY){
-
-        printf("Entry has RDWR or WRONLY Flags\n");
         int write_amount = retr_int(buffer + 5);
         ssize_t bts_written = write(entry->file_fd, buffer + 9, write_amount);
 
@@ -499,8 +501,8 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
             }
         }
     } else {
+        wrsz = write_socket_err(sock, EPERM);
     }
-    printf("Nothing from if\n");
     return wrsz;
 }
 

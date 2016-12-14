@@ -3,26 +3,26 @@
 #define assert(x, y) lassert(x, y, __LINE__)
 
 void lassert(int c1, char* msg, int line);
+int write_to_file(const char* str, char* filename);
 
 int failed = 0;
 int total_assertions = 0;
-
-
 
 void test_netopenclose();
 void test_list_methods();
 void test_netinit();
 void test_read();
 void test_write();
+void test_rw();
 
 int main(int args, char ** argv) {
-
+    write_to_file("rutgers", "test.txt");
     test_netinit();
     test_netopenclose();
     test_list_methods();
     test_read();
     test_write();
-
+    test_rw();
     return finish();
 
 }
@@ -59,6 +59,26 @@ void test_netopenclose() {
 
 }
 
+void test_rw() {
+    char buf[BUFF_SIZE];
+    netserverinit("localhost");
+    int fd1 = netopen("./test.txt", O_RDWR);
+    int fd2 = netopen("./test.txt", O_WRONLY);
+    int fd3 = netopen("./test.txt", O_RDONLY);
+    
+    assert(fd1 != -1, "Descriptor 1 should be good");
+    assert(fd2 != -1, "Descriptor 2 should be good");
+    assert(fd3 != -1, "Descriptor 3 should be good");
+    assert(netwrite(fd1, "test1", 5) == 5, "Should be able to write 5 successful bytes");
+    assert(netread(fd3, &buf, 5) == 5, "Should read 5 bytes");
+    assert(netwrite(fd2, "test2", 5) == 5, "Should write 5 successful bytes with fd2");
+    assert(netread(fd1, buf, 2) == 2, "read 2 successful bytes");
+
+    netclose(fd2);
+    netclose(fd3);
+    netclose(fd1);
+}
+
 void test_write() {
     netserverinit("localhost");
     printf("Flag sent with open: %i\n", O_RDWR);
@@ -70,6 +90,34 @@ void test_write() {
     assert(errno == 0, "errno shouldn't have been set");
     netclose(fd);
 
+    // Test on readonly 
+    write_to_file("", "test.txt");
+    fd = netopen("./things.txt", O_RDONLY);
+    bts = netwrite(fd, msg, strlen(msg));
+    assert(bts == -1, "Should not have been able to write");
+    assert(errno != 0, "Errno should have been set");
+    netclose(fd);
+
+    fd = netopen("./things.txt", O_RDWR);
+    bts = netwrite(fd, msg, strlen(msg));
+    assert(bts == len, "number of bytes written should be the same.");
+    assert(errno == 0, "errno shouldn't have been set");
+    netclose(fd);
+
+
+    fd = netopen("./things.txt", O_RDWR);
+    msg = "EL OH EL";
+    len = strlen(msg);
+    bts = netwrite(fd, msg, strlen(msg));
+    assert(bts == len, "number of bytes written should be the same.");
+    assert(errno == 0, "errno shouldn't have been set");
+    
+    msg = "test test test\n";
+    len = strlen(msg);
+    bts = netwrite(fd, msg, strlen(msg));
+    assert(bts == len, "number of bytes written should be the same. 2nd write in a row");
+    assert(errno == 0, "errno shouldn't have been set on 2nd write");
+    netclose(fd);
 
 }
 
@@ -83,6 +131,58 @@ void test_read() {
     int t = netread(-1, &buffer, O_RDONLY);
     assert(t == -1, "Should not have been able to read from descriptor of -1");
     perror("The error from bad fd");
+
+
+    //Test multiple reads
+    f1 = netopen("test.txt", O_RDONLY);
+    b = netread(f1, &buffer, 3);
+    assert(b == 3, "Should have read 3 bytes");
+    netclose(f1);
+    
+    f1 = netopen("test.txt", O_RDONLY);
+    b = netread(f1, &buffer, 4);
+    assert(b == 4, "Should have read 3 bytes");
+    netclose(f1);
+    
+    f1 = netopen("test.txt", O_RDONLY);
+    b = netread(f1, &buffer, 5);
+    assert(b == 5, "Should have read 3 bytes");
+    netclose(f1);
+
+    f1 = netopen("test.txt", O_RDONLY);
+    b = netread(f1, &buffer, 20);
+    assert(b == 7, "Should have read 7 bytes on attempted 20 byte read");
+    netclose(f1);
+
+    f1 = netopen("test.txt", O_RDONLY);
+    b = netread(f1, &buffer, 4);
+    assert(b == 4, "Should have read 4 bytes first read before close");
+    b = netread(f1, &( buffer[3] ), 3);
+    assert(b == 3, "Should have read 7 bytes on attempted 3 byte read");
+    netclose(f1);
+
+    f1 = netopen("test.txt", O_RDONLY);
+    b = netread(f1, &buffer, 5);
+    assert(b == 5, "Should have read 5 bytes first read before close");
+    b = netread(f1, &( buffer[4] ), 3);
+    assert(b == 2, "Should have read last 2 bytes on attempted 3 byte read");
+    netclose(f1);
+
+
+    //Test different modes.
+    
+    f1 = netopen("test.txt", O_WRONLY);
+    b = netread(f1, &buffer, 1);
+    printf("bytes: %zd\n", b);
+    printf("O_RDONLY: %i, O_WRONLY: %i, O_RDWR: %i\n", O_RDONLY, O_WRONLY, O_RDWR);
+    assert(b == -1, "Should not have been able to read on writeonly file");
+    netclose(f1);
+
+    f1 = netopen("test.txt", O_RDWR);
+    b = netread(f1, &buffer, 6);
+    assert(b == 6, "Should have been able to write on file.");
+    netclose(f1);
+
 }
 
 void test_list_methods() {
@@ -132,6 +232,25 @@ void lassert(int c1, char* msg, int line) {
     total_assertions++;
     
 }
+
+int write_to_file(const char* str, char* filename) {
+    int success = 1; //Assume it to first always be successfull
+    FILE* f = fopen(filename, "w");
+    if (f) { // No error when attempting to open file.
+        if (fputs(str, f) == EOF) { //EOF when error
+            // An Error occurred when writing to file
+            fprintf(stderr, "Error when writing to file %s", filename);
+            success = 0;
+        }
+        fclose(f);
+        // printf("Wrote to file\n");
+    } else { success = 0;
+        fprintf(stderr, "Could not open a pointer to the file %s\n", filename);
+    }
+    
+    return success;
+}
+
 
 
 int finish() {

@@ -1,9 +1,6 @@
 #include "libnetfiles.h"
 
-
-
 char* host_server = NULL;
-
 
 //Creates a socket and connects to the specified server
 //Socket ready for reading and writing.
@@ -301,6 +298,7 @@ int netclose(int fd) {
     return 0;
 }
 
+// Pakcs int into a char array
 void store_int(char* dest, int i) {
     union int_to_char t;
     t.a = i;
@@ -310,6 +308,8 @@ void store_int(char* dest, int i) {
     dest[3] = t.b[3];
 }
 
+
+//unpacks int from a char array
 int retr_int(const char* src) {
     union int_to_char t;
     t.b[0] = src[0];
@@ -320,6 +320,7 @@ int retr_int(const char* src) {
 }
 
 
+//Add node to end of list.
 void add_filedata(file_data** head, file_data* node) {
     if (*head == NULL) {
         // printf("set head as node\n");
@@ -365,6 +366,7 @@ file_data* remove_filedata(file_data** head, int fd_selector) {
     }
 }
 
+//Search for a node.
 file_data* search_filedata(file_data** head, int fd_selector) {
     file_data* curr = *head;
     while( curr != NULL ) {
@@ -377,6 +379,8 @@ file_data* search_filedata(file_data** head, int fd_selector) {
     return NULL;
 }
 
+
+//creates a new node.
 file_data * new_node(char * filename, int sockfd, int file_fd, int file_connection, int flags) {
 
     file_data * node = malloc(sizeof(file_data));
