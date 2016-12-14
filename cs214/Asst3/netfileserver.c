@@ -2,6 +2,8 @@
 
 file_data* head = NULL;
 
+pthread_t threads[10];
+
 int main(int argc, char** argv) {
 
 
@@ -432,29 +434,83 @@ int read_op(int sock, const char* buffer, ssize_t sz){
     } else if ( entry->flags == O_RDONLY || entry->flags == O_RDWR ){
 
         int rd_sz = retr_int(buffer + 5);
-        printf("Size to read is %i\n", rd_sz);
-        int datasz = rd_sz + 5; // 1 for success and 4 for bytes read.
-        // Entry not null -  read and return data        
-        char* data = malloc(sizeof(char)*(datasz));
-        ssize_t bts_read = read(entry->file_fd, data + 5, rd_sz);
-        printf("read bytes %zd\n", bts_read);
-        if(bts_read < 0) {
-            wrsz = write_socket_err(sock, errno);
+        if (rd_sz > 2000) {
+            wrsz = (int)thread_read(rd_sz, wrsz, entry -> file_fd, sock);
         } else {
-            data[0] = '1';
-            store_int(data + 1, bts_read);
-            wrsz = write(sock, data, datasz);
-
-            if (wrsz < 0) {
-                wrsz = write_socket_err(sock, errno);
-            }
+            r_args * r = malloc(sizeof(r_args));
+            r -> rd_sz = rd_sz;
+            r -> wrsz = wrsz;
+            r -> file_fd = entry -> file_fd;
+            r -> sock = sock;
+            r -> offset = 0;
+            wrsz = (int)read_bytes(r); // offset
         }
-        free(data);
     } else { //File descriptor was write only
         wrsz = write_socket_err(sock, EPERM);
     }
     
     return wrsz;
+}
+
+int thread_read(int rd_sz, int wrsz, int file_fd, int sock) {
+
+    int remainder = rd_sz % 2000;
+    void * total_bytes = 0;
+    int thread_count = rd_sz / 2000;
+    void * (*worker)(void *);
+    worker = (void *)(&read_bytes);
+    printf("So far so good.\n");
+
+    r_args * r = malloc(sizeof(r_args));
+    r -> rd_sz = rd_sz;
+    r -> wrsz = wrsz;
+    r -> file_fd = file_fd;
+    r -> sock = sock;
+    
+    int i = 0;
+    for (i = 0; i < thread_count; i++) {
+        r -> rd_sz = 2000;
+        r -> offset = i * 2000;
+        pthread_create(&(threads[i]), NULL, worker, r);
+    }
+
+    if (remainder) {
+        r -> rd_sz = remainder;
+        r -> offset = thread_count * 2000;
+        pthread_create(&(threads[thread_count + 1]), NULL, worker, r);
+    }
+
+    wrsz = 0;
+    for (i = 0; i < thread_count; i++) { // join
+        pthread_join(threads[i], &total_bytes);
+        wrsz += (int)total_bytes;
+    }
+
+    return wrsz;
+}
+
+// return wrsz bytes read
+void * read_bytes(r_args * r) {
+
+    printf("Size to read is %i\n", r -> rd_sz);
+    int datasz = r -> rd_sz + 5; // 1 for success and 4 for bytes read.
+    // Entry not null -  read and return data        
+    char* data = malloc(sizeof(char)*(datasz));
+    ssize_t bts_read = read(r -> file_fd, data + 5 + r -> offset, r -> rd_sz);
+    printf("read bytes %zd\n", bts_read);
+    if(bts_read < 0) {
+        r -> wrsz = write_socket_err(r -> sock, errno);
+    } else {
+        data[0] = '1';
+        store_int(data + 1, bts_read);
+        r -> wrsz = write(r -> sock, data, datasz);
+
+        if (r -> wrsz < 0) {
+            r -> wrsz = write_socket_err(r -> sock, errno);
+        }
+    }
+    free(data);
+    return (void *) r -> wrsz;
 }
 
 int write_op(int sock, const char* buffer, ssize_t sz) {

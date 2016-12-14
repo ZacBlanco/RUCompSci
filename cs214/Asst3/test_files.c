@@ -13,6 +13,7 @@ void test_list_methods();
 void test_netinit();
 void test_read();
 void test_write();
+void test_readbig();
 void test_rw();
 
 int main(int args, char ** argv) {
@@ -23,7 +24,19 @@ int main(int args, char ** argv) {
     test_read();
     test_write();
     test_rw();
+    test_readbig();
     return finish();
+
+}
+
+void test_readbig() {
+
+    char buf[7500];
+    netserverinit("localhost");
+    int fd1 = netopen("./big.txt", O_RDWR);
+    assert(netread(fd1, &buf, 11 * 599) == 11 * 599, "Should read n bytes.\n"); 
+    netclose(fd1);
+
 
 }
 

@@ -1,10 +1,7 @@
 #include "libnetfiles.h"
 
-<<<<<<< HEAD
-=======
 pthread_mutex_t lock;
 
->>>>>>> origin/master
 char* host_server = NULL;
 
 //Creates a socket and connects to the specified server
