@@ -35,7 +35,8 @@ typedef struct file_data {
     struct file_data* next;
 } file_data;
 
-
+// Open a socket connection to a host with a port.
+int socket_connect(char* host, int port);
 
 // RETURN VALUE
 // netopen() returns the new file descriptor, or -1 if an error occurred (in which case, errno is set

@@ -158,6 +158,19 @@ First char (byte) always describes operation.
     +---------+----------------+-----------+------------------+
 
     - Responses differ in type based on failure/success
+    - Response will vary based on number of bytes requested
+
+    Expected Response on handshake
+    +-----------+-------------+----------------+--------------+
+    | suc=1 (1) | nthread (4) | start_port (n) |              |
+    +-----------+-------------+----------------+--------------+
+    Expected Response on Failure
+    +-----------+-----------+----------------+----------------+
+    | suc=0 (1) | errno (4) | errm messg (n) |                |
+    +-----------+-----------+----------------+----------------+
+
+    After the handshake there shall be `nthread` number of threads open
+    to listen on.
 
     Expected Response on Success
     +-----------+---------------------+-----------------------+
