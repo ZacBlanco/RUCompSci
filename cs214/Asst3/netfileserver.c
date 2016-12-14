@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
             perror("Failed on accept()");
             continue;
         } else {
-            printf("Connecion Accepted\n");
+            printf("Conneción Accepted\n");
 
             //Handle the clients
             int* fd = malloc(sizeof(int)); //FREE THIS IN WORKER
@@ -261,6 +261,7 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
             break;
 
     }
+    printf("~~~~~~~ Operation END ~~~~~~~\n");
 
     return return_code;
 }
@@ -275,7 +276,6 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
 
     int badf = 0; // true if we need to send an error; 
     int sz_wr = 0;
-    printf("Close Operation Received:\n");
     if (sz < 5) {
         // Message did not contain enough bytes to process
         printf("Size less than 5: %d\n", (int)sz);
@@ -283,7 +283,7 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
     } else {
         int fd = retr_int( buffer + 1 );
         printf("fd received for close: %i\n", fd);
-        file_data* closen = search_filedata(head, fd);
+        file_data* closen = search_filedata(&head, fd);
         printf("Search completed.\n");
         if (closen == NULL) {
             //File did not exist.
@@ -291,7 +291,7 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
             badf = 1;
         } else {
             printf("Found file.\n");
-            remove_filedata(head, fd);
+            remove_filedata(&head, fd);
             free_filedata(closen);
             close(fd);
         }
@@ -323,20 +323,26 @@ int init_op(int sock, const char* buffer, ssize_t sz) {
     printf("Init Operation received\n");
     printf("--------------------------\n");
     int wrsz = 0;
-    if (sz < 5) {
-        printf("Size lt 5: %zu\n", sz);
-        wrsz = write_socket_err(sock, EINVAL);    
-    } else {
-        int mode = retr_int(buffer + 1);
-        char a;
-        if (mode == NFS_EX || mode == NFS_TR || mode == NFS_UN) {
-            a = '1';
-            wrsz = write(sock, &a, 1);
-        } else {
-            a = '0';
-            wrsz = write(sock, &a, 1);
-        }   
-    }
+
+    //Code for ext A init.
+    // if (sz < 5) {
+    //     wrsz = write_socket_err(sock, EINVAL);    
+    // } else {
+    //     int mode = retr_int(buffer + 1);
+    //     char a;
+    //     if (mode == NFS_EX || mode == NFS_TR || mode == NFS_UN) {
+    //         a = '1';
+    //         wrsz = write(sock, &a, 1);
+    //     } else {
+    //         a = '0';
+    //         wrsz = write(sock, &a, 1);
+    //     }   
+    // }
+
+    char a;
+    a = '1';
+    wrsz = write(sock, &a, 1);
+    
     return wrsz;
 }
 
@@ -391,7 +397,7 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
             wrsz = write_socket_err(sock, errno);
         } else {
             file_data * node = new_node(filepath, sock, fd, 0, flags);
-            add_filedata(head, node);
+            add_filedata(&head, node);
             char a[5];
             a[0] = '1';
             store_int(&( a[1] ), fd);
@@ -413,7 +419,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
     } else {
 
         int ffd = retr_int(buffer + 1);
-        entry = search_filedata(head, ffd);
+        entry = search_filedata(&head, ffd);
         
     }
 
@@ -457,7 +463,7 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
     } else {
 
         int ffd = retr_int(buffer + 1);
-        entry = search_filedata(head, ffd);
+        entry = search_filedata(&head, ffd);
         
     }
     printf("Entry is: %p.\n", entry);
@@ -484,77 +490,6 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
     }
     return wrsz;
 }
-
-file_data * new_node(char * filename, int sockfd, int file_fd, int file_connection, int flags) {
-
-    file_data * node = malloc(sizeof(file_data));
-    node -> filename = filename;
-    node -> sockfd = sockfd;
-    node -> file_fd = file_fd;
-    node -> file_connection = file_connection;
-    node -> flags = flags;
-
-    return node;
-}
-
-
-void add_filedata(file_data* head, file_data* node) {
-    if (head == NULL) {
-        head = node;
-    } else {
-        file_data* curr = head;
-        file_data* prev = head;
-        while(curr != NULL) {
-            prev = curr;
-            curr = curr->next;
-        }
-        prev->next = node;
-        node->next = NULL;
-
-    }
-}
-
-file_data* search_filedata(file_data* head, int fd_selector) {
-    file_data* curr = head;
-    while( curr != NULL ) {
-        if (curr->file_fd == fd_selector) {
-            return curr;
-        }
-    }
-    return NULL;
-}
-
-// Returns removed node on success, NULL if not found.
-file_data* remove_filedata(file_data* head, int fd_selector) {
-    file_data* curr = head;
-    file_data* prev = head;
-
-    if (curr->file_fd == fd_selector) {
-        head = head->next;
-        return curr;
-    } 
-
-    while(curr != NULL) {
-        if(curr->file_fd == fd_selector) {
-            break;
-        }
-        prev = curr;
-        curr = curr->next; }
-
-    if (curr == NULL) {
-        return NULL;
-    } else {
-        prev->next = curr->next;
-        return curr;
-    }
-}
-
-void free_filedata(file_data* node) {
-    free(node->filename);
-    node->next = NULL;
-    free(node);
-}
-
 
 //Returns 0 if no error. Otherwise value of ERR returned
 int check_filemode(int sock, int mode) {

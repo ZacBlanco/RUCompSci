@@ -19,7 +19,7 @@ test: test_run
 
 test_debug: clean clr 
 	$(CC) -g $(LIBS) -o $(DEBUG_EXE) libnetfiles.c test_files.c
-	gdb $(DEBUG_EXE)
+	gdb -ex run ./$(DEBUG_EXE)
 
 test_server: libnetfiles.o libnetserver.o
 	$(CC) -g $(LIBS) -o server_test.out netfileserver.o libnetfiles.o

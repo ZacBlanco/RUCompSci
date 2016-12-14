@@ -1,4 +1,5 @@
 #ifndef __libnetfiles__
+#define __libnetfiles__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,10 +7,12 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <sys/socket.h>
 #include <pthread.h>
 #include <string.h>
 
+#define PORT (9797)
 
 #define BUFF_SIZE 512
 
@@ -17,8 +20,22 @@
 #define NFS_EX 98 //Exclusive write mode
 #define NFS_TR 99 //Transactional mode
 
+#define EHOSTNOTFOUND 1024
+
 #define INVALID_FILE_MODE 700
 #define INVALID_FLAG 800
+
+
+typedef struct file_data {
+    char* filename; // filename
+    int sockfd; //client ID
+    int file_fd; //file descriptor
+    int file_connection; // Connection type (ext A)
+    int flags; // O_RDONLY, O_WRONLY, or O_RDWR
+    struct file_data* next;
+} file_data;
+
+
 
 // RETURN VALUE
 // netopen() returns the new file descriptor, or -1 if an error occurred (in which case, errno is set
@@ -61,6 +78,14 @@ union int_to_char {
 
 void store_int(char* dest, int i);
 int retr_int(const char* src);
+
+
+void add_filedata(file_data** head, file_data* node);
+file_data* remove_filedata(file_data** head, int fd_selector);
+file_data* search_filedata(file_data** head, int fd_selector);
+file_data* new_node(char* filename, int sockfd, int file_fd, int file_connection, int flags);
+void free_filedata(file_data* node);
+
 
 #endif
 
