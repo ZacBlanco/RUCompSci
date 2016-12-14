@@ -1,10 +1,6 @@
 #include "libnetfiles.h"
 
-<<<<<<< HEAD
-=======
 pthread_mutex_t lock;
-
->>>>>>> origin/master
 char* host_server = NULL;
 
 //Creates a socket and connects to the specified server
@@ -15,7 +11,6 @@ int socket_connect(char* host) {
     int sockfd;
     struct sockaddr_in server;
     errno = 0;
-
     if (host == NULL) {
         errno = EHOSTNOTFOUND;
         return -1;
@@ -30,13 +25,15 @@ int socket_connect(char* host) {
     struct addrinfo* result;
 
     int herr = getaddrinfo(host, NULL, NULL, &result);
-
     if (herr < 0) {
         // Error on get addr info
         errno = EHOSTNOTFOUND;
         sockfd = -1;
     } else {
-
+        errno = 0; // Set to 0 b/c implementation of getaddrinfo is weird on ilabs
+        // For some reason even if it didn't fail errno was still being set.
+        // If we made it up to this point anyways errno must have been 0 before
+        // getaddrinfo()
         struct sockaddr_in *addr;
         addr = (struct sockaddr_in *)result->ai_addr; 
         // printf("inet_ntoa(in_addr)sin = %s\n",inet_ntoa((struct in_addr)addr->sin_addr));
@@ -53,8 +50,10 @@ int socket_connect(char* host) {
             printf("Connection worked!\n");
         }
 
+        if ( result != NULL) {
+            freeaddrinfo(result);
+        }
     }
-    freeaddrinfo(result);
     return sockfd;
 }
 
