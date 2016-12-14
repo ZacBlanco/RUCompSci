@@ -1,6 +1,6 @@
 #include "libnetfiles.h"
 
-
+pthread_mutex_t lock;
 
 char* host_server = NULL;
 
@@ -323,7 +323,9 @@ int retr_int(const char* src) {
 void add_filedata(file_data** head, file_data* node) {
     if (*head == NULL) {
         // printf("set head as node\n");
+        pthread_mutex_lock(&lock);
         *head = node;
+        pthread_mutex_unlock(&lock);
     } else {
         // printf("didn't set head as node\n'");
         file_data* curr = *head;
@@ -332,8 +334,10 @@ void add_filedata(file_data** head, file_data* node) {
             prev = curr;
             curr = curr->next;
         }
+        pthread_mutex_lock(&lock);
         prev->next = node;
         node->next = NULL;
+        pthread_mutex_unlock(&lock);
 
     }
 }
@@ -344,7 +348,9 @@ file_data* remove_filedata(file_data** head, int fd_selector) {
     file_data* prev = *head;
 
     if (curr->file_fd == fd_selector) {
+        pthread_mutex_lock(&lock);
         *head = curr->next;
+        pthread_mutex_unlock(&lock);
         return curr;
     } 
 
@@ -360,7 +366,9 @@ file_data* remove_filedata(file_data** head, int fd_selector) {
         return NULL;
     } else {
         printf("Found node to be removed\n");
+        pthread_mutex_lock(&lock);
         prev->next = curr->next;
+        pthread_mutex_unlock(&lock);
         return curr;
     }
 }

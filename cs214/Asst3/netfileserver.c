@@ -1,7 +1,5 @@
 #include "netfileserver.h"
 
-pthread_mutex_t mode_mutex;
-
 file_data* head = NULL;
 
 int main(int argc, char** argv) {
@@ -234,7 +232,6 @@ void* client_handler(void* fd) {
 //      ssize_t sz: The max amount of bytes to read from.
 int process_msg(int sock, const char* buffer, ssize_t sz) {
     // First determine the operation.
-    printf("Gets to process msg\n");
     int return_code = 0;
     switch(buffer[0]) {
         case '0':
@@ -254,12 +251,11 @@ int process_msg(int sock, const char* buffer, ssize_t sz) {
             break;
 
         case '4':
-            printf("First char is write_OP\n");
             return_code = write_op(sock, buffer, sz);
             break;
 
         default:
-            printf("Bad message: %c\n", buffer[0]);
+            printf("Bad message\n");
             break;
 
     }
@@ -398,10 +394,8 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
             printf("Bad File. Errno - %s\n", strerror(errno));
             wrsz = write_socket_err(sock, errno);
         } else {
-            printf("Flag before set node: %i\n", flags);
             file_data * node = new_node(filepath, sock, fd, 0, flags);
             add_filedata(&head, node);
-            printf("Flag set from node: %i\n", node -> flags);
             char a[5];
             a[0] = '1';
             store_int(&( a[1] ), fd);
@@ -473,22 +467,18 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
         entry = search_filedata(&head, ffd);
         
     }
-    printf("Entry is: %p. Flags: %i\n", entry, entry -> flags);
+    printf("Entry is: %p.\n", entry);
 
     if (entry == NULL) {
-        printf("Entry is null.\n");
         wrsz = write_socket_err(sock, EINVAL);
     } else if(entry->flags == O_RDWR || entry->flags == O_WRONLY){
 
-        printf("Entry has RDWR or WRONLY Flags\n");
         int write_amount = retr_int(buffer + 5);
         ssize_t bts_written = write(entry->file_fd, buffer + 9, write_amount);
 
         if(bts_written < 0) {
-            printf("Bytes written < 0\n");
             wrsz = write_socket_err(sock, errno);
         } else {
-            printf("Bytes written > 0\n");
             char a[5];
             a[0] = '1';
             store_int(a + 1, bts_written);
@@ -498,9 +488,7 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
                 wrsz = write_socket_err(sock, errno);
             }
         }
-    } else {
     }
-    printf("Nothing from if\n");
     return wrsz;
 }
 
