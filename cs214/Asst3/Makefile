@@ -32,7 +32,7 @@ test_run: clean	clr libnet
 clr:
 	clear
 
-server:  libnetfiles.o libnetserver.o 
+server: clean libnetserver.o
 	$(CC) $(LIBS) -o server.out netfileserver.o libnetfiles.o
 	./server.out
 

@@ -290,7 +290,7 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
             printf("File did not exist.\n");
             badf = 1;
         } else {
-            printf("Found file.\n");
+            printf("Found filein list.\n");
             remove_filedata(&head, fd);
             free_filedata(closen);
             close(fd);
@@ -415,7 +415,8 @@ int read_op(int sock, const char* buffer, ssize_t sz){
     int wrsz = 0;
     file_data* entry = NULL;
     if (sz < 9) {
-        wrsz = write_socket_err(sock, EINVAL);    
+        wrsz = write_socket_err(sock, EINVAL);
+        printf("Wrote err\n");    
     } else {
 
         int ffd = retr_int(buffer + 1);
@@ -424,15 +425,17 @@ int read_op(int sock, const char* buffer, ssize_t sz){
     }
 
     if (entry == NULL) {
-        wrsz = write_socket_err(sock, EINVAL);
+        wrsz = write_socket_err(sock, EBADF);
+        printf("No entry\n");
     } else if ( entry->flags == O_RDONLY || entry->flags == O_RDWR ){
 
         int rd_sz = retr_int(buffer + 5);
+        printf("Size to read is %i\n", rd_sz);
         int datasz = rd_sz + 5; // 1 for success and 4 for bytes read.
         // Entry not null -  read and return data        
         char* data = malloc(sizeof(char)*(datasz));
-        ssize_t bts_read = read(entry->file_fd, data + 5, datasz);
-
+        ssize_t bts_read = read(entry->file_fd, data + 5, rd_sz);
+        printf("read bytes %zd\n", bts_read);
         if(bts_read < 0) {
             wrsz = write_socket_err(sock, errno);
         } else {
@@ -530,5 +533,5 @@ int write_socket_err(int sock, int err) {
     char a[5];
     a[0] = (char)'0';
     store_int(&( a[1] ), err);
-    write(sock, &a, 5);
+    return write(sock, &a, 5);
 }

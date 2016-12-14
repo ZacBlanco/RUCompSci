@@ -113,7 +113,7 @@ int netopen(const char *pathname, int flags) {
     printf(" ~          NET OPEN             ~\n");
     printf("----------------------------------\n");
 
-    char buffer[BUFF_SIZE], * data_received, num[10];
+    char buffer[BUFF_SIZE];
     int fd;
     int sockfd = socket_connect(host_server);
 
@@ -124,17 +124,17 @@ int netopen(const char *pathname, int flags) {
         char * filepath = "./test.txt";
         memcpy(buffer + 9, filepath, strlen(filepath));
         if ( send(sockfd, buffer, strlen(filepath) + 9, 0) < 0) {
-            printf("Data sent failed.\n");
-        } else {
-            printf("Data sent success.\n");
+            printf("Netopen failed on send.\n");
+            fd = -1;
         }
 
-        if ( recv(sockfd, data_received, strlen(data_received), 0) < 0) {
-            printf("Recv failed.\n");
+        if (fd == -1 || recv(sockfd, buffer, BUFF_SIZE, 0) < 0) {
+            printf("Netopen failed on recv.\n");
+            fd = -1;
         } else {
             printf("Recv success.\n");
         }
-        fd = retr_int(data_received + 1);
+        fd = retr_int(buffer + 1);
         printf("fd: %i\n", fd);
         
         close(sockfd);
@@ -158,7 +158,43 @@ int netopen(const char *pathname, int flags) {
 // EBADF
 // ECONNRESET
 ssize_t netread(int fildes, void *buf, size_t nbyte) {
-    return -1;
+    printf("----------------------------------\n");
+    printf(" ~           NET READ            ~\n");
+    printf("----------------------------------\n");
+    ssize_t ret = 0;
+    char buffer[BUFF_SIZE];
+    int sockfd = socket_connect(host_server); //implicitly sets errno=0
+
+    if ( errno == 0 ) {
+        buffer[0] = '3'; //3 for read.
+        store_int(&( buffer[1] ), fildes);
+        store_int(&( buffer[5] ), (int)nbyte);
+        if ( write(sockfd, buffer, 9)  < 0) { //errno is set.
+            ret = -1;
+        }
+
+        if (ret == -1 || recv(sockfd, buffer, BUFF_SIZE, 0) < 0) { //erno is set
+            ret = -1;
+        } else if (buffer[0] == '0') {
+            // Failed to read
+            errno = retr_int(&( buffer[1] ));
+            ret = -1;
+        } else if (buffer[0] == '1') {
+
+            int sz = retr_int(&( buffer[1] ));
+            memcpy(buf, &( buffer[5] ), sz);
+            ret = (ssize_t)sz;
+
+        } else {
+            errno = EBADMSG;
+            ret = -1;
+        }
+        close(sockfd);
+    } else { //fd is bad. //Errno already set
+        ret = -1;
+    }
+    
+    return ret;
 }
 
 
@@ -172,7 +208,44 @@ ssize_t netread(int fildes, void *buf, size_t nbyte) {
 // ETIMEOUT
 // ECONNRESET
 ssize_t netwrite(int fildes, const void *buf, size_t nbyte) {
-    return -1;
+    
+    printf("----------------------------------\n");
+    printf(" ~           NET WRITE           ~\n");
+    printf("----------------------------------\n");
+    ssize_t ret = 0;
+    char buffer[BUFF_SIZE];
+    int sockfd = socket_connect(host_server); //implicitly sets errno=0
+
+    if ( errno == 0 ) {
+        buffer[0] = '4'; //4 for write.
+        store_int(&( buffer[1] ), fildes);
+        store_int(&( buffer[5] ), (int)nbyte);
+        memcpy(buffer, buf + 9, nbyte);
+        if ( write(sockfd, buffer, 9 + nbyte)  < 0) { //errno is set.
+            ret = -1;
+        }
+
+        if (ret == -1 || recv(sockfd, buffer, BUFF_SIZE, 0) < 0) { //erno is set
+            ret = -1;
+        } else if (buffer[0] == '0') {
+            // Failed to read
+            errno = retr_int(&( buffer[1] ));
+            ret = -1;
+        } else if (buffer[0] == '1') {
+
+            int sz = retr_int(&( buffer[1] ));
+            ret = sz;
+
+        } else {
+            errno = EBADMSG;
+            ret = -1;
+        }
+        close(sockfd);
+    } else { //fd is bad. //Errno already set
+        ret = -1;
+    }
+    
+    return ret;
 }
 
 
@@ -183,32 +256,40 @@ int netclose(int fd) {
     printf("----------------------------------\n");
     printf(" ~          NET CLOSE            ~\n");
     printf("----------------------------------\n");
-
+    int ret = 0;
     int sockfd = socket_connect(host_server);
-    char buffer[BUFF_SIZE], * data_received;
+    char buffer[BUFF_SIZE];
 
-    buffer[0] = '2';
-    store_int(buffer + 1, fd);
-    if ( send(sockfd, buffer, sizeof(char) + sizeof(int), 0) < 0) {
-        printf("Data sent failed.\n");
-    } else {
-        printf("Data sent success.\n");
-    }
+    if ( errno == 0 ) {
+        buffer[0] = '2';
+        store_int(buffer + 1, fd);
+        
+        if ( send(sockfd, buffer, sizeof(char) + sizeof(int), 0) < 0) {
+            printf("Data sent failed.\n");
+            ret = -1;
+        }
 
-    if ( recv(sockfd, data_received, strlen(data_received), 0) < 0) {
-        printf("Recv failed.\n");
+        if ( ret == -1 || recv(sockfd, &buffer, sizeof(char) + sizeof(int), 0) < 0) {
+            ret = -1; //errno is set already or gets set by recv.
+        } else {
+            printf("Recv success.\n");
+            ret = 0;
+        }
+
+        if (buffer[0] == '0') {
+            int err = retr_int(buffer + 1);
+            printf("Error on netclose. %s\n", strerror(err));
+            ret = -1;
+        } else {
+            printf("Netclose success.\n");
+            ret = 0;
+        }
+        
+        close(sockfd);
+
     } else {
-        printf("Recv success.\n");
+
     }
-    if (data_received[0] == '0') {
-        int err = retr_int(data_received + 1);
-        printf("Error on netclose. %s\n", strerror(err));
-    } else {
-        printf("Netclose success.\n");
-        return 1;
-    }
-    
-    close(sockfd);
     return 0;
 }
 
@@ -233,10 +314,10 @@ int retr_int(const char* src) {
 
 void add_filedata(file_data** head, file_data* node) {
     if (*head == NULL) {
-        printf("set head as node\n");
+        // printf("set head as node\n");
         *head = node;
     } else {
-        printf("didn't set head as node\n'");
+        // printf("didn't set head as node\n'");
         file_data* curr = *head;
         file_data* prev = *head;
         while(curr != NULL) {
@@ -255,7 +336,7 @@ file_data* remove_filedata(file_data** head, int fd_selector) {
     file_data* prev = *head;
 
     if (curr->file_fd == fd_selector) {
-        *head = (*head)->next;
+        *head = curr->next;
         return curr;
     } 
 
@@ -267,8 +348,10 @@ file_data* remove_filedata(file_data** head, int fd_selector) {
         curr = curr->next; }
 
     if (curr == NULL) {
+        printf("Couldn't find node to remove\n");
         return NULL;
     } else {
+        printf("Found node to be removed\n");
         prev->next = curr->next;
         return curr;
     }
@@ -280,6 +363,8 @@ file_data* search_filedata(file_data** head, int fd_selector) {
         if (curr->file_fd == fd_selector) {
             return curr;
         }
+        printf("Curr next: %p, fd = %i\n", curr->next, curr->file_fd);
+        curr = curr->next;
     }
     return NULL;
 }
@@ -292,6 +377,7 @@ file_data * new_node(char * filename, int sockfd, int file_fd, int file_connecti
     node -> file_fd = file_fd;
     node -> file_connection = file_connection;
     node -> flags = flags;
+    node -> next = NULL;
 
     return node;
 }
