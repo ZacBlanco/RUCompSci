@@ -14,30 +14,135 @@ void test_netinit();
 void test_read();
 void test_write();
 void test_rw();
+void test_extA();
 
 int main(int args, char ** argv) {
     write_to_file("rutgers", "test.txt");
+    write_to_file("rutgers", "things.txt");
+    test_rw();
     test_netinit();
     test_netopenclose();
     test_list_methods();
     test_read();
     test_write();
-    test_rw();
+    test_extA();
     return finish();
+
+}
+
+void test_extA() {
+    
+    write_to_file("", "perm1.test");
+    write_to_file("", "perm2.test");
+    write_to_file("", "perm3.test");
+    write_to_file("", "perm4.test");
+    write_to_file("", "perm5.test");
+    write_to_file("", "perm6.test");
+    write_to_file("", "perm7.test");
+    write_to_file("", "perm8.test");
+    write_to_file("", "perm8.test");
+
+    netserverinit("localhost", NFS_UN);
+    int fd1 = netopen("./perm1.test", O_RDWR);
+
+    netserverinit("localhost", NFS_EX);
+    assert(netopen("./perm1.test", O_WRONLY) == -1, "Should not be able to open Exclusive write when someone has rdwr");
+    assert(netopen("./perm1.test", O_RDWR) == -1, "Should not be able to open Exclusive write when someone has rdwr");
+    assert(netopen("./perm1.test", O_RDONLY) != -1, "Should be able to do exclusive on readonly");
+
+    netserverinit("localhost", NFS_TR);
+    assert(netopen("./perm1.test", O_WRONLY) == -1, "Should not be able to open trans write when someone has rdwr");
+    assert(netopen("./perm1.test", O_RDWR) == -1, "Should not be able to open trans write when someone has rdwr");
+    assert(netopen("./perm1.test", O_RDONLY) == -1, "Should not be able to do trans on readonly");
+
+    netserverinit("localhost", NFS_UN);
+    assert(netopen("./perm1.test", O_RDONLY) != -1, "Should be able to do un on readonly");
+    assert(netopen("./perm1.test", O_WRONLY) != -1, "Should be able to do un on readonly");
+    assert(netopen("./perm1.test", O_RDWR) != -1, "Should be able to do un on readonly");
+
+
+
+    netserverinit("localhost", NFS_EX);
+    fd1 = netopen("./perm2.test", O_RDWR);
+
+    netserverinit("localhost", NFS_EX);
+    assert(netopen("./perm2.test", O_WRONLY) == -1, "Should not be able to open Exclusive write when someone has rdwr");
+    assert(netopen("./perm2.test", O_RDWR) == -1, "Should not be able to open Exclusive write when someone has rdwr");
+    assert(netopen("./perm2.test", O_RDONLY) != -1, "Should be able to do exclusive on readonly");
+
+    netserverinit("localhost", NFS_TR);
+    assert(netopen("./perm2.test", O_WRONLY) == -1, "Should not be able to open trans write when someone has rdwr");
+    assert(netopen("./perm2.test", O_RDWR) == -1, "Should not be able to open trans write when someone has rdwr");
+    assert(netopen("./perm2.test", O_RDONLY) == -1, "Should not be able to do trans on readonly");
+
+    netserverinit("localhost", NFS_UN);
+    assert(netopen("./perm2.test", O_RDONLY) != -1, "Should be able to do un on readonly");
+    assert(netopen("./perm2.test", O_WRONLY) == -1, "Should not be able to do un on writeonly");
+    assert(netopen("./perm2.test", O_RDWR) == -1, "Should not be able to do un on readwr");
+
+
+    netserverinit("localhost", NFS_TR);
+    fd1 = netopen("./perm3.test", O_RDWR);
+
+    netserverinit("localhost", NFS_EX);
+    assert(netopen("./perm3.test", O_WRONLY) == -1, "Should not be able to open Exclusive write when someone has rdwr");
+    assert(netopen("./perm3.test", O_RDWR) == -1, "Should not be able to open Exclusive write when someone has rdwr");
+    assert(netopen("./perm3.test", O_RDONLY) == -1, "Should be able to do exclusive on readonly");
+
+    netserverinit("localhost", NFS_TR);
+    assert(netopen("./perm3.test", O_WRONLY) == -1, "Should not be able to open trans write when someone has rdwr");
+    assert(netopen("./perm3.test", O_RDWR) == -1, "Should not be able to open trans write when someone has rdwr");
+    assert(netopen("./perm3.test", O_RDONLY) == -1, "Should not be able to do trans on readonly");
+
+    netserverinit("localhost", NFS_UN);
+    assert(netopen("./perm3.test", O_RDONLY) == -1, "Should be able to do un on readonly");
+    assert(netopen("./perm3.test", O_WRONLY) == -1, "Should not be able to do un on readonly");
+    assert(netopen("./perm3.test", O_RDWR) == -1, "Should not be able to do un on readonly");
+
+
+
+
+    netserverinit("localhost", NFS_UN);
+    fd1 = netopen("./perm4.test", O_RDONLY);
+
+    netserverinit("localhost", NFS_TR);
+    assert(netopen("./perm4.test", O_WRONLY) == -1, "Should not be able to open trans write when someone has rdwr");
+    assert(netopen("./perm4.test", O_RDWR) == -1, "Should not be able to open trans write when someone has rdwr");
+    assert(netopen("./perm4.test", O_RDONLY) == -1, "Should not be able to do trans on readonly");
+
+    netserverinit("localhost", NFS_UN);
+    assert(netopen("./perm4.test", O_RDONLY) != -1, "Should be able to do un on readonly");
+    assert(netopen("./perm4.test", O_WRONLY) != -1, "Should be able to do un on readonly");
+    assert(netopen("./perm1.test", O_RDWR) != -1, "Should be able to do un on readonly");
+
+    netserverinit("localhost", NFS_EX);
+    assert(netopen("./perm4.test", O_WRONLY) == -1, "Should not be able to open Exclusive write when someone has rdwr");
+    assert(netopen("./perm4.test", O_RDWR) == -1, "Should not be able to open Exclusive write when someone has rdwr");
+    assert(netopen("./perm4.test", O_RDONLY) != -1, "Should be able to do exclusive on readonly");
+
+
+    netserverinit("localhost", NFS_UN);
+    fd1 = netopen("./perm5.test", O_RDONLY);
+    netserverinit("localhost", NFS_UN);
+    assert(netopen("./perm5.test", O_RDONLY) != -1, "Should be able to do un on readonly");
+    assert(netopen("./perm5.test", O_WRONLY) != -1, "Should be able to do un on readonly");
+    netserverinit("localhost", NFS_EX);
+    assert(netopen("./perm5.test", O_WRONLY) == -1, "Should not be able to open Exclusive write when someone has rdwr");
+
 
 }
 
 void test_netinit() {
 
-    int r = netserverinit(NULL);
+    int r = netserverinit(NULL, NFS_UN);
     assert(r == -1, "Should have gotten -1 on NULL arg to netserverinit");
     assert(errno != 0, "Errno should have been set if return is -1");
     
-    r = netserverinit("______");
+    r = netserverinit("______", NFS_UN);
     assert(r == -1, "Should have gotten -1 on \"_____\" arg to netserverinit");
     assert(errno != 0, "Errno should have been set if return is -1");
 
-    r = netserverinit("localhost");
+    r = netserverinit("localhost", NFS_UN);
     assert(r == 0, "Should be able to get simple connection to localhost.");
 
 }
@@ -61,7 +166,7 @@ void test_netopenclose() {
 
 void test_rw() {
     char buf[BUFF_SIZE];
-    netserverinit("localhost");
+    netserverinit("localhost", NFS_UN);
     int fd1 = netopen("./test.txt", O_RDWR);
     int fd2 = netopen("./test.txt", O_WRONLY);
     int fd3 = netopen("./test.txt", O_RDONLY);
@@ -72,7 +177,9 @@ void test_rw() {
     assert(netwrite(fd1, "test1", 5) == 5, "Should be able to write 5 successful bytes");
     assert(netread(fd3, &buf, 5) == 5, "Should read 5 bytes");
     assert(netwrite(fd2, "test2", 5) == 5, "Should write 5 successful bytes with fd2");
-    assert(netread(fd1, buf, 2) == 2, "read 2 successful bytes");
+    int nr = netread(fd1, buf, 2);
+    printf("NR: %i", nr);
+    assert( nr == 2, "read 2 successful bytes");
 
     netclose(fd2);
     netclose(fd3);
@@ -80,7 +187,7 @@ void test_rw() {
 }
 
 void test_write() {
-    netserverinit("localhost");
+    netserverinit("localhost", NFS_UN);
     printf("Flag sent with open: %i\n", O_RDWR);
     int fd = netopen("./things.txt", O_RDWR);
     char* msg = "overwriting rutgers.";
@@ -122,7 +229,7 @@ void test_write() {
 }
 
 void test_read() {
-    netserverinit("localhost");
+    netserverinit("localhost", NFS_UN);
     char buffer[BUFF_SIZE];
     int f1 = netopen("test.txt", O_RDONLY);
     ssize_t b = netread(f1, &buffer, 3);
@@ -205,9 +312,9 @@ void test_list_methods() {
     assert(fd2 == NULL, "Should get Null searching on null list");
 
     add_filedata(&head, fd1);
-    fd1 = new_node("test1", -1, 7, 0, O_RDONLY);
+    fd1 = new_node("test2", -1, 7, 0, O_RDONLY);
     add_filedata(&head, fd1);
-    fd1 = new_node("test1", -1, 14, 0, O_RDONLY);
+    fd1 = new_node("test3", -1, 14, 0, O_RDONLY);
     add_filedata(&head, fd1);
 
     
@@ -217,6 +324,17 @@ void test_list_methods() {
     assert(fd2 != NULL, "We should have found a node with a file descriptor of 7.");
     fd2 = search_filedata(&head, 14);
     assert(fd2 != NULL, "We should have found a node with a file descriptor of 14.");
+
+    file_data* fd4 = search_filedata_byname(&head, "test2");
+    assert(fd4 != NULL, "Should have found node test2");
+    fd4 = search_filedata_byname(&head, "test1");
+    assert(fd4 != NULL, "Should have found node test1");
+    fd4 = search_filedata_byname(&head, "test3");
+    assert(fd4 != NULL, "Should have found node test3");
+
+    fd4 = search_filedata_byname(&head, "abc123");
+    assert(fd4 == NULL, "Shouldn't have been able to find abc123");
+
 
 }
 

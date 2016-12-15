@@ -29,5 +29,8 @@ int get_max_multiplex(size_t data, int type);
 int create_listen_socket(int port);
 void handle_read(thread_rd* args);
 
+int convert_fd(int fd);
+int mode_allowed(int fmode, char* filename, int flags);
+
 #endif
 

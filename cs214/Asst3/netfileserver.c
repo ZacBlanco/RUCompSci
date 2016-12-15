@@ -325,8 +325,8 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
         printf("Size less than 5: %d\n", (int)sz);
         badf = 1;
     } else {
-        int fd = retr_int( buffer + 1 );
-        printf("fd received for close: %i\n", fd);
+        int fd = convert_fd(retr_int( buffer + 1 ));
+        printf("fd received for close: %i\n", convert_fd(fd));
         file_data* closen = search_filedata(&head, fd);
         printf("Search completed.\n");
         if (closen == NULL) {
@@ -409,19 +409,26 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
         filepath[0] = '\0';
         strncpy(filepath, buffer + 9, sz-9);
         filepath[sz-9] = '\0';
+
+
         printf("filepath: %s\n", filepath);
         // printf("buffer: %s fmode: %i flags: %i filepath: %s\n", buffer, fmode, flags, filepath);
 
         int fd = 0;
         int err = 0;
         
-        // err = check_filemode(sock, fmode);
         if ( !err ) {
             err = check_flags(sock, flags);
         }
 
+        err = !(mode_allowed(fmode, filepath, flags));
+
+        if ( err == 1) { 
+            fd = -1;
+        }
+
             // If there was no error on filemode or flags then we're ok.
-            if (!err) {
+            if ( err != 1  && fd != -1) {
                 switch (flags) {
                     case O_RDWR:
                         fd = open(filepath, O_RDWR); 
@@ -436,21 +443,103 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
             }
 
         if ( fd < 0) { // open failed - get error
-            perror("fd is lt 0");
+            perror("Got FD as < 0");
             printf("Bad File. Errno - %s\n", strerror(errno));
             wrsz = write_socket_err(sock, errno);
         } else {
-            file_data * node = new_node(filepath, sock, fd, 0, flags);
+            file_data * node = new_node(filepath, sock, fd, fmode, flags);
             add_filedata(&head, node);
             char a[5];
             a[0] = '1';
-            printf("Returning fd from open_op %i\n", fd);
-            store_int(&( a[1] ), fd);
+            printf("Returning fd from open_op %i\n", convert_fd(fd));
+            store_int(&( a[1] ), convert_fd(fd));
             wrsz = send(sock, &a, 5, 0);
             // printf("fd: %i\n", fd);
         }
     }
     return wrsz;
+}
+
+//
+int mode_allowed(int fmode, char* filename, int flags) {
+    file_data* node = search_filedata_byname(&head, filename);
+    int ret = 1;
+
+    if(node == NULL) {
+        return 1;
+    }
+    printf("Checking if mode allowed: %i, on file %s, with flags %i\n", fmode, filename, flags);
+    switch(fmode) {
+        case NFS_UN:
+            printf("mode is UNRESTRICTED and found a node.\n");
+            printf("node fileconnection : %i\n", node->file_connection);
+            if(node->file_connection == NFS_TR) {
+                ret = 0;
+            } else if(node->file_connection == NFS_EX && node->flags == O_RDONLY) {
+                file_data* n = node->next;
+                while (n != NULL) {
+                    if (  (n->flags == O_WRONLY || node->flags == O_RDWR) && (flags == O_WRONLY || flags == O_RDWR)) {
+                        ret = 0;
+                        break;
+                        n = search_filedata_byname(&(n->next), filename);
+                    }
+                }
+            } else if( node->file_connection == NFS_EX && node->flags == O_RDWR && (flags == O_WRONLY)) {
+                ret = 0;
+            } else if( node->file_connection == NFS_EX && node->flags == O_RDWR && flags == O_RDWR) {
+                ret = 0;
+            } else if (node->file_connection == NFS_EX && node->flags == O_RDWR && (flags == O_WRONLY || flags == O_RDWR)) {
+                ret = 0;
+            }
+
+            break;
+        case NFS_EX:
+            if(node->file_connection == NFS_TR) {
+                ret = 0;
+            } else if(node->file_connection == NFS_EX && node->flags == O_RDONLY) {
+                file_data* n = node->next;
+                while (n != NULL) {
+                    if (  (n->flags == O_WRONLY || node->flags == O_RDWR) && (flags == O_WRONLY || flags == O_RDWR)) {
+                        ret = 0;
+                        break;
+                    }
+                    n = search_filedata_byname(&(n->next), filename);
+                }
+            } else if( node->file_connection == NFS_EX && node->flags == O_RDWR && flags == O_WRONLY) {
+                ret = 0;
+            } else if( node->file_connection == NFS_EX && node->flags == O_RDWR && flags == O_RDWR) {
+                ret = 0;
+            } else if (node->file_connection == NFS_UN && (node->flags == O_RDWR || node->flags == O_WRONLY ) && (flags == O_RDWR) ) {
+                printf("Inside what shoudl catch\n");
+                ret = 0;
+            } else if (node->file_connection == NFS_UN && (node->flags == O_RDWR || node->flags == O_WRONLY ) && (flags == O_WRONLY) ) {
+                printf("Inside what shoudl catch 2\n");
+                ret = 0;
+            }
+
+            break;
+        case NFS_TR:
+            if(node->file_connection == NFS_TR) {
+                ret = 0;
+            } else if(node->file_connection == NFS_EX) {
+                ret = 0;
+            } else if( node->file_connection == NFS_UN) {
+                ret = 0;
+            } 
+            break;
+
+        default:
+            ret = 0;
+            errno = EBADMSG;
+            break;
+    }
+
+    if (ret == 0) {
+        errno = EPERM;
+    }
+    printf("RETURN FROM MODE ALLOWED: %i\n", ret);
+    return ret;
+
 }
 
 int read_op(int sock, const char* buffer, ssize_t sz){
@@ -464,7 +553,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
         printf("Read Size not great enough.\n");    
     } else {
 
-        int ffd = retr_int(buffer + 1);
+        int ffd = convert_fd(retr_int(buffer + 1));
         entry = search_filedata(&head, ffd);
         if (entry != NULL) {
             printf("Entry flags: %i", entry->flags);
@@ -689,7 +778,7 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
         wrsz = write_socket_err(sock, EBADE);    
     } else {
 
-        int ffd = retr_int(buffer + 2);
+        int ffd = convert_fd(retr_int(buffer + 2));
         entry = search_filedata(&head, ffd);
         
     }
@@ -808,7 +897,7 @@ void handle_write(thread_wr* args) {
             write_socket_err(args->sockfd, errno);
             close(args->sockfd);
         } else {
-            int netfd = retr_int( buf );
+            int netfd = convert_fd(retr_int( buf ));
             int ds = retr_int( buf + 4 );
 
             r = write(args->fd, buf + 8, ds);
@@ -832,24 +921,6 @@ void handle_write(thread_wr* args) {
 
 }
 
-//Returns 0 if no error. Otherwise value of ERR returned
-int check_filemode(int sock, int mode) {
-    
-    if (mode == NFS_UN || mode == NFS_EX || mode == NFS_TR) {
-        // Set the server type
-        return 0;
-    } else {
-        // Bad mode type
-        // unsigned char msg[19];
-        // msg[0] = (char)'0';
-        // store_int(msg + 1, INVALID_FILE_MODE);
-        // int num = retr_int(msg + 1);
-        // // printf("filemode: %i\n", num);
-        // strcpy(&(msg[5]), "Bad mode type\n");
-        return EINVAL;
-    }
-}
-
 //Returns 0 if no error, otherwise value of ERR returned.
 int check_flags(int sock, int flags) {
 
@@ -857,12 +928,6 @@ int check_flags(int sock, int flags) {
         return 0;
     } else {
         // Bad flags
-        // unsigned char msg[19];
-        // msg[0] = (char)'0';
-        // store_int(msg + 1, INVALID_FLAG);
-        // int num = retr_int(msg + 1);
-        // strcpy(&(msg[5]), "Bad mode type\n");
-        // write(sock, &msg, 19);
         return EINVAL;
     }
 }
@@ -872,4 +937,8 @@ int write_socket_err(int sock, int err) {
     a[0] = (char)'0';
     store_int(&( a[1] ), err);
     return write(sock, &a, 5);
+}
+
+int convert_fd(int fd) {
+    return (fd * -1);
 }
