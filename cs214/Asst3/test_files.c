@@ -10,19 +10,23 @@ int total_assertions = 0;
 
 void test_netopenclose();
 void test_list_methods();
+void test_min_max();
+void test_multiplex();
 void test_netinit();
 void test_read();
 void test_write();
 void test_rw();
 
 int main(int args, char ** argv) {
-    write_to_file("rutgers", "test.txt");
-    test_netinit();
-    test_netopenclose();
-    test_list_methods();
+    //write_to_file("rutgers", "test.txt");
+    //test_netinit();
+   // test_netopenclose();
+  //  test_list_methods();
+ //   test_multiplex();
+//    test_min_max();
     test_read();
-    test_write();
-    test_rw();
+    //test_write();
+    //test_rw();
     return finish();
 
 }
@@ -40,6 +44,47 @@ void test_netinit() {
     r = netserverinit("localhost");
     assert(r == 0, "Should be able to get simple connection to localhost.");
 
+}
+
+void test_multiplex() {
+    int * thread_taken = calloc(10, sizeof(int));
+    int nt;
+    int st;
+    int rd_sz = 5000;
+
+    //Test Zero'd array
+    nt = get_max_multiplex(rd_sz, 0, thread_taken);
+    st = get_max_multiplex(rd_sz, 1, thread_taken);
+    assert(nt == 3, "Should return 3 threads available.");
+    //printf("Number of threads returned: %i\n", nt);
+    assert(st == 0, "Should return start point from 0.");
+
+    //Test fragmented array
+    int i;
+    for(i = 0; i < 10; i += 3) {
+        thread_taken[i] = 1;
+    }
+    nt = get_max_multiplex(rd_sz, 0, thread_taken);
+    st = get_max_multiplex(rd_sz, 1, thread_taken);
+    assert(nt == 2, "Should return 2 threads available.");
+    //printf("Number of threads returned: %i\n", nt);
+    assert(st == 1, "Should return 1st index.");
+    printf("Starting location: %i\n", st);
+
+    //Test Half available
+    for (i = 0; i < 9; i++) {
+        thread_taken[i] = 0;
+    }
+    thread_taken[5] = 1;
+    rd_sz = 10000;
+    nt = get_max_multiplex(rd_sz, 0, thread_taken);
+    st = get_max_multiplex(rd_sz, 1, thread_taken);
+    assert(nt == 5, "Should return 5 threads available.");
+    //printf("Number of threads returned: %i\n", nt);
+    assert(st == 0, "Should return 0th index.");
+    //printf("Starting location: %i\n", st);
+    
+    
 }
 
 void test_netopenclose() {
@@ -73,7 +118,7 @@ void test_rw() {
     assert(netread(fd3, &buf, 5) == 5, "Should read 5 bytes");
     assert(netwrite(fd2, "test2", 5) == 5, "Should write 5 successful bytes with fd2");
     assert(netread(fd1, buf, 2) == 2, "read 2 successful bytes");
-
+    
     netclose(fd2);
     netclose(fd3);
     netclose(fd1);
@@ -123,7 +168,7 @@ void test_write() {
 
 void test_read() {
     netserverinit("localhost");
-    char buffer[BUFF_SIZE];
+    /*char buffer[BUFF_SIZE];
     int f1 = netopen("test.txt", O_RDONLY);
     ssize_t b = netread(f1, &buffer, 3);
     assert(b == 3, "Should have read 3 bytes");
@@ -182,7 +227,27 @@ void test_read() {
     b = netread(f1, &buffer, 6);
     assert(b == 6, "Should have been able to write on file.");
     netclose(f1);
+*/
+    //Test threaded version
+    
+    char bigbuff[4000];
+    int f2 = netopen("big.txt", O_RDONLY);
+    ssize_t b = netread(f2, &bigbuff, 3500);
+    errno = retr_int(bigbuff + 1);
+    perror("Error from bigread");
+    assert(b == 3500, "Threads should work.");
+    printf("Bytes read: %i\n", b);
+    netclose(f2);
 
+}
+
+void test_min_max() {
+    
+    assert(min(0, 10) == 0, "0 should be less than 10");
+    assert(min(10, 0) == 0, "0 should be less than 10");
+    assert(max(10, 0) == 10, "10 should be greater than 0");
+    assert(max(0, 10) == 10, "10 should be greater than 0");
+    
 }
 
 void test_list_methods() {

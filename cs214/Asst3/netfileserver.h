@@ -25,7 +25,6 @@ int write_op(int sock, const char* buffer, ssize_t sz);
 
 int write_socket_err(int sock, int err);
 
-int get_max_multiplex(size_t data, int type);
 int create_listen_socket(int port);
 void handle_read(thread_rd* args);
 

@@ -436,7 +436,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
         int ffd = retr_int(buffer + 1);
         entry = search_filedata(&head, ffd);
         if (entry != NULL) {
-            printf("Entry flags: %i", entry->flags);
+            printf("Entry flags: %i\n", entry->flags);
         }
         
     }
@@ -450,12 +450,13 @@ int read_op(int sock, const char* buffer, ssize_t sz){
         printf("Size to read is %i\n", rd_sz);
 
         if (rd_sz > 2000) {
-            printf("Multiplexing the read");
+            printf("Multiplexing the read\n");
 
             pthread_mutex_lock(&multiplex_lock);
-            int nt = get_max_multiplex(rd_sz, 0); // Num threads
-            int st = get_max_multiplex(rd_sz, 1); // Index where we can start from.
-            if  (nt < 0) {
+            int nt = get_max_multiplex(rd_sz, 0, thread_taken); // Num threads
+            int st = get_max_multiplex(rd_sz, 1, thread_taken); // Index where we can start from.
+            printf("# of threads: %i index start: %i\n", nt, st);
+            if  (nt <= 0) {
                 wrsz = write_socket_err(sock, EFBIG);
                 return wrsz;    
             }
@@ -471,6 +472,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
             for(i = 0; i < nt; i++) {
                 int s = create_listen_socket( PORT + i + 1 );
                 if (s == -1) { // uh oh -- error close all sockets.
+                    printf("Error closing all sockets.\n");
                     i--;
                     while (i >= 0) {
                         close(socks[i]);
@@ -479,61 +481,87 @@ int read_op(int sock, const char* buffer, ssize_t sz){
                     break;
                 }
                 socks[i] = s;
+                printf("Sock[%i]: %i\n", i, socks[i]);
             }
+
+            printf("Starting point.\n");
+                    printf("Sock[1]: %i\n", socks[1]);
 
             if ( errno != 0 ) {
                 //Shouldn't create threads -sockets are closed
+                printf("Errno != 0\n");
                 wrsz = write_socket_err(sock, errno);
             } else {
                 //Go on ahead and create the threads.
+                printf("Errno == 0\n");
                 size_t data_per_thread = sz / nt;
                 size_t rem = sz - (data_per_thread * nt); 
 
                 void * (*worker)(void *);
                 worker = (void *)(&handle_read);
+                printf("About to run threads.\n");
+                    printf("Sock[1]: %i\n", socks[1]);
                 for(i = 0; i < nt - 1; i++) {
+                    printf("Sock[1]: %i\n", socks[1]);
                     char* a = malloc(sizeof(char)*(data_per_thread + 5));
                     thread_rd* s = malloc(sizeof(thread_rd));
                     ssize_t r = read(entry->file_fd, a+5, data_per_thread);
                     if (r < 0) {
+                        printf("Checking.\n");
                         a[0] = '0';
                         store_int(a +1, errno);
-                        s -> sockfd = socks[i + 1];
+                        s -> sockfd = socks[i];
                         s -> data = a;
                     } else {
+                    printf("Sock[1]: %i\n", socks[1]);
                         a[0] = '1';
                         store_int(a + 1, data_per_thread);
+                        printf("Socks: %i\n", socks[i]);
                         s -> sockfd = socks[i];
+                        printf("Socks after set: %i\n", s -> sockfd);
                         s -> data = a;
                         s -> data_size = r;
                         //Now send off to the threads.
                     }
                     
+                    printf("Sock[1]: %i\n", socks[1]);
                     pthread_create(&(multiplex_threads[i]), NULL, worker, s);
                 }
+                    printf("Sock[1]: %i\n", socks[1]);
                     char* a = malloc(sizeof(char)*(rem + 5));
                     thread_rd* s = malloc(sizeof(thread_rd));
+                    printf("Sock[1]: %i\n", socks[1]);
                     ssize_t r = read(entry->file_fd, a+5, rem);
+                    printf("Sock[1]: %i\n", socks[1]);
                     if (r < 0) {
                         a[0] = '0';
                         store_int(a + 1, errno);
+                        printf("Socks: %i\n", socks[i + 1]);
                         s -> sockfd = socks[i + 1];
+                        printf("Socks after set: %i\n", socks[i + 1]);
                         s -> data = a;
                     } else {
                         a[0] = '1';
                         store_int(a + 1, data_per_thread);
-                        s -> sockfd = socks[i + 1];
+                        printf("i: %i\n", i);
+                        printf("Socks: %i\n", socks[i]);
+                        s -> sockfd = socks[i];
+                        printf("Socks after set: %i\n", s -> sockfd);
                         s -> data = a;
                         s -> data_size = r;
                         //Now send off to the threads.
                     }
-                    pthread_create(&(multiplex_threads[i]), NULL, worker, s);
+                    pthread_create(&(multiplex_threads[i + 1]), NULL, worker, s);
 
+                // WRITE BACK HERE
+                wrsz = write(sock, data, datasz);
+                printf("Threads running\n");
             }
 
 
 
         } else {
+            printf("Not bigger than 3500.\n");
 
             int datasz = rd_sz + 5; // 1 for success and 4 for bytes read.
             // Entry not null -  read and return data        
@@ -556,9 +584,9 @@ int read_op(int sock, const char* buffer, ssize_t sz){
         }
 
     } else { //File descriptor was write only
+        printf("File descriptor was write only.\n");
         wrsz = write_socket_err(sock, EPERM);
     }
-    
     return wrsz;
 }
 
@@ -569,6 +597,7 @@ void handle_read(thread_rd* args) {
     int conn; 
     conn = accept(args->sockfd, (struct sockaddr *)&client, (socklen_t*)&c);
     if (conn < 0) {
+        printf("Args -> sockfd: %i\n", args -> sockfd);
         perror("Failed on accept()");
     } else {
         printf("Conneción Accepted\n");
@@ -577,38 +606,6 @@ void handle_read(thread_rd* args) {
     free(args->data);
     free(args);
     
-    
-}
-
-//Returns either the index of where we're allowed to start listening
-// Or returns the max number of threads we're allowed to open.
-// set type == 0 to get the number of threads
-// set type == 1 to get the index of the ports
-int get_max_multiplex(size_t data, int type) {
-    int i = 0;
-    int max_needed = min( (data / 2000) + 1, 10); 
-    int num = 0; // current available in a row.
-    int max_threads = 0; //max available we've found
-    int bad_last = 0;
-    int start_index = 0;
-    int max_index = 0;
-    for(i = 0; i < 10; i++) {
-        if (bad_last == 1) {
-            start_index = i;
-        }
-        if(thread_taken[i] == 0) {
-            num++;
-        } else {
-            max_threads = min( max(num, max_threads), max_needed);
-            max_index = start_index;
-            num = 0;
-        } 
-    }
-    if( type == 0 ) {
-        return max_threads;
-    } else {
-        return max_index;
-    }
     
 }
 

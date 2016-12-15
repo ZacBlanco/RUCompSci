@@ -22,7 +22,7 @@ test_debug: clean clr
 	gdb -ex run ./$(DEBUG_EXE)
 
 test_server: libnetfiles.o libnetserver.o
-	$(CC) -g $(LIBS) -o server_test.out netfileserver.o libnetfiles.o
+	$(CC) -g $(LIBS) -o server_test.out netfileserver.c libnetfiles.o
 	gdb server_test.out
 
 test_run: clean	clr libnet
@@ -33,7 +33,7 @@ clr:
 	clear
 
 server: clean libnetserver.o
-	$(CC) $(LIBS) -o server.out netfileserver.o libnetfiles.o
+	$(CC) -Wall $(LIBS) -o server.out netfileserver.o libnetfiles.o
 	./server.out
 
 libnet: clr clr netfileserver.o libnetfiles.o test_files.o

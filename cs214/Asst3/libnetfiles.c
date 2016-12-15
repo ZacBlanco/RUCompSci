@@ -190,9 +190,10 @@ ssize_t netread(int fildes, void *buf, size_t nbyte) {
 
             int nthreads = retr_int(&( buffer[1] ));
             int start_port = retr_int(&(  buffer[5] ));
+            printf("# threads: %i, Start_Port: %i\n", nthreads, start_port);
 
             int pn = 0;
-            for(pn = 0; pn < pn; pn++) {
+            for(pn = 1; pn <= nthreads; pn++) {
                 ssize_t r = read_func(start_port + pn, (buf + ret) );
                 if (r == -1 && r + ret <= nbyte) {
                     errno = EIO;
@@ -473,4 +474,50 @@ int min(int i1, int i2) {
         return i1;
     }
 }
+
+//Returns either the index of where we're allowed to start listening
+// Or returns the max number of threads we're allowed to open.
+// set type == 0 to get the number of threads
+// set type == 1 to get the index of the ports
+int get_max_multiplex(size_t data, int type, int * thread_taken) {
+    int i = 0;
+    int max_needed = min( (data / 2000) + ((data % 2000) > 0), 10); 
+    int num = 0; // current available in a row.
+    int max_threads = 0; //max available we've found
+    int bad_last = 0;
+    int start_index = 0;
+    int max_index = 0;
+    int prev_threads = 0;
+    for(i = 0; i < 10; i++) {
+        if (bad_last == 1) {
+            //printf("Bad last was set at %i\n", i);
+            start_index = i;
+            bad_last = 0;
+        }
+        if (i == 9 && thread_taken[i] == 0) {
+            num++;
+            max_threads = min( max(num, max_threads), max_needed);
+        } else if(thread_taken[i] == 0) {
+            //printf("Incrementing num.\n");
+            num++;
+            max_threads = max(num, max_threads);
+        } else {
+            //printf("Found chunk of threads: %i\n", num);
+            bad_last = 1;
+            max_threads = min( max_threads, max_needed);
+            if (prev_threads < max_threads) {
+                prev_threads = max_threads;
+                max_index = start_index;
+            }
+            num = 0;
+        } 
+    }
+    if( type == 0 ) {
+        return max_threads;
+    } else {
+        return max_index;
+    }
+    
+}
+
 

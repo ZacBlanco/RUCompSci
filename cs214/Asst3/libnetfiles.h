@@ -93,6 +93,7 @@ file_data* search_filedata(file_data** head, int fd_selector);
 file_data* new_node(char* filename, int sockfd, int file_fd, int file_connection, int flags);
 void free_filedata(file_data* node);
 
+int get_max_multiplex(size_t data, int type, int * thread_taken);
 int max(int i1, int i2);
 int min(int i1, int i2);
 
