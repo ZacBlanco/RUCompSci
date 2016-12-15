@@ -244,6 +244,41 @@ ssize_t read_func(int port, void *buf) {
     return ret;
 }
 
+ssize_t write_func(int port, int orig_fd, const void *buf, size_t size) {
+    ssize_t ret = 0;
+    int data_size = BUFF_SIZE + 5;
+    char buffer[data_size];
+    int sockfd = socket_connect(host_server, port); //implicitly sets errno=0
+
+    if ( errno == 0 ) {
+
+        store_int(buffer, orig_fd);
+        store_int(buffer + 4, (int)size);
+        memcpy(buffer + 8, buf, size);
+
+        if ( (ret = write(sockfd, buffer, size, 0) ) < 0) { //erno is set
+            ret = -1;
+        }
+
+        if (ret < 0 || (ret = recv(sockfd, buffer, size, 0) ) < 0) { //erno is set
+            ret = -1; //errno is set.
+        } else {
+            if (buffer[0] == '0') {
+                errno = retr_int( &( buffer[1] ) );
+                ret = -1;
+            } else if (buffer[0] == '1') {
+                ret = retr_int( &(buffer[1]) );
+            }
+        }
+
+        close(sockfd);
+    } else { //fd is bad. //Errno already set
+        ret = -1;
+    }
+
+    return ret;
+}
+
 
 // RETURN VALUE
 // Upon successful completion, netwrite() should return the number of bytes actually written to
@@ -265,37 +300,85 @@ ssize_t netwrite(int fildes, const void *buf, size_t nbyte) {
 
     if ( errno == 0 ) {
         printf("Error is none\n");
-        buffer[0] = '4'; //4 for write.
-        store_int(&( buffer[1] ), fildes);
-        store_int(&( buffer[5] ), (int)nbyte);
-        memcpy(buffer + 9, buf, nbyte);
-        if ( write(sockfd, buffer, 9 + nbyte)  < 0) { //errno is set.
-            printf("Error in write\n");
-            ret = -1;
-        }
 
-        printf("No error in write\n");
+        if (nbyte < 2000) {
 
-        if (ret == -1 || recv(sockfd, buffer, BUFF_SIZE, 0) < 0) { //erno is set
-            printf("Ret is equal -1");
-            ret = -1;
-        } else if (buffer[0] == '0') {
-            printf("Buffer[0] == 0\n");
-            // Failed to read
-            errno = retr_int(&( buffer[1] ));
-            ret = -1;
-        } else if (buffer[0] == '1') {
-            printf("Buffer[0] == 1\n");
+            buffer[0] = '4'; //4 for write.
+            buffer[1] = '0'; // Are we greater than 2k? ==> No.
+            store_int(&( buffer[2] ), fildes); //File descriptor
+            store_int(&( buffer[6] ), (int)nbyte);
+            memcpy(buffer + 10, buf, nbyte);
+            if ( write(sockfd, buffer, 10 + nbyte)  < 0) { //errno is set.
+                printf("Error in write\n");
+                ret = -1;
+            }
 
-            int sz = retr_int(&( buffer[1] ));
-            ret = sz;
+            printf("No error in write\n");
+
+            if (ret == -1 || recv(sockfd, buffer, BUFF_SIZE, 0) < 0) { //erno is set
+                printf("Ret is equal -1");
+                ret = -1;
+            } else if (buffer[0] == '0') {
+                printf("Buffer[0] == 0\n");
+                // Failed to read
+                errno = retr_int(&( buffer[1] ));
+                ret = -1;
+            } else if (buffer[0] == '1') {
+                printf("Buffer[0] == 1\n");
+                int sz = retr_int(&( buffer[1] ));
+                ret = sz;
+
+            } else {
+                printf("Error in receive\n");
+                errno = EBADMSG;
+                ret = -1;
+            }
+            close(sockfd);
 
         } else {
-            printf("Error in receive\n");
-            errno = EBADMSG;
-            ret = -1;
+
+            // Size is over 2000 - special construction message.
+            buffer[0] = '4'; //4 for write.
+            store_int(&( buffer[1] ), '1'); // Are we greater than 2k? ==> No.
+            store_int(&( buffer[5] ), fildes); //File descriptor
+            store_int(&( buffer[9] ), (int)nbyte);
+            if ( write(sockfd, buffer, 13)  < 0) { //errno is set.
+                printf("Error in write\n");
+                ret = -1;
+            }
+            if (ret == -1 || recv(sockfd, buffer, BUFF_SIZE, 0) < 0) { //erno is set
+                printf("Ret is equal -1");
+                ret = -1;
+            } else if (buffer[0] == '0') {
+                //Error on multiplexing
+                errno = retr_int( buffer + 1 );
+                ret = -1;
+            } else if (buffer[0] == '1') {
+
+                int nt = retr_int( &( buffer[5] ));
+                int start_port = retr_int( &( buffer[9] ));
+                ssize_t total_wr = 0;
+                int wr_thsz = nt / nbyte;
+                int rem = nbyte - (wr_thsz * nt);
+                //Attempt to write data to every thread.
+                //write_func(int port, int orig_fd, void *buf, size_t size)
+                int i;
+                for (i = 0; i < nt- 1; i++) {
+                    ssize_t r = write_func(PORT + 1 + start_port, fildes, buf +(i*wr_thsz), wr_thsz);
+                    if (r >= 0) {
+                        total_wr += r;
+                    }
+                }
+                ssize_t r = write_func(PORT + 1 + start_port, fildes, buf + (i*wr_thsz), rem);
+                if (r >= 0) {
+                    total_wr += r;
+                }
+                
+
+            }
+
         }
-        close(sockfd);
+
     } else { //fd is bad. //Errno already set
         ret = -1;
     }

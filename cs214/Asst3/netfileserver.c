@@ -152,7 +152,7 @@ First char (byte) always describes operation.
 
     ------ '3' - Read Operation ------
 
-     - On a close operation we have a first bit of 2. After
+     - On a read operation we have a first bit of '3'. After
     which we care about 1 argument - The file descriptor.
 
     Expected Message
@@ -187,17 +187,21 @@ First char (byte) always describes operation.
 
     ------ '4' - Write Operation ------ 
 
-    - On a close operation we have a first bit of 2. After
-    which we care about 1 argument - The file descriptor.
+    - On a write operation we have a first bit of '4'. After
+    which we care about 1 argument - The file descriptor. write_op
 
-    Expected Message
-    +---------+----------------+----------+---------+---------+
-    | op. (1) | descriptor (4) | size (4) | data(n) |         |
-    +---------+----------------+----------+---------+---------+
+    Expected Message (size < 2k)
+    +---------+-----------+----------------+----------+---------+
+    | op. (1) | sgt2k (1) | descriptor (4) | size (4) | data(n) |
+    +---------+-----------+----------------+----------+---------+
+    Expected Message (size > 2k)
+    +---------+-----------+----------------+----------+---------+
+    | op. (1) | sgt2k (1) | descriptor (4) | size (4) |         |
+    +---------+-----------+----------------+----------+---------+
 
     - Responses differ in type based on failure/success
 
-    Expected Response on Success
+    Expected Response on Success (for less than 2k)
     +-----------+---------+-----------------------------------+
     | suc=1 (1) | size(4) |                                   |
     +-----------+---------+-----------------------------------+
@@ -205,6 +209,32 @@ First char (byte) always describes operation.
     +-----------+-----------+----------------+----------------+
     | suc=0 (1) | errno (4) | errm messg (n) |                |
     +-----------+-----------+----------------+----------------+
+
+/*
+    Expected Response on Success (for gt 2k)
+    +----------+-------------+----------------+---------------+
+    | suc=1 (1) | nthread (4) | start_port (n) |              |
+    +-----------+-------------+----------------+--------------+
+    Expected Response on Failure
+    +-----------+-----------+----------------+----------------+
+    | suc=0 (1) | errno (4) | errm messg (n) |                |
+    +-----------+-----------+----------------+----------------+
+
+    Client will then send data to write. in the form
+    Expected Response on Success (for gt 2k)
+    +-------------+------------+----------+--------------------+
+    | orig_fd (4) | data_sz(4) | data (n) |                    |
+    +-------------+------------+----------+--------------------+
+
+    The thread should then redpond with
+    +-----------+---------+-----------------------------------+
+    | suc=1 (1) | size(4) |                                   |
+    +-----------+---------+-----------------------------------+
+    or 
+    +-----------+-----------+----------------+----------------+
+    | suc=0 (1) | errno (4) | errm messg (n) |                |
+    +-----------+-----------+----------------+----------------+
+
 
 
 */
@@ -315,11 +345,12 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
     if (badf) {
         char* mg = "Bad file descriptor";
         int len = 5 + strlen(mg);
-        char msg[len];
+        char* msg = malloc(sizeof(char) * len);
         msg[0] = '0';
         store_int(&(msg[1]), EBADF);
         strcpy(&(msg[5]), mg);
         sz_wr = write(sock, msg, len);
+        free(msg);
     } else {
         printf("Success\n");
         char msg[5];
@@ -444,7 +475,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
     if (entry == NULL) {
         wrsz = write_socket_err(sock, EBADF);
         printf("No entry\n");
-    } else if ( entry->flags == O_RDONLY || entry->flags == O_RDWR ){
+    } else if ( entry->flags == O_RDONLY || entry->flags == O_RDWR ) {
 
         int rd_sz = retr_int(buffer + 5);
         printf("Size to read is %i\n", rd_sz);
@@ -455,7 +486,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
             pthread_mutex_lock(&multiplex_lock);
             int nt = get_max_multiplex(rd_sz, 0); // Num threads
             int st = get_max_multiplex(rd_sz, 1); // Index where we can start from.
-            if  (nt < 0) {
+            if  (nt <= 0) {
                 wrsz = write_socket_err(sock, EFBIG);
                 return wrsz;    
             }
@@ -466,7 +497,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
             pthread_mutex_unlock(&multiplex_lock);
 
             // we now have exclusive access to multiplex threads st through (st + nt)
-            int socks[nt];
+            int* socks = malloc(sizeof(int)*nt);
             errno = 0;
             for(i = 0; i < nt; i++) {
                 int s = create_listen_socket( PORT + i + 1 );
@@ -528,11 +559,14 @@ int read_op(int sock, const char* buffer, ssize_t sz){
                         //Now send off to the threads.
                     }
                     pthread_create(&(multiplex_threads[i]), NULL, worker, s);
-
-            }
-
-
-
+                    free(socks);
+                    for(i = 0; i < nt; i++) {
+                        pthread_join(multiplex_threads[i], NULL);
+                        pthread_mutex_lock(&multiplex_lock);
+                        thread_taken[i + st] = 0;
+                        pthread_mutex_unlock(&multiplex_lock);
+                    }
+                }
         } else {
 
             int datasz = rd_sz + 5; // 1 for success and 4 for bytes read.
@@ -651,11 +685,11 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
     printf("--------------------------\n");
     int wrsz = 0;
     file_data* entry = NULL;
-    if (sz < 9) {
-        wrsz = write_socket_err(sock, EINVAL);    
+    if (sz < 10) {
+        wrsz = write_socket_err(sock, EBADE);    
     } else {
 
-        int ffd = retr_int(buffer + 1);
+        int ffd = retr_int(buffer + 2);
         entry = search_filedata(&head, ffd);
         
     }
@@ -664,25 +698,138 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
     if (entry == NULL) {
         wrsz = write_socket_err(sock, EINVAL);
     } else if(entry->flags == O_RDWR || entry->flags == O_WRONLY){
-        int write_amount = retr_int(buffer + 5);
-        ssize_t bts_written = write(entry->file_fd, buffer + 9, write_amount);
+        
+        int greater_than_2k = buffer[1];
 
-        if(bts_written < 0) {
-            wrsz = write_socket_err(sock, errno);
-        } else {
-            char a[5];
-            a[0] = '1';
-            store_int(a + 1, bts_written);
-            wrsz = write(sock, a, write_amount);
+        if (greater_than_2k == '0') {
+            int write_amount = retr_int(buffer + 6);
+            ssize_t bts_written = write(entry->file_fd, buffer + 10, write_amount);
 
-            if (wrsz < 0) {
+            if(bts_written < 0) {
                 wrsz = write_socket_err(sock, errno);
+            } else {
+                char a[5];
+                a[0] = '1';
+                store_int(a + 1, bts_written);
+                wrsz = write(sock, a, write_amount);
+
+                if (wrsz < 0) {
+                    wrsz = write_socket_err(sock, errno);
+                }
             }
+
+        } else if (greater_than_2k == '1') {
+            int write_amount = retr_int(buffer + 6);
+            // We need to create the threads here.
+            pthread_mutex_lock(&multiplex_lock);
+            int nt = get_max_multiplex(write_amount, 0); // Num threads
+            int st = get_max_multiplex(write_amount, 1); // Index where we can start from.
+            if  (nt <= 0) {
+                wrsz = write_socket_err(sock, EFBIG);
+                return wrsz;    
+            }
+            int i;
+            for (i = 0; i < nt; i++) {
+                thread_taken[i + st] = 1;
+            }
+            pthread_mutex_unlock(&multiplex_lock);
+            size_t wr_thsz = write_amount / nt;
+            size_t rem = write_amount % nt;
+            // So now we have # threads and the start port.
+            //Need nt new file descriptors which write to 
+            //different locations in the file
+            //meaning we dup the current file descriptor.
+            int* new_fds = malloc(sizeof(int)*nt);
+            off_t pos = lseek(entry->file_fd, 0, SEEK_CUR);
+            for(i = 0; i < nt-1; i++){
+                new_fds[i] = open(entry->filename, entry->flags);
+                lseek(new_fds[i], pos + (i*wr_thsz), SEEK_CUR); // Mov to current file position
+            }
+            new_fds[i] = open(entry->filename, entry->flags);
+            lseek(new_fds[i], pos + (i*wr_thsz) + rem, SEEK_CUR); // Mov to current file position
+
+            for(i = 0; i < write_amount; i++) {
+                write(entry->file_fd, "", 1); // Write null bytes to expand the file.
+            }
+
+            void * (*worker)(void *);
+            worker = (void *)(&client_handler);
+            for(i = 0; i < nt - 1; i++) {
+                thread_wr* d = malloc(sizeof(thread_wr));
+                d -> sockfd = sock;
+                d -> fd = new_fds[i];
+                d -> size = wr_thsz;
+                pthread_create(&(multiplex_threads[i]), NULL, worker, d);
+            }
+
+            if (errno != 0) {
+                perror("Uh oh error after creating threads.");
+                write_socket_err(sock, errno);
+                return -1;
+            }
+
+            for(i = 0; i < nt; i++) {
+                pthread_join(multiplex_threads[i], NULL);
+                pthread_mutex_lock(&multiplex_lock);
+                thread_taken[i + st] = 0;
+                pthread_mutex_unlock(&multiplex_lock);
+            }
+
+            for(i = 0; i < nt; i++) {
+                close(new_fds[i]);
+            }
+            free(new_fds);
+
+        } else {
+            write_socket_err(sock, EBADE);
         }
+
+
     } else {
         wrsz = write_socket_err(sock, EPERM);
     }
     return wrsz;
+}
+
+void handle_write(thread_wr* args) {
+    size_t c = sizeof(struct sockaddr_in);
+    struct sockaddr_in client;
+    int conn;
+    char* buf = malloc(sizeof(char)* (args->size + 20));
+    conn = accept(args->sockfd, (struct sockaddr *)&client, (socklen_t*)&c);
+    if (conn < 0) {
+        perror("Failed on accept()");
+    } else {
+        printf("Conneción Accepted\n");
+        ssize_t r = recv(args->sockfd, buf, args->size + 20, 0);
+
+        if (r < 0) {
+            //error on recv, errno is set
+            write_socket_err(args->sockfd, errno);
+            close(args->sockfd);
+        } else {
+            int netfd = retr_int( buf );
+            int ds = retr_int( buf + 4 );
+
+            r = write(args->fd, buf + 8, ds);
+            if (r < 0) {
+                write_socket_err(args->sockfd, errno);
+                close(args->sockfd);
+            } else {
+                char a[5];
+                a[0] = '0';
+                store_int(&( a[1] ), r);
+                if (write(args->sockfd, a, 5) < 0) {
+                    write_socket_err(args->sockfd, errno);
+                    close(args->sockfd);
+                }
+            }
+        }        
+
+    }
+    free(buf);
+    free(args);
+
 }
 
 //Returns 0 if no error. Otherwise value of ERR returned

@@ -41,6 +41,12 @@ typedef struct thread_rd {
     ssize_t data_size;
 } thread_rd;
 
+typedef struct thread_wr {
+    int sockfd;
+    int fd;
+    size_t size; // in bytes
+} thread_wr;
+
 // Open a socket connection to a host with a port.
 int socket_connect(char* host, int port);
 
