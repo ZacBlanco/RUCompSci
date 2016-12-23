@@ -41,6 +41,12 @@ typedef struct thread_rd {
     ssize_t data_size;
 } thread_rd;
 
+typedef struct thread_wr {
+    int sockfd;
+    int fd;
+    size_t size; // in bytes
+} thread_wr;
+
 // Open a socket connection to a host with a port.
 int socket_connect(char* host, int port);
 
@@ -72,7 +78,7 @@ int netclose(int fd);
 
 // RETURN
 // 0 on success, -1 on error and h_errnor set correctly
-int netserverinit(char * hostname);
+int netserverinit(char * hostname, int filemode);
 // netserverinit(char * hostname, int filemode) (for ext. A only)
 
 
@@ -91,6 +97,7 @@ void add_filedata(file_data** head, file_data* node);
 file_data* remove_filedata(file_data** head, int fd_selector);
 file_data* search_filedata(file_data** head, int fd_selector);
 file_data* new_node(char* filename, int sockfd, int file_fd, int file_connection, int flags);
+file_data* search_filedata_byname(file_data** head, char* name);
 void free_filedata(file_data* node);
 
 int get_max_multiplex(size_t data, int type, int * thread_taken);
@@ -98,6 +105,7 @@ int max(int i1, int i2);
 int min(int i1, int i2);
 
 ssize_t read_func(int port, void *buf);
+
 
 #endif
 

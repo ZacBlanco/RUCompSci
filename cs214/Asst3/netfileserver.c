@@ -152,7 +152,7 @@ First char (byte) always describes operation.
 
     ------ '3' - Read Operation ------
 
-     - On a close operation we have a first bit of 2. After
+     - On a read operation we have a first bit of '3'. After
     which we care about 1 argument - The file descriptor.
 
     Expected Message
@@ -187,17 +187,21 @@ First char (byte) always describes operation.
 
     ------ '4' - Write Operation ------ 
 
-    - On a close operation we have a first bit of 2. After
-    which we care about 1 argument - The file descriptor.
+    - On a write operation we have a first bit of '4'. After
+    which we care about 1 argument - The file descriptor. write_op
 
-    Expected Message
-    +---------+----------------+----------+---------+---------+
-    | op. (1) | descriptor (4) | size (4) | data(n) |         |
-    +---------+----------------+----------+---------+---------+
+    Expected Message (size < 2k)
+    +---------+-----------+----------------+----------+---------+
+    | op. (1) | sgt2k (1) | descriptor (4) | size (4) | data(n) |
+    +---------+-----------+----------------+----------+---------+
+    Expected Message (size > 2k)
+    +---------+-----------+----------------+----------+---------+
+    | op. (1) | sgt2k (1) | descriptor (4) | size (4) |         |
+    +---------+-----------+----------------+----------+---------+
 
     - Responses differ in type based on failure/success
 
-    Expected Response on Success
+    Expected Response on Success (for less than 2k)
     +-----------+---------+-----------------------------------+
     | suc=1 (1) | size(4) |                                   |
     +-----------+---------+-----------------------------------+
@@ -205,6 +209,32 @@ First char (byte) always describes operation.
     +-----------+-----------+----------------+----------------+
     | suc=0 (1) | errno (4) | errm messg (n) |                |
     +-----------+-----------+----------------+----------------+
+
+/*
+    Expected Response on Success (for gt 2k)
+    +----------+-------------+----------------+---------------+
+    | suc=1 (1) | nthread (4) | start_port (n) |              |
+    +-----------+-------------+----------------+--------------+
+    Expected Response on Failure
+    +-----------+-----------+----------------+----------------+
+    | suc=0 (1) | errno (4) | errm messg (n) |                |
+    +-----------+-----------+----------------+----------------+
+
+    Client will then send data to write. in the form
+    Expected Response on Success (for gt 2k)
+    +-------------+------------+----------+--------------------+
+    | orig_fd (4) | data_sz(4) | data (n) |                    |
+    +-------------+------------+----------+--------------------+
+
+    The thread should then redpond with
+    +-----------+---------+-----------------------------------+
+    | suc=1 (1) | size(4) |                                   |
+    +-----------+---------+-----------------------------------+
+    or 
+    +-----------+-----------+----------------+----------------+
+    | suc=0 (1) | errno (4) | errm messg (n) |                |
+    +-----------+-----------+----------------+----------------+
+
 
 
 */
@@ -295,8 +325,8 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
         printf("Size less than 5: %d\n", (int)sz);
         badf = 1;
     } else {
-        int fd = retr_int( buffer + 1 );
-        printf("fd received for close: %i\n", fd);
+        int fd = convert_fd(retr_int( buffer + 1 ));
+        printf("fd received for close: %i\n", convert_fd(fd));
         file_data* closen = search_filedata(&head, fd);
         printf("Search completed.\n");
         if (closen == NULL) {
@@ -315,11 +345,12 @@ int close_op(int sock, const char* buffer, ssize_t sz) {
     if (badf) {
         char* mg = "Bad file descriptor";
         int len = 5 + strlen(mg);
-        char msg[len];
+        char* msg = malloc(sizeof(char) * len);
         msg[0] = '0';
         store_int(&(msg[1]), EBADF);
         strcpy(&(msg[5]), mg);
         sz_wr = write(sock, msg, len);
+        free(msg);
     } else {
         printf("Success\n");
         char msg[5];
@@ -378,19 +409,26 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
         filepath[0] = '\0';
         strncpy(filepath, buffer + 9, sz-9);
         filepath[sz-9] = '\0';
+
+
         printf("filepath: %s\n", filepath);
         // printf("buffer: %s fmode: %i flags: %i filepath: %s\n", buffer, fmode, flags, filepath);
 
         int fd = 0;
         int err = 0;
         
-        // err = check_filemode(sock, fmode);
         if ( !err ) {
             err = check_flags(sock, flags);
         }
 
+        err = !(mode_allowed(fmode, filepath, flags));
+
+        if ( err == 1) { 
+            fd = -1;
+        }
+
             // If there was no error on filemode or flags then we're ok.
-            if (!err) {
+            if ( err != 1  && fd != -1) {
                 switch (flags) {
                     case O_RDWR:
                         fd = open(filepath, O_RDWR); 
@@ -405,21 +443,103 @@ int open_op(int sock, const char* buffer, ssize_t sz) {
             }
 
         if ( fd < 0) { // open failed - get error
-            perror("fd is lt 0");
+            perror("Got FD as < 0");
             printf("Bad File. Errno - %s\n", strerror(errno));
             wrsz = write_socket_err(sock, errno);
         } else {
-            file_data * node = new_node(filepath, sock, fd, 0, flags);
+            file_data * node = new_node(filepath, sock, fd, fmode, flags);
             add_filedata(&head, node);
             char a[5];
             a[0] = '1';
-            printf("Returning fd from open_op %i\n", fd);
-            store_int(&( a[1] ), fd);
+            printf("Returning fd from open_op %i\n", convert_fd(fd));
+            store_int(&( a[1] ), convert_fd(fd));
             wrsz = send(sock, &a, 5, 0);
             // printf("fd: %i\n", fd);
         }
     }
     return wrsz;
+}
+
+//
+int mode_allowed(int fmode, char* filename, int flags) {
+    file_data* node = search_filedata_byname(&head, filename);
+    int ret = 1;
+
+    if(node == NULL) {
+        return 1;
+    }
+    printf("Checking if mode allowed: %i, on file %s, with flags %i\n", fmode, filename, flags);
+    switch(fmode) {
+        case NFS_UN:
+            printf("mode is UNRESTRICTED and found a node.\n");
+            printf("node fileconnection : %i\n", node->file_connection);
+            if(node->file_connection == NFS_TR) {
+                ret = 0;
+            } else if(node->file_connection == NFS_EX && node->flags == O_RDONLY) {
+                file_data* n = node->next;
+                while (n != NULL) {
+                    if (  (n->flags == O_WRONLY || node->flags == O_RDWR) && (flags == O_WRONLY || flags == O_RDWR)) {
+                        ret = 0;
+                        break;
+                        n = search_filedata_byname(&(n->next), filename);
+                    }
+                }
+            } else if( node->file_connection == NFS_EX && node->flags == O_RDWR && (flags == O_WRONLY)) {
+                ret = 0;
+            } else if( node->file_connection == NFS_EX && node->flags == O_RDWR && flags == O_RDWR) {
+                ret = 0;
+            } else if (node->file_connection == NFS_EX && node->flags == O_RDWR && (flags == O_WRONLY || flags == O_RDWR)) {
+                ret = 0;
+            }
+
+            break;
+        case NFS_EX:
+            if(node->file_connection == NFS_TR) {
+                ret = 0;
+            } else if(node->file_connection == NFS_EX && node->flags == O_RDONLY) {
+                file_data* n = node->next;
+                while (n != NULL) {
+                    if (  (n->flags == O_WRONLY || node->flags == O_RDWR) && (flags == O_WRONLY || flags == O_RDWR)) {
+                        ret = 0;
+                        break;
+                    }
+                    n = search_filedata_byname(&(n->next), filename);
+                }
+            } else if( node->file_connection == NFS_EX && node->flags == O_RDWR && flags == O_WRONLY) {
+                ret = 0;
+            } else if( node->file_connection == NFS_EX && node->flags == O_RDWR && flags == O_RDWR) {
+                ret = 0;
+            } else if (node->file_connection == NFS_UN && (node->flags == O_RDWR || node->flags == O_WRONLY ) && (flags == O_RDWR) ) {
+                printf("Inside what shoudl catch\n");
+                ret = 0;
+            } else if (node->file_connection == NFS_UN && (node->flags == O_RDWR || node->flags == O_WRONLY ) && (flags == O_WRONLY) ) {
+                printf("Inside what shoudl catch 2\n");
+                ret = 0;
+            }
+
+            break;
+        case NFS_TR:
+            if(node->file_connection == NFS_TR) {
+                ret = 0;
+            } else if(node->file_connection == NFS_EX) {
+                ret = 0;
+            } else if( node->file_connection == NFS_UN) {
+                ret = 0;
+            } 
+            break;
+
+        default:
+            ret = 0;
+            errno = EBADMSG;
+            break;
+    }
+
+    if (ret == 0) {
+        errno = EPERM;
+    }
+    printf("RETURN FROM MODE ALLOWED: %i\n", ret);
+    return ret;
+
 }
 
 int read_op(int sock, const char* buffer, ssize_t sz){
@@ -433,7 +553,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
         printf("Read Size not great enough.\n");    
     } else {
 
-        int ffd = retr_int(buffer + 1);
+        int ffd = convert_fd(retr_int(buffer + 1));
         entry = search_filedata(&head, ffd);
         if (entry != NULL) {
             printf("Entry flags: %i\n", entry->flags);
@@ -444,7 +564,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
     if (entry == NULL) {
         wrsz = write_socket_err(sock, EBADF);
         printf("No entry\n");
-    } else if ( entry->flags == O_RDONLY || entry->flags == O_RDWR ){
+    } else if ( entry->flags == O_RDONLY || entry->flags == O_RDWR ) {
 
         int rd_sz = retr_int(buffer + 5);
         printf("Size to read is %i\n", rd_sz);
@@ -453,9 +573,14 @@ int read_op(int sock, const char* buffer, ssize_t sz){
             printf("Multiplexing the read\n");
 
             pthread_mutex_lock(&multiplex_lock);
+<<<<<<< HEAD
             int nt = get_max_multiplex(rd_sz, 0, thread_taken); // Num threads
             int st = get_max_multiplex(rd_sz, 1, thread_taken); // Index where we can start from.
             printf("# of threads: %i index start: %i\n", nt, st);
+=======
+            int nt = get_max_multiplex(rd_sz, 0); // Num threads
+            int st = get_max_multiplex(rd_sz, 1); // Index where we can start from.
+>>>>>>> 254fff55de1e78eae5bdbeb74389557507fbc432
             if  (nt <= 0) {
                 wrsz = write_socket_err(sock, EFBIG);
                 return wrsz;    
@@ -467,7 +592,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
             pthread_mutex_unlock(&multiplex_lock);
 
             // we now have exclusive access to multiplex threads st through (st + nt)
-            int socks[nt];
+            int* socks = malloc(sizeof(int)*nt);
             errno = 0;
             for(i = 0; i < nt; i++) {
                 int s = create_listen_socket( PORT + i + 1 );
@@ -551,6 +676,7 @@ int read_op(int sock, const char* buffer, ssize_t sz){
                         s -> data_size = r;
                         //Now send off to the threads.
                     }
+<<<<<<< HEAD
                     pthread_create(&(multiplex_threads[i + 1]), NULL, worker, s);
 
                 // WRITE BACK HERE
@@ -560,6 +686,17 @@ int read_op(int sock, const char* buffer, ssize_t sz){
 
 
 
+=======
+                    pthread_create(&(multiplex_threads[i]), NULL, worker, s);
+                    free(socks);
+                    for(i = 0; i < nt; i++) {
+                        pthread_join(multiplex_threads[i], NULL);
+                        pthread_mutex_lock(&multiplex_lock);
+                        thread_taken[i + st] = 0;
+                        pthread_mutex_unlock(&multiplex_lock);
+                    }
+                }
+>>>>>>> 254fff55de1e78eae5bdbeb74389557507fbc432
         } else {
             printf("Not bigger than 3500.\n");
 
@@ -648,11 +785,11 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
     printf("--------------------------\n");
     int wrsz = 0;
     file_data* entry = NULL;
-    if (sz < 9) {
-        wrsz = write_socket_err(sock, EINVAL);    
+    if (sz < 10) {
+        wrsz = write_socket_err(sock, EBADE);    
     } else {
 
-        int ffd = retr_int(buffer + 1);
+        int ffd = convert_fd(retr_int(buffer + 2));
         entry = search_filedata(&head, ffd);
         
     }
@@ -661,43 +798,138 @@ int write_op(int sock, const char* buffer, ssize_t sz) {
     if (entry == NULL) {
         wrsz = write_socket_err(sock, EINVAL);
     } else if(entry->flags == O_RDWR || entry->flags == O_WRONLY){
-        int write_amount = retr_int(buffer + 5);
-        ssize_t bts_written = write(entry->file_fd, buffer + 9, write_amount);
+        
+        int greater_than_2k = buffer[1];
 
-        if(bts_written < 0) {
-            wrsz = write_socket_err(sock, errno);
-        } else {
-            char a[5];
-            a[0] = '1';
-            store_int(a + 1, bts_written);
-            wrsz = write(sock, a, write_amount);
+        if (greater_than_2k == '0') {
+            int write_amount = retr_int(buffer + 6);
+            ssize_t bts_written = write(entry->file_fd, buffer + 10, write_amount);
 
-            if (wrsz < 0) {
+            if(bts_written < 0) {
                 wrsz = write_socket_err(sock, errno);
+            } else {
+                char a[5];
+                a[0] = '1';
+                store_int(a + 1, bts_written);
+                wrsz = write(sock, a, write_amount);
+
+                if (wrsz < 0) {
+                    wrsz = write_socket_err(sock, errno);
+                }
             }
+
+        } else if (greater_than_2k == '1') {
+            int write_amount = retr_int(buffer + 6);
+            // We need to create the threads here.
+            pthread_mutex_lock(&multiplex_lock);
+            int nt = get_max_multiplex(write_amount, 0); // Num threads
+            int st = get_max_multiplex(write_amount, 1); // Index where we can start from.
+            if  (nt <= 0) {
+                wrsz = write_socket_err(sock, EFBIG);
+                return wrsz;    
+            }
+            int i;
+            for (i = 0; i < nt; i++) {
+                thread_taken[i + st] = 1;
+            }
+            pthread_mutex_unlock(&multiplex_lock);
+            size_t wr_thsz = write_amount / nt;
+            size_t rem = write_amount % nt;
+            // So now we have # threads and the start port.
+            //Need nt new file descriptors which write to 
+            //different locations in the file
+            //meaning we dup the current file descriptor.
+            int* new_fds = malloc(sizeof(int)*nt);
+            off_t pos = lseek(entry->file_fd, 0, SEEK_CUR);
+            for(i = 0; i < nt-1; i++){
+                new_fds[i] = open(entry->filename, entry->flags);
+                lseek(new_fds[i], pos + (i*wr_thsz), SEEK_CUR); // Mov to current file position
+            }
+            new_fds[i] = open(entry->filename, entry->flags);
+            lseek(new_fds[i], pos + (i*wr_thsz) + rem, SEEK_CUR); // Mov to current file position
+
+            for(i = 0; i < write_amount; i++) {
+                write(entry->file_fd, "", 1); // Write null bytes to expand the file.
+            }
+
+            void * (*worker)(void *);
+            worker = (void *)(&client_handler);
+            for(i = 0; i < nt - 1; i++) {
+                thread_wr* d = malloc(sizeof(thread_wr));
+                d -> sockfd = sock;
+                d -> fd = new_fds[i];
+                d -> size = wr_thsz;
+                pthread_create(&(multiplex_threads[i]), NULL, worker, d);
+            }
+
+            if (errno != 0) {
+                perror("Uh oh error after creating threads.");
+                write_socket_err(sock, errno);
+                return -1;
+            }
+
+            for(i = 0; i < nt; i++) {
+                pthread_join(multiplex_threads[i], NULL);
+                pthread_mutex_lock(&multiplex_lock);
+                thread_taken[i + st] = 0;
+                pthread_mutex_unlock(&multiplex_lock);
+            }
+
+            for(i = 0; i < nt; i++) {
+                close(new_fds[i]);
+            }
+            free(new_fds);
+
+        } else {
+            write_socket_err(sock, EBADE);
         }
+
+
     } else {
         wrsz = write_socket_err(sock, EPERM);
     }
     return wrsz;
 }
 
-//Returns 0 if no error. Otherwise value of ERR returned
-int check_filemode(int sock, int mode) {
-    
-    if (mode == NFS_UN || mode == NFS_EX || mode == NFS_TR) {
-        // Set the server type
-        return 0;
+void handle_write(thread_wr* args) {
+    size_t c = sizeof(struct sockaddr_in);
+    struct sockaddr_in client;
+    int conn;
+    char* buf = malloc(sizeof(char)* (args->size + 20));
+    conn = accept(args->sockfd, (struct sockaddr *)&client, (socklen_t*)&c);
+    if (conn < 0) {
+        perror("Failed on accept()");
     } else {
-        // Bad mode type
-        // unsigned char msg[19];
-        // msg[0] = (char)'0';
-        // store_int(msg + 1, INVALID_FILE_MODE);
-        // int num = retr_int(msg + 1);
-        // // printf("filemode: %i\n", num);
-        // strcpy(&(msg[5]), "Bad mode type\n");
-        return EINVAL;
+        printf("Conneción Accepted\n");
+        ssize_t r = recv(args->sockfd, buf, args->size + 20, 0);
+
+        if (r < 0) {
+            //error on recv, errno is set
+            write_socket_err(args->sockfd, errno);
+            close(args->sockfd);
+        } else {
+            int netfd = convert_fd(retr_int( buf ));
+            int ds = retr_int( buf + 4 );
+
+            r = write(args->fd, buf + 8, ds);
+            if (r < 0) {
+                write_socket_err(args->sockfd, errno);
+                close(args->sockfd);
+            } else {
+                char a[5];
+                a[0] = '0';
+                store_int(&( a[1] ), r);
+                if (write(args->sockfd, a, 5) < 0) {
+                    write_socket_err(args->sockfd, errno);
+                    close(args->sockfd);
+                }
+            }
+        }        
+
     }
+    free(buf);
+    free(args);
+
 }
 
 //Returns 0 if no error, otherwise value of ERR returned.
@@ -707,12 +939,6 @@ int check_flags(int sock, int flags) {
         return 0;
     } else {
         // Bad flags
-        // unsigned char msg[19];
-        // msg[0] = (char)'0';
-        // store_int(msg + 1, INVALID_FLAG);
-        // int num = retr_int(msg + 1);
-        // strcpy(&(msg[5]), "Bad mode type\n");
-        // write(sock, &msg, 19);
         return EINVAL;
     }
 }
@@ -722,4 +948,8 @@ int write_socket_err(int sock, int err) {
     a[0] = (char)'0';
     store_int(&( a[1] ), err);
     return write(sock, &a, 5);
+}
+
+int convert_fd(int fd) {
+    return (fd * -1);
 }
