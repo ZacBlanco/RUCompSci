@@ -1,19 +1,21 @@
 #include "minsmax.h"
 
-void main_minsmax(char* file) {
-  printf("I am the main process and my pid is %i\n", getpid());
+struct stats main_minsmax(char* file) {
+
+  if (PROC_OUT){
+    printf("I am the main process and my pid is %i\n", getpid());
+  }
   int* ints = NULL;
   int n = readFile(file, &ints);
 
   if(n == -1) {
     perror("Bad File Input.");
-    return;
+    exit(1);
   }
-  int stats[3];
-  minsmax(ints, n, stats);
-  printf("The min is %i\n", stats[0]);
-  printf("The max is %i\n", stats[1]);
-  printf("The sum is %i\n", stats[2]);
+  int nums[3];
+  minsmax(ints, n, nums);
+  struct stats stat = { nums[0], nums[1], nums[2] };
+  return stat;
 }
 
 void minsmax(const int* data, int len, int* results) {
@@ -39,31 +41,33 @@ void minsmax(const int* data, int len, int* results) {
   // +-----+-----+-----+
   // | MIN | MAX | SUM |
   // +-----+-----+-----+
-  printf("minsmax: min, max, sum: %i, %i, %i\n", min, max, sum);
+  // printf("minsmax: min, max, sum: %i, %i, %i\n", min, max, sum);
   results[0] = min;
   results[1] = max;
   results[2] = sum;
 }
 
-void main_recurse_minsmax(char* file, int num_proc) {
+struct stats main_recurse_minsmax(char* file, int num_proc) {
   int* ints = NULL;
   int stats[3];
   int pipes[2]; //read is pipe[0], write is pipe[1].
   if(pipe(pipes) < 0) { 
     perror("Error creating pipes");
-    return;
+    exit(1);
   }
-  
-  printf("I am the main process and my pid is %i\n", getpid());
+  if (PROC_OUT) {
+    printf("I am the main process and my pid is %i\n", getpid());
+  }
+
   if( num_proc <= 0 ) {
     perror("Number of processes must be > 1");
-    return;
+    exit(1);
   }
 
   int n; // Number of ints read.
   if( (n = readFile(file, &ints)) == -1) {
     perror("Bad File Input.");
-    return;
+    exit(1);
   }
 
   int len = n / num_proc; // # of ints for all other processes
@@ -76,7 +80,7 @@ void main_recurse_minsmax(char* file, int num_proc) {
     perror("Error making child process");
   } else if (fpid == 0) {
     // child
-    int* start = ints + len;
+    int* start = ints + main_len;
     recurse_minsmax_helper(start, num_proc - 1, len, pipes[1]);
 
   } else {
@@ -87,9 +91,13 @@ void main_recurse_minsmax(char* file, int num_proc) {
     waitpid(fpid, NULL, 0);
     int odata[3];
     ssize_t bytes = read(pipes[0], &odata, sizeof(int)*3);
-    if (bytes != sizeof(int)*3) {
+    if( bytes == 1 ) {
+      odata[0] = INT_MAX;
+      odata[1] = INT_MIN;
+      odata[2] = 0;
+    } else if (bytes != sizeof(int)*3) {
       perror("Did not read the correct number of bytes from the pipe");
-      return;
+      exit(1);
     }
     if(odata[0] < stats[0]) { stats[0] = odata[0]; } // Set new min if needed
     if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
@@ -97,9 +105,15 @@ void main_recurse_minsmax(char* file, int num_proc) {
 
   }
 
-  printf("The min is %i\n", stats[0]);
-  printf("The max is %i\n", stats[1]);
-  printf("The sum is %i\n", stats[2]);
+  struct stats fin = { stats[0], stats[1], stats[2] };
+
+  return fin;
+}
+
+void print_stats(struct stats stat) {
+  printf("The min is %i\n", stat.min);
+  printf("The max is %i\n", stat.max);
+  printf("The sum is %i\n", stat.sum);
 }
 
 void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pipe) {
@@ -112,7 +126,10 @@ void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pip
 
   int stats[3];
   int pipes[2]; //read is pipe[0], write is pipe[1].
-  printf("I am a child process %i my parent is %i\n", getpid(), getppid());
+  if (PROC_OUT) {
+    printf("I am a child process %i my parent is %i\n", getpid(), getppid());
+  }
+
   if(pipe(pipes) < 0) { 
     perror("Error creating pipes");
     return;
@@ -155,6 +172,107 @@ void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pip
   
 }
 
+struct stats main_iter_minsmax(char* file, int num_proc) {
+  // Initialize
+  int* ints = NULL; // ints is the list of numbers
+  int stats[3];     // stats represents the min,max,sum statistic
+  int pipes[2];     // pipes represents the read(0)/write(1) pipes
+
+  // Setup pipe and check for errors
+  if (pipe(pipes) < 0) {
+    perror("Error creating pipes");
+    exit(1);
+  }
+
+  // Check num_proc for errors
+  if (num_proc < 1) {
+    perror("Number of processes must be >= 1");
+    exit(1);
+  }
+
+  // Read numbers in and check for errors
+  int n; // n is the number of integers read in
+  if ((n = readFile(file, &ints)) == -1) {
+    perror("Bad File Input");
+    exit(1);
+  }
+
+  if (PROC_OUT) {
+    printf("I am the main process and my pid is %i\n", getpid());
+  }
+  int len = n / num_proc;
+  int main_len = (n % num_proc) + len;
+
+  // Fork into children
+  // Do a preliminary write as the base case or whatever
+  write(pipes[1],  "aaa\0", 1);
+  int i;
+  for (i = 0; i < num_proc; i++)
+  {
+    int fpid = fork();
+
+    if (fpid < 0) {
+      perror("Error making child process");
+    } else if (fpid == 0) {
+
+      if (PROC_OUT) {
+        printf("I am a child process %i my parent is %i\n", getpid(), getppid());
+      }
+      int* start = ints + len;
+      // Get data for this process
+      minsmax(start, len, stats);
+      // Get other data
+      int odata[3];
+      ssize_t bytes = read(pipes[0], (void*)odata, sizeof(int)*3);
+      // Check if data exists
+      if( bytes == 1 ) {
+        odata[0] = INT_MAX;
+        odata[1] = INT_MIN;
+        odata[2] = 0;
+      } else if (bytes != sizeof(int)*3) {
+        perror("Did not read the correct number of bytes from the pipe");
+        exit(1);
+      }
+      // Merge data into stats, and then write it to pipe
+      if(odata[0] < stats[0]) { stats[0] = odata[0]; } // Set new min if needed
+      if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
+      stats[2] += odata[2];
+      bytes = write(pipes[1], (void*)stats, sizeof(int)*3);
+      close(pipes[0]);
+      close(pipes[1]);
+      // printf("The min is %i\n", stats[0]);
+      // printf("The max is %i\n", stats[1]);
+      // printf("The sum is %i\n", stats[2]);
+      exit(0);
+    } 
+  }
+
+
+  minsmax(ints, main_len, stats);
+  int odata[3];
+  ssize_t bytes = read(pipes[0], &odata, sizeof(int)*3);
+  // In the case that the parent finishes first,
+  if( bytes == 1 ) {
+    odata[0] = INT_MAX;
+    odata[1] = INT_MIN;
+    odata[2] = 0;
+  } else if (bytes != sizeof(int)*3) {
+    perror("Did not read the correct number of bytes from the pipe");
+    exit(1);
+  }
+  if (bytes != sizeof(int)*3) {
+    perror("Did not read the correct number of bytes from the pipe");
+    exit(1);
+  }
+  if(odata[0] < stats[0]) { stats[0] = odata[0]; } // Set new min if needed
+  if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
+  stats[2] += odata[2];
+
+  close(pipes[0]);
+  close(pipes[1]);
+  struct stats ret = {stats[0], stats[1], stats[2] };
+  return ret;
+}
 
 
 

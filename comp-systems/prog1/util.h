@@ -2,10 +2,8 @@
 #define __PUTIL__
 #include <stdlib.h>
 #include <stdio.h>
-#include <error.h>
 #include <errno.h>
 #include <string.h>
-
 
 /**
  * Reads an input file line by line. Assumes input is a single integer on every line. 
@@ -14,6 +12,5 @@
  * @return The length of ints
  */
 int readFile(char* filename, int** ints);
-
 
 #endif

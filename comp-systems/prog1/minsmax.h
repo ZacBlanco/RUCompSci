@@ -7,11 +7,25 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include <error.h>
 #include <unistd.h>
 #include <limits.h>
 
+#ifndef PROC_OUT
+#define PROC_OUT 0
+#endif
 
+
+struct stats {
+  int min;
+  int max;
+  int sum;
+};
+
+/**
+* Print the min/max/sum from struct
+* @param struct stats the statistics
+*/
+void print_stats(struct stats stat);
 
 /**
 * Writes the min, max, and sum into (int* results)
@@ -27,7 +41,7 @@ void minsmax(const int* data, int len, int* results);
 * listed within the file
 * @param char* the file to read 
 */
-void main_minsmax(char* file);
+struct stats main_minsmax(char* file);
 
 /**
 * Prints the min, sum, and max of an array of numbers as
@@ -36,16 +50,25 @@ void main_minsmax(char* file);
 * @param char* the file to read
 * @param int the number of processes ( > 0 )
 */
-void main_recurse_minsmax(char* file, int num_proc);
+struct stats main_recurse_minsmax(char* file, int num_proc);
 
 /**
-* if num_proc > 0 then the process will 
-* listed within the file
+* if num_proc > 0 then the process will create a new processs
+* and also calculate the stats for its specific subarray
 * @param int* pointer to integers
 * @param num_proc number of processes
 * @param int the num of items to process from int pointer
 * @param the pipe to write the min/max/sum back to
 */
 void recurse_minsmax_helper(int* data, int num_proc, int data_length, int pipe);
+
+
+/**
+* Iteration version of IPC where the main process
+* creates many child processes.
+* @param char* filename
+* @param num_proc number of processes
+*/
+struct stats main_iter_minsmax(char* file, int num_proc);
 
 #endif
