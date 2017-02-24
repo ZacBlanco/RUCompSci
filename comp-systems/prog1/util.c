@@ -37,3 +37,19 @@ int readFile(char* filename, int** ints) {
 
 }
 
+bool writeFile(char* filename, int* ints, int ints_len) {
+  FILE* fp = fopen(filename, "w");
+
+  if (fp == NULL) {
+    perror("Could not open/create file");
+    return false;
+  }
+
+  int i;
+  for (i = 0; i < ints_len; i++) {
+    fprintf(fp, "%d\n", ints[i]);
+    fflush(fp);
+  }
+
+  return true;
+}

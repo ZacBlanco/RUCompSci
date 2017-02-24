@@ -1,5 +1,41 @@
 #include "minsmax.h"
 
+int* gen_rand_array(const int min, const int max, const int n) {
+  int* ints = NULL;
+  if (n < 1) {
+    // Bad size
+    perror("Invalid array size");
+    return NULL;
+  } else if (n == 1) {
+    // If there is only one element, min must equal max
+    if (min != max) {
+      perror("Bad parameters");
+      return NULL;
+    }
+    ints = malloc(sizeof(int));
+    ints[0] = min;
+  } else {
+    // Generate random numbers for the entire array within the range [min,max]
+    ints = malloc(sizeof(int)*n);
+    time_t t; 
+    srand((unsigned) time(&t));
+    int mod = max - min + 1;
+    int i;
+    for (i = 0; i < n; i++) {
+      ints[i] = (rand() % mod) + min;
+    }
+    // Place the min and max in two random spots
+    int rand_loc1 = rand() % n;
+    int rand_loc2 = -1;
+    do {
+      rand_loc2 = rand() % n;
+    } while (rand_loc1 == rand_loc2);
+    ints[rand_loc1] = min;
+    ints[rand_loc2] = max;
+  }
+  return ints;
+}
+
 struct stats main_minsmax(char* file) {
 
   if (PROC_OUT){
@@ -238,11 +274,7 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
       if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
       stats[2] += odata[2];
       bytes = write(pipes[1], (void*)stats, sizeof(int)*3);
-      close(pipes[0]);
-      close(pipes[1]);
-      // printf("The min is %i\n", stats[0]);
-      // printf("The max is %i\n", stats[1]);
-      // printf("The sum is %i\n", stats[2]);
+      // Print stats
       exit(0);
     } 
   }

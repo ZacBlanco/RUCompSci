@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <time.h>
 
 #ifndef PROC_OUT
 #define PROC_OUT 0
@@ -26,6 +28,15 @@ struct stats {
 * @param struct stats the statistics
 */
 void print_stats(struct stats stat);
+
+/**
+* Generates a random array adhering to the following parameters
+* @param const int The minimum value
+* @param const int The maximum value
+* @param const int The size of the array
+* @return The pointer to the array
+*/
+int* gen_rand_array(const int min, const int max, const int n);
 
 /**
 * Writes the min, max, and sum into (int* results)

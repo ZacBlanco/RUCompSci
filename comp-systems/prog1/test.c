@@ -6,11 +6,13 @@
 void testReadFile();
 void testminsmax_main();
 void testminsmax_recurse();
+void testminsmax_iter();
 
 int main() {
   testReadFile();
   testminsmax_main();
   testminsmax_recurse();
+  testminsmax_iter();
 }
 
 void testminsmax_main() {
@@ -21,6 +23,7 @@ void testminsmax_main() {
 }
 
 void testminsmax_recurse() {
+  // ====================== t1.txt ===================== //
   struct stats stat = main_recurse_minsmax("./test/t1.txt", 1);
   assert(stat.min == 5);
   assert(stat.max == 55);
@@ -55,6 +58,29 @@ void testminsmax_recurse() {
   assert(stat.max == 40);
   assert(stat.sum == 0);
   print_stats(stat);
+}
+
+void testminsmax_iter() {
+  // ====================== t1.txt ===================== //
+  struct stats stat;
+  const struct stats t1 = {5, 55, 123};
+  int max_proc_t1 = 2;
+  int i;
+  for (i = 1; i < max_proc_t1; i++) {
+    stat = main_iter_minsmax("./test/t1.txt", i);
+    assert(stat.min == t1.min);
+    assert(stat.max == t1.max);
+    assert(stat.sum == t1.sum);
+  }
+  // ====================== t2.txt ===================== //
+  const struct stats t2 = {-814, 40, 0};
+  int max_proc_t2 = 6;
+  for (i = 1; i < max_proc_t2; i++) {
+    stat = main_iter_minsmax("./test/t2.txt", i);
+    assert(stat.min == t2.min);
+    assert(stat.max == t2.max);
+    assert(stat.sum == t2.sum);
+  }
 }
 
 void testReadFile() {
