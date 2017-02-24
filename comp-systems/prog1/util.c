@@ -51,5 +51,6 @@ bool writeFile(char* filename, int* ints, int ints_len) {
     fflush(fp);
   }
 
+  fclose(fp);
   return true;
 }

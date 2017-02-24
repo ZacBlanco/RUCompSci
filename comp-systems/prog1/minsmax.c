@@ -241,20 +241,18 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
 
   // Fork into children
   // Do a preliminary write as the base case or whatever
-  write(pipes[1],  "aaa\0", 1);
+  write(pipes[1], "\0", 1);
+  int* start = ints + main_len;
   int i;
-  for (i = 0; i < num_proc; i++)
+  for (i = 1; i < num_proc; i++)
   {
     int fpid = fork();
-
     if (fpid < 0) {
       perror("Error making child process");
     } else if (fpid == 0) {
-
       if (PROC_OUT) {
         printf("I am a child process %i my parent is %i\n", getpid(), getppid());
       }
-      int* start = ints + len;
       // Get data for this process
       minsmax(start, len, stats);
       // Get other data
@@ -276,7 +274,9 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
       bytes = write(pipes[1], (void*)stats, sizeof(int)*3);
       // Print stats
       exit(0);
-    } 
+    } else {
+      start += len;
+    }
   }
 
 
@@ -292,14 +292,11 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
     perror("Did not read the correct number of bytes from the pipe");
     exit(1);
   }
-  if (bytes != sizeof(int)*3) {
-    perror("Did not read the correct number of bytes from the pipe");
-    exit(1);
-  }
   if(odata[0] < stats[0]) { stats[0] = odata[0]; } // Set new min if needed
   if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
   stats[2] += odata[2];
 
+  wait(NULL);
   close(pipes[0]);
   close(pipes[1]);
   struct stats ret = {stats[0], stats[1], stats[2] };
