@@ -86,4 +86,13 @@ void recurse_minsmax_helper(int* data, int num_proc, int data_length, int pipe);
 */
 struct stats main_iter_minsmax(char* file, int num_proc);
 
+/**
+* Iteration+Recursive version of minsmax
+* creates many child processes
+* @param char* filename
+* @param int proc_breadth - number of processes for main process to create
+* @param int proc_depth - number of processes for each immediate child to create
+*/
+struct stats main_iter_recur_minsmax(char* file, int proc_breadth, int proc_depth);
+
 #endif

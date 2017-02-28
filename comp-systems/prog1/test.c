@@ -2,7 +2,7 @@
 #include "util.h"
 #include "minsmax.h"
 
-
+void testminsmax_iter_recurse();
 void testReadFile();
 void testminsmax_main();
 void testminsmax_recurse();
@@ -13,6 +13,7 @@ int main() {
   testminsmax_main();
   testminsmax_recurse();
   testminsmax_iter();
+  testminsmax_iter_recurse();
 }
 
 void testminsmax_main() {
@@ -64,6 +65,32 @@ void testminsmax_iter() {
     assert(stat.min == t2.min);
     assert(stat.max == t2.max);
     assert(stat.sum == t2.sum);
+  }
+}
+
+void testminsmax_iter_recurse() {
+  // ====================== t1.txt ===================== //
+  struct stats stat;
+  const struct stats t1 = {5, 55, 123};
+  int max_proc = 10;
+  int i, j;
+  for (i = 1; i < max_proc; i++) {
+    for(j = 1; i < max_proc; i++) {
+      stat = main_iter_recur_minsmax("./test/t1.txt", i, j);
+      assert(stat.min == t1.min);
+      assert(stat.max == t1.max);
+      assert(stat.sum == t1.sum);
+    }
+  }
+  // ====================== t2.txt ===================== //
+  const struct stats t2 = {-814, 40, 0};
+  for (i = 1; i < max_proc; i++) {
+    for(j = 1; i < max_proc; i++) {
+      stat = main_iter_recur_minsmax("./test/t2.txt", i, j);
+      assert(stat.min == t2.min);
+      assert(stat.max == t2.max);
+      assert(stat.sum == t2.sum);
+    }
   }
 }
 
