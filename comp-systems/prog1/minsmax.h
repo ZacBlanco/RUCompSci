@@ -16,6 +16,10 @@
 #define PROC_OUT 0
 #endif
 
+#ifndef PRINTLN
+#define PRINTLN printf("Line: %i\n", __LINE__);
+#endif
+
 
 struct stats {
   int min;

@@ -33,6 +33,8 @@ int readFile(char* filename, int** ints) {
     free(line);
     cnt++; // Account for last line
   }
+
+  fclose(fp);
   return cnt;
 
 }

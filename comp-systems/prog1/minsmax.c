@@ -253,6 +253,7 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
       if (PROC_OUT) {
         printf("I am a child process %i my parent is %i\n", getpid(), getppid());
       }
+
       // Get data for this process
       minsmax(start, len, stats);
       // Get other data
@@ -279,7 +280,9 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
     }
   }
 
-
+  for(i = 0; i < num_proc -1;i++) {
+    wait(NULL);
+  }
   minsmax(ints, main_len, stats);
   int odata[3];
   ssize_t bytes = read(pipes[0], &odata, sizeof(int)*3);
@@ -296,7 +299,7 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
   if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
   stats[2] += odata[2];
 
-  wait(NULL);
+  
   close(pipes[0]);
   close(pipes[1]);
   struct stats ret = {stats[0], stats[1], stats[2] };
