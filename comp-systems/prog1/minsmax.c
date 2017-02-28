@@ -108,7 +108,6 @@ struct stats main_recurse_minsmax(char* file, int num_proc) {
 
   if( num_proc > n) {
     num_proc = n;
-    printf("Here lol\n");
   }
 
   int len = n / num_proc; // # of ints for all other processes
