@@ -106,6 +106,10 @@ struct stats main_recurse_minsmax(char* file, int num_proc) {
     exit(1);
   }
 
+  if( num_proc > n) {
+    num_proc = n;
+  }
+
   int len = n / num_proc; // # of ints for all other processes
   int main_len = (n % num_proc) + len; // length of processing for main process
 
