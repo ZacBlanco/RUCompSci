@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 /**
  * Reads an input file line by line. Assumes input is a single integer on every line. 
@@ -22,5 +23,14 @@ int readFile(char* filename, int** ints);
  * @return Boolean representing write success or failure
  */
 bool writeFile(char* filename, int* ints, int ints_len);
+
+/**
+* Generates a random array adhering to the following parameters
+* @param const int The minimum value
+* @param const int The maximum value
+* @param const int The size of the array
+* @return The pointer to the array
+*/
+int* gen_rand_array(const int min, const int max, const int n);
 
 #endif
