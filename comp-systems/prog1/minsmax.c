@@ -1,41 +1,5 @@
 #include "minsmax.h"
 
-int* gen_rand_array(const int min, const int max, const int n) {
-  int* ints = NULL;
-  if (n < 1) {
-    // Bad size
-    perror("Invalid array size");
-    return NULL;
-  } else if (n == 1) {
-    // If there is only one element, min must equal max
-    if (min != max) {
-      perror("Bad parameters");
-      return NULL;
-    }
-    ints = malloc(sizeof(int));
-    ints[0] = min;
-  } else {
-    // Generate random numbers for the entire array within the range [min,max]
-    ints = malloc(sizeof(int)*n);
-    time_t t; 
-    srand((unsigned) time(&t));
-    int mod = max - min + 1;
-    int i;
-    for (i = 0; i < n; i++) {
-      ints[i] = (rand() % mod) + min;
-    }
-    // Place the min and max in two random spots
-    int rand_loc1 = rand() % n;
-    int rand_loc2 = -1;
-    do {
-      rand_loc2 = rand() % n;
-    } while (rand_loc1 == rand_loc2);
-    ints[rand_loc1] = min;
-    ints[rand_loc2] = max;
-  }
-  return ints;
-}
-
 struct stats main_minsmax(char* file) {
 
   if (PROC_OUT){
@@ -122,6 +86,7 @@ struct stats main_recurse_minsmax(char* file, int num_proc) {
     // child
     int* start = ints + main_len;
     recurse_minsmax_helper(start, num_proc - 1, len, pipes[1]);
+    exit(0);
 
   } else {
     // parent
@@ -179,6 +144,7 @@ void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pip
   if (fpid < 0) {
     //err
     perror("Error making child process");
+    exit(1);
   } else if (fpid == 0) {
     // child
     int* start = data + data_length;
@@ -198,7 +164,7 @@ void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pip
       odata[2] = 0;
     } else if (bytes != sizeof(int)*3) {
       perror("Did not read the correct number of bytes from the pipe");
-      return;
+      exit(1);
     }
     if(odata[0] < stats[0]) { stats[0] = odata[0]; } // Set new min if needed
     if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
@@ -237,7 +203,8 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
     exit(1);
   }
 
-  if( num_proc > n ) {
+  // Make sure that num_proc isn't higher than n
+  if (num_proc > n) {
     num_proc = n;
   }
 

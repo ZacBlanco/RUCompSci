@@ -56,3 +56,39 @@ bool writeFile(char* filename, int* ints, int ints_len) {
   fclose(fp);
   return true;
 }
+
+int* gen_rand_array(const int min, const int max, const int n) {
+  int* ints = NULL;
+  if (n < 1) {
+    // Bad size
+    perror("Invalid array size");
+    return NULL;
+  } else if (n == 1) {
+    // If there is only one element, min must equal max
+    if (min != max) {
+      perror("Bad parameters");
+      return NULL;
+    }
+    ints = malloc(sizeof(int));
+    ints[0] = min;
+  } else {
+    // Generate random numbers for the entire array within the range [min,max]
+    ints = malloc(sizeof(int)*n);
+    time_t t; 
+    srand((unsigned) time(&t));
+    int mod = max - min + 1;
+    int i;
+    for (i = 0; i < n; i++) {
+      ints[i] = (rand() % mod) + min;
+    }
+    // Place the min and max in two random spots
+    int rand_loc1 = rand() % n;
+    int rand_loc2 = -1;
+    do {
+      rand_loc2 = rand() % n;
+    } while (rand_loc1 == rand_loc2);
+    ints[rand_loc1] = min;
+    ints[rand_loc2] = max;
+  }
+  return ints;
+}
