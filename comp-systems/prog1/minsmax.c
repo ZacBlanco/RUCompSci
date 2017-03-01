@@ -233,6 +233,11 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
     exit(1);
   }
 
+  // Make sure that num_proc isn't higher than n
+  if (num_proc > n) {
+    num_proc = n;
+  }
+
   if (PROC_OUT) {
     printf("I am the main process and my pid is %i\n", getpid());
   }
