@@ -82,6 +82,7 @@ struct stats main_recurse_minsmax(char* file, int num_proc) {
   if (fpid < 0) {
     //err
     perror("Error making child process");
+    exit(1);
   } else if (fpid == 0) {
     // child
     int* start = ints + main_len;
@@ -137,7 +138,7 @@ void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pip
 
   if(pipe(pipes) < 0) { 
     perror("Error creating pipes");
-    return;
+    exit(1);
   }
   int fpid = fork();
 
@@ -224,6 +225,7 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
     int fpid = fork();
     if (fpid < 0) {
       perror("Error making child process");
+      exit(1);
     } else if (fpid == 0) {
       if (PROC_OUT) {
         printf("I am a child process %i my parent is %i\n", getpid(), getppid());
@@ -342,6 +344,7 @@ struct stats main_iter_recur_minsmax(char* file, int proc_breadth, int proc_dept
     int fpid = fork();
     if (fpid < 0) {
       perror("Error making child process");
+      exit(1);
     } else if (fpid == 0) {
       if (PROC_OUT) {
         printf("I am a child process %i my parent is %i\n", getpid(), getppid());

@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
-#include <time.h>
+#include <sys/time.h>
 #include "util.h"
 #include "minsmax.h"
 
