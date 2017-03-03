@@ -12,7 +12,7 @@
 #include <stdbool.h>
 
 #ifndef PROC_OUT
-#define PROC_OUT 0
+#define PROC_OUT 1
 #endif
 
 #ifndef PRINTLN

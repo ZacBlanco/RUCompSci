@@ -4,6 +4,7 @@ struct stats main_minsmax(char* file) {
 
   if (PROC_OUT){
     printf("I am the main process and my pid is %i\n", getpid());
+    fflush(stdout);
   }
   int* ints = NULL;
   int n = readFile(file, &ints);
@@ -57,6 +58,7 @@ struct stats main_recurse_minsmax(char* file, int num_proc) {
   }
   if (PROC_OUT) {
     printf("I am the main process and my pid is %i\n", getpid());
+    fflush(stdout);
   }
 
   if( num_proc <= 0 ) {
@@ -120,6 +122,7 @@ void print_stats(struct stats stat) {
   printf("The min is %i\n", stat.min);
   printf("The max is %i\n", stat.max);
   printf("The sum is %i\n", stat.sum);
+  fflush(stdout);
 }
 
 void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pipe) {
@@ -134,6 +137,7 @@ void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pip
   int pipes[2]; //read is pipe[0], write is pipe[1].
   if (PROC_OUT) {
     printf("I am a child process %i my parent is %i\n", getpid(), getppid());
+    fflush(stdout);
   }
 
   if(pipe(pipes) < 0) { 
@@ -211,6 +215,7 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
 
   if (PROC_OUT) {
     printf("I am the main process and my pid is %i\n", getpid());
+    fflush(stdout);
   }
   int len = n / num_proc;
   int main_len = (n % num_proc) + len;
@@ -229,6 +234,7 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
     } else if (fpid == 0) {
       if (PROC_OUT) {
         printf("I am a child process %i my parent is %i\n", getpid(), getppid());
+        fflush(stdout);
       }
 
       // Get data for this process
@@ -315,6 +321,7 @@ struct stats main_iter_recur_minsmax(char* file, int proc_breadth, int proc_dept
 
   if (PROC_OUT) {
     printf("I am the main process and my pid is %i\n", getpid());
+    fflush(stdout);
   }
 
   if (proc_breadth > n) {
@@ -348,6 +355,7 @@ struct stats main_iter_recur_minsmax(char* file, int proc_breadth, int proc_dept
     } else if (fpid == 0) {
       if (PROC_OUT) {
         printf("I am a child process %i my parent is %i\n", getpid(), getppid());
+        fflush(stdout);
       }
       int rpipes[2];
       if (pipe(rpipes) < 0) {
