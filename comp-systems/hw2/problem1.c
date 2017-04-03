@@ -45,8 +45,6 @@ void* rev_printer(struct loopargs* args);
 		3 is prime
 		5 is prime
 		7 is prime
-		Reversed Prime: 0
-		Reversed Prime: 1
 		Reversed Prime: 2
 		Reversed Prime: 3
 		Reversed Prime: 5
@@ -138,7 +136,7 @@ int main(int argc, char* argv[]) {
 
 void* rev_printer(struct loopargs* args){
 	int i;
-	for(i = 0; i < args->n; i++){
+	for(i = 2; i < args->n; i++){
 		if ( (args->nums)[i] == 0){
 			continue;
 		}
