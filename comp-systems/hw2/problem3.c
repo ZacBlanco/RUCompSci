@@ -29,7 +29,6 @@ void* bank_client(void* arg)
 	{
 		if (sem_wait(&sem) == 0)
 		{
-			printf("%s\n", strerror(errno));
 			make_transaction();
 			sem_post(&sem);
 			break;
