@@ -26,9 +26,9 @@ short condition;
 
 // master is the tid of the first process to create a child and does not change.
 // A process that exits with tid equal to master will exit the program.
-unsigned short master = -1;
+unsigned short master = 0;
 // counter will determine the tid of the next thread to be created. This ensures no duplicates.
-unsigned short counter = 0;
+unsigned short counter = 1;
 // This queue will hold all threads that are currently waiting for another to exit via the join function.
 queue_t* wait;
 // This queue holds threads that have yielded or have entered the ready queue after their join condition is satisfied.
@@ -61,7 +61,7 @@ int compare_condition_pthreads(mypthread_t* d1, mypthread_t* d2) {
 * Create a new thread node and queue it onto the end of the thread queue
 */
 int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*start_routine) (void *), void *arg) {
-	if(master == -1) // only set master the first time create is called
+	if(master == 0) // only set master the first time create is called
 	{	
 		tid = counter++;
 		master = tid;
@@ -129,5 +129,29 @@ int mypthread_yield() {
 * Enter wait queue with thread ID of thread to join on.
 */
 int mypthread_join(mypthread_t thread, void **retval) {
+	ucontext_t current;
+	getcontext(&current);
+	mypthread_t node;
+	node.tid = tid;
+	if(qexists(&ready,&node,&compare_tid_pthreads) == 0)	// determine if current process is already in ready queue
+	{
+		if(qexists(&ready,&thread,&compare_tid_pthreads) == 1 || qexists(&wait,&thread,&compare_tid_pthreads) == 1)	
+		{							// determine if join process is already in either queue
+			node.mynode->context = current;			// if so, enqueue into wait queue as normal	
+			node.mynode->condition = thread.tid;
+			qenqueue(&wait,&node);
+			mypthread_t next;
+			dequeue(&ready,&next);
+			swapcontext(next.mynode->mycontext);
+		}
+
+		return 0;				// if not, return and indicate that thread to join is not in either queue
+	}
+	else						// current process is in ready queue, indicating that is has returned 
+	{						// after joining. Now it must dequeue itself and continue operation.
+		mypthread_t dummy;
+		dequeue(&ready,&dummy);
+	}
+	return 1;
 
 }
