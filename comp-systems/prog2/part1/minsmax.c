@@ -2,21 +2,28 @@
 
 int main_stats[3] = {INT_MIN, INT_MAX, 0};
 
-void minsmax_signal_handler(int signal, siginfo_t* data) {
-  update_minsmax(main_stats, (int*)data->si_ptr);
-}
+void minsmax_signal_handler(int sig, siginfo_t* data, void* context) {
+  // SIGUSR1 ==> 30, 10, or 16
+  // process min if 10
+  // process max if 16
+  // process sum if 30
+  if (sig == 10) {
 
-void update_minsmax(int* nums, int* new_nums) {
-  if (new_nums[0] < nums[0]) {
-    nums[0] = new_nums[0];
+    if (data->si_int < main_stats[0]) {
+      main_stats[0] = data->si_int;
+    }
+
+  } else if (sig == 16) {
+    
+    if (data->si_int > main_stats[1]) {
+      main_stats[1] = data->si_int;
+    }
+
+  } else if (sig == 30) {
+    main_stats[2] += data->si_int;
   }
 
-  if (new_nums[1] > nums[1]) {
-    nums[1] = new_nums[1];
-  }
-
-  nums[2] += new_nums[2];
-
+  printf("GOT SIGQUEUE SIGNAL \n");
 }
 
 struct stats main_minsmax(char* file) {
@@ -69,12 +76,7 @@ void minsmax(const int* data, int len, int* results) {
 
 struct stats main_recurse_minsmax(char* file, int num_proc) {
   int* ints = NULL;
-  int stats[3];
-  int pipes[2]; //read is pipe[0], write is pipe[1].
-  if(pipe(pipes) < 0) { 
-    perror("Error creating pipes");
-    exit(1);
-  }
+  int* stats = &main_stats;
   if (PROC_OUT) {
     printf("I am the main process and my pid is %i\n", getpid());
     fflush(stdout);
@@ -107,7 +109,7 @@ struct stats main_recurse_minsmax(char* file, int num_proc) {
   } else if (fpid == 0) {
     // child
     int* start = ints + main_len;
-    recurse_minsmax_helper(start, num_proc - 1, len, pipes[1]);
+    recurse_minsmax_helper(start, num_proc - 1, len);
     exit(0);
 
   } else {
@@ -117,15 +119,6 @@ struct stats main_recurse_minsmax(char* file, int num_proc) {
     // Get other data
     waitpid(fpid, NULL, 0);
     int odata[3];
-    ssize_t bytes = read(pipes[0], &odata, sizeof(int)*3);
-    if( bytes == 1 ) {
-      odata[0] = INT_MAX;
-      odata[1] = INT_MIN;
-      odata[2] = 0;
-    } else if (bytes != sizeof(int)*3) {
-      perror("Did not read the correct number of bytes from the pipe");
-      exit(1);
-    }
     if(odata[0] < stats[0]) { stats[0] = odata[0]; } // Set new min if needed
     if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
     stats[2] += odata[2];
@@ -144,25 +137,24 @@ void print_stats(struct stats stat) {
   fflush(stdout);
 }
 
-void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pipe) {
+void recurse_minsmax_helper(int* data, int num_proc, int data_length) {
+  struct sigaction minsmax_sigact;
+  minsmax_sigact.sa_flags = SA_SIGINFO;
+  minsmax_sigact.sa_sigaction = &minsmax_signal_handler;
+  sigaction(10, &minsmax_sigact, NULL);
+  sigaction(16, &minsmax_sigact, NULL);
+  sigaction(30, &minsmax_sigact, NULL);
 
   if(num_proc == 0) { 
-    write(wr_pipe, "\0", 1);
-    close(wr_pipe);
     exit(0);
   }
 
-  int stats[3];
-  int pipes[2]; //read is pipe[0], write is pipe[1].
+  int* stats = &main_stats;
   if (PROC_OUT) {
     printf("I am a child process %i my parent is %i\n", getpid(), getppid());
     fflush(stdout);
   }
 
-  if(pipe(pipes) < 0) { 
-    perror("Error creating pipes");
-    exit(1);
-  }
   int fpid = fork();
 
   if (fpid < 0) {
@@ -172,7 +164,7 @@ void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pip
   } else if (fpid == 0) {
     // child
     int* start = data + data_length;
-    recurse_minsmax_helper(start, num_proc - 1, data_length, pipes[1]);
+    recurse_minsmax_helper(start, num_proc - 1, data_length);
 
   } else {
     // parent
@@ -180,23 +172,21 @@ void recurse_minsmax_helper(int* data, int num_proc, int data_length, int wr_pip
     minsmax(data, data_length, stats);
     // Get other data
     waitpid(fpid, NULL, 0);
-    int odata[3];
-    ssize_t bytes = read(pipes[0], (void*)odata, sizeof(int)*3);
-    if( bytes == 1 ) {
-      odata[0] = INT_MAX;
-      odata[1] = INT_MIN;
-      odata[2] = 0;
-    } else if (bytes != sizeof(int)*3) {
-      perror("Did not read the correct number of bytes from the pipe");
-      exit(1);
-    }
-    if(odata[0] < stats[0]) { stats[0] = odata[0]; } // Set new min if needed
-    if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
-    stats[2] += odata[2];
-    bytes = write(wr_pipe, (void*)stats, sizeof(int)*3);
-    close(wr_pipe);
-    close(pipes[0]);
-    close(pipes[1]);
+
+    // By this point we should have had signals sent, updating
+    
+    // Instead of writing we send the signal:
+    union sigval val;
+    val.sival_int = main_stats[0];
+    sigqueue(getppid(), 10, val);
+    sleep(0.05);
+    val.sival_int = main_stats[1];
+    sigqueue(getppid(), 16, val);
+    sleep(0.05);
+    val.sival_int = main_stats[2];
+    sigqueue(getppid(), 30, val);
+    sleep(0.05);
+    // bytes = write(wr_pipe, (void*)stats, sizeof(int)*3);
     exit(0);
   }
   
@@ -313,16 +303,17 @@ struct stats main_iter_minsmax(char* file, int num_proc) {
 
 
 struct stats main_iter_recur_minsmax(char* file, int proc_breadth, int proc_depth) {
+  // SET UP THE SIGNAL HANDLER
+  struct sigaction minsmax_sigact;
+  minsmax_sigact.sa_flags = SA_SIGINFO;
+  minsmax_sigact.sa_sigaction = &minsmax_signal_handler;
+  sigaction(10, &minsmax_sigact, NULL); // SIGUSR
+  sigaction(16, &minsmax_sigact, NULL);
+  sigaction(30, &minsmax_sigact, NULL);
+
   // Initialize
   int* ints = NULL; // ints is the list of numbers
-  int stats[3];     // stats array represents the min,max,sum statistic
-  int pipes[2];     // pipes represents the read(0)/write(1) pipes
-
-  // Setup pipe and check for errors
-  if (pipe(pipes) < 0) {
-    perror("Error creating pipes");
-    exit(1);
-  }
+  int* stats = &main_stats;     // stats array represents the min,max,sum statistic
 
   // Check num_proc for errors
   if (proc_breadth < 1 || proc_depth < 1) {
@@ -336,7 +327,6 @@ struct stats main_iter_recur_minsmax(char* file, int proc_breadth, int proc_dept
     perror("Bad File Input");
     exit(1);
   }
-  
 
   if (PROC_OUT) {
     printf("I am the main process and my pid is %i\n", getpid());
@@ -360,9 +350,6 @@ struct stats main_iter_recur_minsmax(char* file, int proc_breadth, int proc_dept
   // printf("main_len: %i, len: %i, recur_len: %i, main_recur_len: %i\n", main_len, len, recur_len, main_recur_len);
   // Fork into children
   // Do a preliminary write as the base case or whatever
-  if (proc_breadth == 1) {
-    write(pipes[1], "\0", 1);
-  }
   int* start = ints + main_len;
   int i;
   for (i = 1; i < proc_breadth; i++)
@@ -376,11 +363,7 @@ struct stats main_iter_recur_minsmax(char* file, int proc_breadth, int proc_dept
         printf("I am a child process %i my parent is %i\n", getpid(), getppid());
         fflush(stdout);
       }
-      int rpipes[2];
-      if (pipe(rpipes) < 0) {
-        perror("Error creating rpipes");
-        exit(1);
-      }
+
       // Get data for this process
       // Proc depth - 1 because we must account for the main process
       int fpid2 = fork();
@@ -388,62 +371,42 @@ struct stats main_iter_recur_minsmax(char* file, int proc_breadth, int proc_dept
         perror("Error doing fork in iterative recursive mode\n");
         exit(1);
       } else if (fpid2 == 0) {
-        close(rpipes[0]);
-        recurse_minsmax_helper(start+main_recur_len, proc_depth - 1, recur_len, rpipes[1]);
+        recurse_minsmax_helper(start+main_recur_len, proc_depth - 1, recur_len);
       }
       minsmax(start, main_recur_len, stats);
       // Get other data
-      int odata[3];
       waitpid(fpid2, NULL, 0);
-      ssize_t bytes = read(rpipes[0], (void*)odata, sizeof(int)*3);
-      // Check if data exists
-      if( bytes == 1 ) {
-        odata[0] = INT_MAX;
-        odata[1] = INT_MIN;
-        odata[2] = 0;
-      } else if (bytes != sizeof(int)*3) {
-        perror("Did not read the correct number of bytes from the pipe");
-        exit(1);
-      }
-      // Merge data into stats, and then write it to pipe
-      if(odata[0] < stats[0]) { stats[0] = odata[0]; } // Set new min if needed
-      if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
-      stats[2] += odata[2];
-      // printf("Stats after recur %i: min: %i, max: %i, sum %i\n", i, stats[0], stats[1], stats[2]);
-      bytes = write(pipes[1], (void*)stats, sizeof(int)*3);
-      // printf("Wrote %zu bytes to pipes[1]\n", bytes);
-      close(rpipes[0]);
-      close(rpipes[1]);
-      // printf("recurse finished gracefully\n");
+
+      printf("Stats after recur %i: min: %i, max: %i, sum %i\n", i, stats[0], stats[1], stats[2]);
+      // bytes = write(pipes[1], (void*)stats, sizeof(int)*3);
+      // Instead of writing we send the signal:
+      printf("My ppid: %i\n", getppid());
+      union sigval val;
+      val.sival_int = stats[0];
+      sigqueue(getppid(), 10, val);
+      sleep(0.05);
+      val.sival_int = stats[1];
+      sigqueue(getppid(), 16, val);
+      sleep(0.05);
+      val.sival_int = stats[2];
+      sigqueue(getppid(), 30, val);
+      sleep(0.05);
+      printf("Sigqueue return: %i\n", sigqueue(getppid(), SIGUSR1, val));
+      perror("Sigqueue Err:");
+      printf("recurse finished gracefully\n");
       exit(0);
     } else {
       start += len;
     }
   }
-  int odata[3];
   minsmax(ints, main_len, stats);
+  printf("My PID %i\n", getpid());
+  struct stats ret2 = { stats[0], stats[1], stats[2] };
+  print_stats(ret2);
   for(i = 0; i < proc_breadth-1;i++) {
     wait(NULL);
-    ssize_t bytes = read(pipes[0], odata, sizeof(int)*3);
-    // In the case that the parent finishes first,
-    if( bytes == 1 ) {
-      odata[0] = INT_MAX;
-      odata[1] = INT_MIN;
-      odata[2] = 0;
-    } else if (bytes != sizeof(int)*3) {
-      perror("Did not read the correct number of bytes from the pipe");
-      exit(1);
-    }
-    // printf("odata read: min: %i, max: %i, sum %i\n", odata[0], odata[1], odata[2]);
-    // printf("stats: min: %i, max: %i, sum %i\n", stats[0], stats[1], stats[2]);
-    if(odata[0] < stats[0]) { stats[0] = odata[0]; } // Set new min if needed
-    if(odata[1] > stats[1]) { stats[1] = odata[1]; } // Set new max if needed
-    stats[2] += odata[2];
   }
-  
-  
-  close(pipes[0]);
-  close(pipes[1]);
+  printf("My PID %i\n", getpid());
   struct stats ret = { stats[0], stats[1], stats[2] };
   return ret;
 }

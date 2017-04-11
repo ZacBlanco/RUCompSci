@@ -19,21 +19,21 @@ int main() {
   testReadFile();
   printf("\n========= Testing a single process =========\n");
   testminsmax_main();
-  printf("\n========= Testing the recursive version =========");
-  testminsmax_recurse();
-  printf("\n========= Testing the iterative version =========");
-  testminsmax_iter();
+  // printf("\n========= Testing the recursive version =========");
+  // testminsmax_recurse();
+  // printf("\n========= Testing the iterative version =========");
+  // testminsmax_iter();
   printf("\n========= Testing the combination version =========");
   testminsmax_iter_recurse();
   createTestFile(file_name, -RAND_MAX/2, RAND_MAX/2, 10000);
   deleteFile(file_name); // At the end
-  printf("Timing test:\n");
-  int i;
-  for(i = 1; i <= 21; i++) {
-    printf("===== Timing test for %i processes =====\n", i);
-    timing_test(i);
-  }
-  exit(0);
+  // printf("Timing test:\n");
+  // int i;
+  // for(i = 1; i <= 21; i++) {
+  //   printf("===== Timing test for %i processes =====\n", i);
+  //   timing_test(i);
+  // }
+  // exit(0);
 }
 
 long get_time() {
@@ -153,6 +153,7 @@ void testminsmax_iter_recurse() {
     for(j = 1; i <= max_proc; i++) {
       printf("\nTesting file t1.txt with breadth %d and depth %d processes:\n", i, j);
       stat = main_iter_recur_minsmax("./test/t1.txt", i, j);
+      print_stats(stat);
       assert(stat.min == t1.min);
       assert(stat.max == t1.max);
       assert(stat.sum == t1.sum);

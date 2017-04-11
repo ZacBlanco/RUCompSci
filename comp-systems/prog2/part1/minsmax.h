@@ -13,7 +13,7 @@
 #include <signal.h>
 
 #ifndef PROC_OUT
-#define PROC_OUT 1
+#define PROC_OUT 0
 #endif
 
 #ifndef PRINTLN
@@ -31,8 +31,7 @@ struct stats {
 extern int main_stats[3];
 
 // Project 2 Part 1
-void minsmax_signal_handler(int signal, siginfo_t* data);
-void update_minsmax(int* nums, int* new_nums);
+void minsmax_signal_handler(int signal, siginfo_t* data, void* context);
 
 /**
 * Print the min/max/sum from struct
@@ -76,7 +75,7 @@ struct stats main_recurse_minsmax(char* file, int num_proc);
 * @param int the num of items to process from int pointer
 * @param the pipe to write the min/max/sum back to
 */
-void recurse_minsmax_helper(int* data, int num_proc, int data_length, int pipe);
+void recurse_minsmax_helper(int* data, int num_proc, int data_length);
 
 
 // PART C ---------------------------------------------
