@@ -20,7 +20,7 @@ typedef struct threadNode{
 // Need field for retval
 short condition;
 // Next threadnode pointer
-ucontext_t mycontext // - the context to switch to
+ucontext_t mycontext; // - the context to switch to
 
 }Node;
 
@@ -34,7 +34,7 @@ unsigned short counter = 1;
 // tid will store the current thread's id and will be updated upon context switch
 unsigned short tid = 1;
 // This queue will hold all threads that are currently waiting for another to exit via the join function.
-queue_t* wait;
+queue_t* join; // Can't call this wait -- redefinition of wait in pid_t
 // This queue holds threads that have yielded or have entered the ready queue after their join condition is satisfied.
 // The first process in this queue will be swapped to when the next context switch occurs.
 queue_t* ready;
