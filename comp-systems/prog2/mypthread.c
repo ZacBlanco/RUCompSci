@@ -1,6 +1,9 @@
 //mypthread.c
 
 #include "mypthread.h"
+#include "queue.h"
+
+#define STACK_MEM 65536
 
 /*
 * Concept - In order to swap context a thread MUST yield.
@@ -10,16 +13,12 @@
 * A yield gives up the control to the last scheduled process.
 */
 
-
-typedef struct threadNode{
-    
-// Type your commands
-// Need field for retval
-short condition;
-// Next threadnode pointer
-ucontext_t mycontext // - the context to switch to
-
-}Node;
+queue_t* qmakequeue()
+{
+	queue_t* myqueue = (queue_t*)malloc(sizeof(queue_t));
+	create_queue(&myqueue);
+	return myqueue;
+}
 
 //Global
 
@@ -31,10 +30,11 @@ unsigned short counter = 1;
 // tid will store the current thread's id and will be updated upon context switch
 unsigned short tid = 1;
 // This queue will hold all threads that are currently waiting for another to exit via the join function.
-queue_t* wait;
+queue_t* wait = NULL;
+
 // This queue holds threads that have yielded or have entered the ready queue after their join condition is satisfied.
 // The first process in this queue will be swapped to when the next context switch occurs.
-queue_t* ready;
+queue_t* ready = NULL;
 
 
 int compare_tid_pthreads(mypthread_t* d1, mypthread_t* d2) {
@@ -62,6 +62,12 @@ int compare_condition_pthreads(mypthread_t* d1, mypthread_t* d2) {
 * Create a new thread node and queue it onto the end of the thread queue
 */
 int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*start_routine) (void *), void *arg) {
+	if (wait == NULL) {
+		wait = qmakequeue();
+	}
+	if (ready == NULL) {
+		ready = qmakequeue();	
+	}
 	if(master == 0) // only set master the first time create is called
 	{	
 		tid = counter++;
@@ -69,10 +75,19 @@ int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*
 	}
 	unsigned short temp = tid;
 	tid = counter++;	// tid is altered so that the new context has the tid of the newly created process.
-	ucontext_t current;
-	getcontext(&current);
-	// makecontext(&current, (*start_routine), 1, arg); // unsure how to use makecontext, need to allocate memory between getcontext and this	
-	// enqueue the created process into the ready queue, but do not swap to it (Not written yet)
+	ucontext_t* current = (ucontext_t*)malloc(sizeof(ucontext_t));
+	getcontext(current);
+	current->uc_stack.ss_sp = malloc(sizeof(STACK_SIZE));
+	current->uc_stack.ss_size = STACK_SIZE;
+	current->uc_link = current; // Optimistic solution
+	makecontext(current, (*start_routine), 1, arg);
+	mypthread_t* newnode = (mypthread_t*)malloc(sizeof(mypthread_t));
+	newnode->tid = tid;
+	Node* mnode = malloc(sizeof(Node));
+	newnode->mynode = mnode;
+	newnode->tid = tid;
+	newnode->mynode->mycontext = current;
+	qenqueue(ready,newnode);// enqueue the created process into the ready queue, but do not swap to it 
 	tid = temp;		// tid is restored to its original value for the creating process.
 	return 0;
 }
@@ -85,8 +100,8 @@ int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*
 void mypthread_exit(void *retval) {
 	if(tid == master)
 		exit(0);
-	mypthread_t node;
-	node.mynode->condition = tid;
+	mypthread_t* node;
+	node->mynode->condition = tid;
 	while(qexists(wait, &node,(void *) &compare_condition_pthreads))	// search wait queue for processes that have called join
 	{								// and are waiting for current process to exit.
 		mypthread_t temp_thread;				// if any are found, move them to ready queue
@@ -94,9 +109,10 @@ void mypthread_exit(void *retval) {
 		qenqueue(ready,&temp_thread);
 	}
 	mypthread_t next;
+	next.tid = tid;
 	qdequeue(ready,(void *) &next);
 	ucontext_t dummy;
-	swapcontext(&dummy, &next.mynode->mycontext);	// swap contexts without storing, effectively terminating current thread
+	swapcontext(&dummy, next.mynode->mycontext);	// swap contexts without storing, effectively terminating current thread
 	// should never reach here	
 	exit(0);
 }
@@ -106,23 +122,29 @@ void mypthread_exit(void *retval) {
 * 
 */
 int mypthread_yield() {
-	ucontext_t current;
-	getcontext(&current);
-	mypthread_t node;
-	node.tid = tid;
+	ucontext_t* current;
+	getcontext(current);
+	mypthread_t* node;
+	node->tid = tid;
 	if(qexists(ready,&node,(void *) &compare_tid_pthreads) == 0)	// determine if current process is already in ready queue
 	{
-		node.mynode->mycontext = current;			// if not, it must be enqueued and the process switches to next in queue
+		mypthread_t* newnode = (mypthread_t*)malloc(sizeof(mypthread_t));
+		newnode->tid = tid;
+		Node* mnode = malloc(sizeof(Node));
+		newnode->mynode = mnode;
+		newnode->tid = tid;
+		newnode->mynode->mycontext = current;	// if not, it must be enqueued and the process switches to next in queue
 		qenqueue(ready,&node);
 		mypthread_t next;
 		qdequeue(ready,(void *) &next);
 		ucontext_t dummy;
-		swapcontext(&dummy, &next.mynode->mycontext);
+		swapcontext(&dummy, next.mynode->mycontext);
 	}
 	else							// current process is in ready queue, indicating that is has returned 
 	{							// after yielding. Now it must dequeue itself and continue operation.
-		mypthread_t dummy;
+		mypthread_t* dummy;
 		qdequeue(ready,(void *) &dummy);
+		
 	}
 	return 1;
 }
@@ -133,21 +155,29 @@ int mypthread_yield() {
 * Enter wait queue with thread ID of thread to join on.
 */
 int mypthread_join(mypthread_t thread, void **retval) {
-	ucontext_t current;
+	ucontext_t* current;
+	//printf("Current ptr: %p\n", current);
+	//printf("ABOUT TO JOIN A THREAD WITH TID: %i\n", tid);	
 	getcontext(&current);
-	mypthread_t node;
+	//printf("Current ptr after: %p\n", current);
+	//printf("JOINING A THREAD WITH TID: %i\n", tid);	
+	mypthread_t node;	
 	node.tid = tid;
-	if(qexists(ready,&node,(void *) &compare_tid_pthreads) == 0)	// determine if current process is already in ready queue
+	if(qexists(ready, &node,(void *) &compare_tid_pthreads) == 0)	// determine if current process is already in ready queue
 	{
 		if(qexists(ready,&thread,(void *) &compare_tid_pthreads) == 1 || qexists(wait,&thread,(void *) &compare_tid_pthreads) == 1)	
 		{							// determine if join process is already in either queue
-			node.mynode->mycontext = current;			// if so, enqueue into wait queue as normal	
-			node.mynode->condition = thread.tid;
+			mypthread_t* newnode = (mypthread_t*)malloc(sizeof(mypthread_t));
+			Node* mnode = malloc(sizeof(Node));
+			newnode->mynode = mnode;
+			newnode->tid = tid;
+			newnode->mynode->mycontext = current;			// if so, enqueue into wait queue as normal	
+			newnode->mynode->condition = thread.tid;
 			qenqueue(wait,&node);
 			mypthread_t next;
 			qdequeue(ready,(void *) &next);
 			ucontext_t dummy;
-			swapcontext(&dummy, &next.mynode->mycontext);
+			swapcontext(&dummy, next.mynode->mycontext);
 		}
 
 		return 0;				// if not, return and indicate that thread to join is not in either queue
