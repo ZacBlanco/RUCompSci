@@ -6,6 +6,7 @@
 #include <stdio.h>      
 #include <stdlib.h>
 #include <errno.h>
+#include "queue.h"
 
 struct threadNode; //defined in .c class
 
