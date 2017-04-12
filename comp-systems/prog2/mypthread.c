@@ -1,6 +1,9 @@
 //mypthread.c
 
 #include "mypthread.h"
+#include "queue.h"
+
+#define STACK_MEM 65536
 
 /*
 * Concept - In order to swap context a thread MUST yield.
@@ -71,8 +74,12 @@ int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*
 	tid = counter++;	// tid is altered so that the new context has the tid of the newly created process.
 	ucontext_t current;
 	getcontext(&current);
-	// makecontext(&current, (*start_routine), 1, arg); // unsure how to use makecontext, need to allocate memory between getcontext and this	
+	// Allocate memory for the context's stack
+	current.uc_stack.ss_sp = malloc(STACK_MEM);
+	current.uc_stack.ss_size = STACK_MEM;
+	makecontext(&current, (*start_routine), 1, arg); 
 	// enqueue the created process into the ready queue, but do not swap to it (Not written yet)
+	qenqueue(ready, tid);
 	tid = temp;		// tid is restored to its original value for the creating process.
 	return 0;
 }
