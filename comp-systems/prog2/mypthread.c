@@ -79,7 +79,8 @@ int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*
 	current.uc_stack.ss_size = STACK_MEM;
 	makecontext(&current, (*start_routine), 1, arg); 
 	// enqueue the created process into the ready queue, but do not swap to it (Not written yet)
-	qenqueue(ready, tid);
+	thread->tid = tid;
+	qenqueue(ready, thread);
 	tid = temp;		// tid is restored to its original value for the creating process.
 	return 0;
 }
