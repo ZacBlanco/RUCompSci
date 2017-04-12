@@ -52,4 +52,6 @@ int main() {
     assert(qexists(q, &(is[3]), &ptr_cmp) == 1);
     assert(qexists(q, &(is[4]), &ptr_cmp) == 1);
 
+    printf("All tests passed\n");
+
 }

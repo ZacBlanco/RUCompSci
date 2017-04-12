@@ -1,6 +1,5 @@
 #include "queue.h"
 
-
 void create_queue(queue_t** q) {
     queue_t* nq = (queue_t*)malloc(sizeof(queue_t));
     nq->size = 0;
@@ -54,7 +53,6 @@ int qexists(queue_t* q, void* data, int (*func)(void* d1, void* d2)) {
 }
 
 void qdelete_item(queue_t* q, void* data, int (*func)(void* d1, void* d2)) {
-    void* ret = NULL;
     queue_node* prev = NULL;
     queue_node* curr = q->rear;
     while((curr = curr->next) != q->rear) {
@@ -75,5 +73,4 @@ void qdelete_item(queue_t* q, void* data, int (*func)(void* d1, void* d2)) {
         }
         prev = curr;
     }
-    data = ret;
 }
