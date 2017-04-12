@@ -8,6 +8,8 @@
 #include <errno.h>
 #include "queue.h"
 
+#define STACK_SIZE 65536
+
 struct threadNode; //defined in .c class
 
 typedef struct{
@@ -16,6 +18,17 @@ typedef struct{
     //Pointer to thread node 
     struct threadNode * mynode;
 } mypthread_t;
+
+
+typedef struct threadNode{
+    
+// Type your commands
+// Need field for retval
+short condition;
+// Next threadnode pointer
+ucontext_t *mycontext; // - the context to switch to
+
+}Node;
 
 typedef struct {
     //Not specified to implement in project instructions but decided to do it anyway.
