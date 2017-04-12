@@ -1,6 +1,9 @@
 //mypthread.c
 
 #include "mypthread.h"
+#include "queue.h"
+
+#define STACK_MEM 65536
 
 /*
 * Concept - In order to swap context a thread MUST yield.
@@ -28,6 +31,7 @@ unsigned short counter = 1;
 unsigned short tid = 1;
 // This queue will hold all threads that are currently waiting for another to exit via the join function.
 queue_t* wait = NULL;
+
 // This queue holds threads that have yielded or have entered the ready queue after their join condition is satisfied.
 // The first process in this queue will be swapped to when the next context switch occurs.
 queue_t* ready = NULL;
