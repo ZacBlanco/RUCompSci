@@ -58,7 +58,7 @@ void minsmax_signal_handler(int sig, siginfo_t* data, void* context) {
     // Only set completed after all 3 are sent (30 is last)
     int i;
     for(i = 0; i < total_ptimes; i++) {
-      if (data->si_pid == child_proces[i]) {
+      if (data->si_pid == child_procs[i].pid) {
         child_procs[i].finished = 1;
       }
     }
