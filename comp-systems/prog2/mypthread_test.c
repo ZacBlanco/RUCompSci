@@ -11,20 +11,12 @@ void *print(void *arg)
 void mypthread_test()
 {
 
-    mypthread_t tid[NUM_THREADS];
-    int i;
-    printf("Creating all threads\n");
-    for (i = 0; i < NUM_THREADS; i++)
-    {
-        mypthread_create(&tid[i], NULL, print, NULL);
-    }
-    printf("Joining threads\n");
-    for (i = 0; i < NUM_THREADS; i++)
-    {
-        printf("Joining on thread %d\n", i);
-        mypthread_join(tid[i], NULL);
-    }
-    printf("Finished joining thread\n");
+    mypthread_t tid;
+    printf("Creating thread\n");
+    mypthread_create(&tid, NULL, print, NULL);
+    printf("Joining on thread\n");
+    mypthread_join(tid, NULL);
+    
     return;
 }
 

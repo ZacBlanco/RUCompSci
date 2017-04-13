@@ -23,7 +23,7 @@ void qenqueue(queue_t* q, void* data) {
 
 void qdequeue(queue_t* q, void** data) {
     if (q->rear == NULL) {
-        printf("Can't dequeue from null queue\n'");
+        // printf("Can't dequeue from null queue\n'");
         return;
     } else if (q->rear == q->rear->next) {
         *data = q->rear->data;
@@ -43,9 +43,11 @@ void qdequeue(queue_t* q, void** data) {
 int qexists(queue_t* q, void* data, int (*func)(void* d1, void* d2)) {
     queue_node* curr = q->rear->next;
     do {
+        // printf("Call func\n");
         if (func(curr->data, data) == 0) {
             return 1;
         }
+        // printf("after call func\n");
     } while((curr = curr->next) != q->rear->next);
     return 0;
 }
