@@ -38,10 +38,15 @@ queue_t* ready = NULL;
 
 
 int compare_tid_pthreads(mypthread_t* d1, mypthread_t* d2) {
-	if (d1->tid == d2->tid)
-		return 1;
-	else
+	printf("Comparing %d and %d\n", d1->tid, d2->tid);
+	if (d1->tid == d2->tid) {
+		printf("Returning 0\n");
 		return 0;
+	}
+	else {
+		printf("Returning 1\n");
+		return 1;
+	}
 }
 
 int compare_condition_pthreads(mypthread_t* d1, mypthread_t* d2) {
@@ -81,13 +86,15 @@ int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*
 	current->uc_stack.ss_size = STACK_SIZE;
 	current->uc_link = current; // Optimistic solution
 	makecontext(current, (*start_routine), 1, arg);
-	mypthread_t* newnode = (mypthread_t*)malloc(sizeof(mypthread_t));
-	newnode->tid = tid;
+	//mypthread_t* newnode = (mypthread_t*)malloc(sizeof(mypthread_t));
+	//newnode->tid = tid;
 	Node* mnode = malloc(sizeof(Node));
-	newnode->mynode = mnode;
-	newnode->tid = tid;
-	newnode->mynode->mycontext = current;
-	qenqueue(ready,newnode);// enqueue the created process into the ready queue, but do not swap to it 
+	thread->tid = tid;
+	thread->mynode = mnode;
+	thread->mynode->mycontext = current;
+	//newnode->mynode = mnode;
+	//newnode->mynode->mycontext = current;
+	qenqueue(ready,thread);// enqueue the created process into the ready queue, but do not swap to it 
 	tid = temp;		// tid is restored to its original value for the creating process.
 	return 0;
 }
@@ -98,20 +105,25 @@ int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*
 * 
 */
 void mypthread_exit(void *retval) {
-	if(tid == master)
+	printf("In exit\n");
+	if(tid == master) {
+		printf("Exiting tid: %d, master: %d\n", tid, master);
 		exit(0);
-	mypthread_t* node;
-	node->mynode->condition = tid;
+	}
+	mypthread_t node;
+	//node->mynode->condition = tid;
+	node.tid = tid;
 	while(qexists(wait, &node,(void *) &compare_condition_pthreads))	// search wait queue for processes that have called join
 	{								// and are waiting for current process to exit.
 		mypthread_t temp_thread;				// if any are found, move them to ready queue
 		qdelete_item(wait,&temp_thread,(void *) &compare_condition_pthreads);
 		qenqueue(ready,&temp_thread);
 	}
-
+	printf("Finished moving\n");
 	mypthread_t* next;
 	next = ready->rear->next->data;
 	ucontext_t dummy;
+	printf("Exit: swapping context\n");
 	swapcontext(&dummy, next->mynode->mycontext);	// swap contexts without storing, effectively terminating current thread
 	// should never reach here	
 	exit(0);
@@ -156,6 +168,11 @@ int mypthread_yield() {
 * Enter wait queue with thread ID of thread to join on.
 */
 int mypthread_join(mypthread_t thread, void **retval) {
+	printf("Printing waiting queue\n");
+	print_queue(wait);
+	printf("Printing ready queue\n");
+	print_queue(ready);
+
 	ucontext_t* current;
 	//printf("Current ptr: %p\n", current);
 	//printf("ABOUT TO JOIN A THREAD WITH TID: %i\n", tid);	
@@ -164,10 +181,13 @@ int mypthread_join(mypthread_t thread, void **retval) {
 	//printf("JOINING A THREAD WITH TID: %i\n", tid);	
 	mypthread_t node;	
 	node.tid = tid;
+	printf("The current tid is %d\n", node.tid);
 	if(qexists(ready, &node,(void *) &compare_tid_pthreads) == 0)	// determine if current process is already in ready queue
 	{
+		printf("The current process is not in rear queue\n");
 		if(qexists(ready,&thread,(void *) &compare_tid_pthreads) == 1 || qexists(wait,&thread,(void *) &compare_tid_pthreads) == 1)	
 		{							// determine if join process is already in either queue
+			printf("The current process is not in either queue\n");
 			mypthread_t* newnode = (mypthread_t*)malloc(sizeof(mypthread_t));
 			Node* mnode = malloc(sizeof(Node));
 			newnode->mynode = mnode;
@@ -179,6 +199,8 @@ int mypthread_join(mypthread_t thread, void **retval) {
 			mypthread_t* next;
 			next = ready->rear->next->data;
 			ucontext_t dummy;
+			printf("The next tid is: %d\n", next->tid);
+			tid = next->tid;
 			swapcontext(&dummy, next->mynode->mycontext);
 		}
 
@@ -186,6 +208,7 @@ int mypthread_join(mypthread_t thread, void **retval) {
 	}
 	else						// current process is in ready queue, indicating that is has returned 
 	{						// after joining. Now it must dequeue itself and continue operation.
+		printf("The current process is in ready queue\n");
 		mypthread_t dummy;
 		qdequeue(ready,(void *) &dummy);
 	}

@@ -1,5 +1,9 @@
 TEST_EXE=test.out
 
+test2:
+	gcc -g mypthread_test.c mypthread.c queue.c -o ${TEST_EXE}
+	./${TEST_EXE}
+
 test:
 	gcc -g test.c queue.c -o ${TEST_EXE}
 	./${TEST_EXE}
