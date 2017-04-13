@@ -1,5 +1,6 @@
 # ifndef __MPQUEUE__
 #define __MPQUEUE__
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -16,7 +17,7 @@ typedef struct queue_t {
     int size;
 } queue_t;
 
-void create_queue(queue_t** q);
+void create_queue(queue_t* q);
 
 //Enqueues data into the queue
 void qenqueue(queue_t* q, void* data);
@@ -37,7 +38,7 @@ int qexists(queue_t* q, void* data, int (*func)(void* d1, void* d2));
 // Deletes an item from the queue if it exists.
 // data is NULL if item not found
 // Otherwise it is populated with the deleted item
-void qdelete_item(queue_t* q, void* data, int (*func)(void* d1, void* d2));
+void qdelete_item(queue_t* q, void* to_delete, void** data, int (*func)(void* d1, void* d2));
 
 // Free everything in the queue
 //void qdelete_queue(); Not implemented
