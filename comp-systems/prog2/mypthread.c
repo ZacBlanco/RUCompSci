@@ -125,7 +125,7 @@ void mypthread_exit(void *retval) {
 	node.mynode = mnode;
 	mnode->condition = tid;
 	// printf("About to check if it exists\n");
-	print_queue(wait);
+	//print_queue(wait);
 	while(qexists(wait, &node,&compare_condition_pthreads))	// search wait queue for processes that have called join
 	{								// and are waiting for current process to exit.
 		// printf("Successfully found that it existed in the wait queue\n");
@@ -204,9 +204,9 @@ void print_queue(queue_t* q) {
 */
 int mypthread_join(mypthread_t thread, void **retval) {
 	// printf("Printing waiting queue\n");
-	print_queue(wait);
+	// print_queue(wait);
 	// printf("Printing ready queue\n");
-	print_queue(ready);
+	// print_queue(ready);
 
 	ucontext_t* current;
 	//// printf("Current ptr: %p\n", current);
