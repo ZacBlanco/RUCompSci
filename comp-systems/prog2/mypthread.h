@@ -43,6 +43,20 @@ int mypthread_yield();
 
 int mypthread_join(mypthread_t thread, void **retval);
 
+void print_queue(queue_t* q) {
+    if (q->rear == NULL) {
+        printf("Empty queue\n");
+        return;
+    }
+    queue_node* i = q->rear->next;
+    do {
+        printf("Process %d\n", ((mypthread_t*)i->data)->tid);
+        i = i->next;
+    } while(i != q->rear->next);
+    return;
+}
+
+
 
 /* Don't touch anything after this line.
  *
