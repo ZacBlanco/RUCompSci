@@ -11,6 +11,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <signal.h>
+#include <time.h>
 
 #ifndef PROC_OUT
 #define PROC_OUT 0
@@ -25,6 +26,12 @@ struct stats {
   int min;
   int max;
   int sum;
+};
+
+struct p_times {
+  pid_t pid; // Process PID
+  time_t stime; // Start time
+  int finished; // Whether the process finished or not
 };
 
 

@@ -17,8 +17,8 @@ int main() {
   char* file_name = "test_nums.txt";
   printf("========= Test reading a file =========\n");
   testReadFile();
-  printf("\n========= Testing a single process =========\n");
-  testminsmax_main();
+  // printf("\n========= Testing a single process =========\n");
+  // testminsmax_main();
   // printf("\n========= Testing the recursive version =========");
   // testminsmax_recurse();
   // printf("\n========= Testing the iterative version =========");
@@ -42,112 +42,112 @@ long get_time() {
   return tv.tv_sec*(1000000) + tv.tv_usec;
 }
 
-void timing_test(const int num_proc) {
-  int tens = 5;
-  char* file_name = "timing_test.txt";
-  int i;
-  int tn = 1;
-  for (i = 1; i <= tens; i++) {
-    tn *= 10;
-    createTestFile(file_name, -RAND_MAX/2, RAND_MAX/2, tn);
-    long start, diff;
-    // Test single version
-    start = get_time();
-    main_minsmax(file_name);
-    long single_time = get_time() - start;
+// void timing_test(const int num_proc) {
+//   int tens = 5;
+//   char* file_name = "timing_test.txt";
+//   int i;
+//   int tn = 1;
+//   for (i = 1; i <= tens; i++) {
+//     tn *= 10;
+//     createTestFile(file_name, -RAND_MAX/2, RAND_MAX/2, tn);
+//     long start, diff;
+//     // Test single version
+//     start = get_time();
+//     main_minsmax(file_name);
+//     long single_time = get_time() - start;
 
-    // Test recursive version
-    start = get_time();
-    main_recurse_minsmax(file_name, num_proc);
-    long recursive_time = get_time() - start;
+//     // Test recursive version
+//     start = get_time();
+//     main_recurse_minsmax(file_name, num_proc);
+//     long recursive_time = get_time() - start;
 
-    // Test iterative version
-    start = get_time();
-    main_iter_minsmax(file_name, num_proc);
-    long iterative_time = get_time() - start;
+//     // Test iterative version
+//     start = get_time();
+//     main_iter_minsmax(file_name, num_proc);
+//     long iterative_time = get_time() - start;
 
-    // Test optimized version
-    start = get_time();
-    // Put function here
-    main_iter_recur_minsmax(file_name, num_proc, num_proc);
-    long optimized_time = get_time() - start;
+//     // Test optimized version
+//     start = get_time();
+//     // Put function here
+//     main_iter_recur_minsmax(file_name, num_proc, num_proc);
+//     long optimized_time = get_time() - start;
 
-    // Print out stats
-    printf("Tests for size %d\n", tn);
-    printf("\tSingle processor version time: \t%ld microseconds\n", single_time);
-    printf("\tRecursive version time: \t%ld microseconds\n", recursive_time);
-    printf("\tIterative version time: \t%ld microseconds\n", iterative_time);
-    printf("\tCombined version time: \t\t%ld microseconds\n\n", optimized_time);
-    fflush(stdout);
-  }
-}
+//     // Print out stats
+//     printf("Tests for size %d\n", tn);
+//     printf("\tSingle processor version time: \t%ld microseconds\n", single_time);
+//     printf("\tRecursive version time: \t%ld microseconds\n", recursive_time);
+//     printf("\tIterative version time: \t%ld microseconds\n", iterative_time);
+//     printf("\tCombined version time: \t\t%ld microseconds\n\n", optimized_time);
+//     fflush(stdout);
+//   }
+// }
 
-void testminsmax_main() {
-  struct stats stat = main_minsmax("./test/t1.txt");
-  assert(stat.min == 5);
-  assert(stat.max == 55);
-  assert(stat.sum == 123);
-  print_stats(stat);
-}
+// void testminsmax_main() {
+//   struct stats stat = main_minsmax("./test/t1.txt");
+//   assert(stat.min == 5);
+//   assert(stat.max == 55);
+//   assert(stat.sum == 123);
+//   print_stats(stat);
+// }
 
-void testminsmax_recurse() {
-  // ====================== t1.txt ===================== //
-  struct stats stat;
-  const struct stats t1 = {5, 55, 123};
-  int max_proc = 10;
-  int i;
-  for (i = 1; i <= max_proc; i++) {
-    printf("\nTesting file t1.txt with %d processes:\n", i);
-    stat = main_recurse_minsmax("./test/t1.txt", i);
-    assert(stat.min == t1.min);
-    assert(stat.max == t1.max);
-    assert(stat.sum == t1.sum);
-    print_stats(stat);
-  }
-  // ====================== t2.txt ===================== //
-  const struct stats t2 = {-814, 40, 0};
-  for (i = 1; i <= max_proc; i++) {
-    printf("\nTesting file t2.txt with %d processes:\n", i);
-    stat = main_recurse_minsmax("./test/t2.txt", i);
-    assert(stat.min == t2.min);
-    assert(stat.max == t2.max);
-    assert(stat.sum == t2.sum);
-    print_stats(stat);
-  }
-}
+// void testminsmax_recurse() {
+//   // ====================== t1.txt ===================== //
+//   struct stats stat;
+//   const struct stats t1 = {5, 55, 123};
+//   int max_proc = 10;
+//   int i;
+//   for (i = 1; i <= max_proc; i++) {
+//     printf("\nTesting file t1.txt with %d processes:\n", i);
+//     stat = main_recurse_minsmax("./test/t1.txt", i);
+//     assert(stat.min == t1.min);
+//     assert(stat.max == t1.max);
+//     assert(stat.sum == t1.sum);
+//     print_stats(stat);
+//   }
+//   // ====================== t2.txt ===================== //
+//   const struct stats t2 = {-814, 40, 0};
+//   for (i = 1; i <= max_proc; i++) {
+//     printf("\nTesting file t2.txt with %d processes:\n", i);
+//     stat = main_recurse_minsmax("./test/t2.txt", i);
+//     assert(stat.min == t2.min);
+//     assert(stat.max == t2.max);
+//     assert(stat.sum == t2.sum);
+//     print_stats(stat);
+//   }
+// }
 
-void testminsmax_iter() {
-  // ====================== t1.txt ===================== //
-  struct stats stat;
-  const struct stats t1 = {5, 55, 123};
-  int max_proc_t1 = 10;
-  int i;
-  for (i = 1; i <= max_proc_t1; i++) {
-    printf("\nTesting file t1.txt with %d processes:\n", i);
-    stat = main_iter_minsmax("./test/t1.txt", i);
-    assert(stat.min == t1.min);
-    assert(stat.max == t1.max);
-    assert(stat.sum == t1.sum);
-    print_stats(stat);
-  }
-  // ====================== t2.txt ===================== //
-  const struct stats t2 = {-814, 40, 0};
-  int max_proc_t2 = 10;
-  for (i = 1; i <= max_proc_t2; i++) {
-    printf("\nTesting file t2.txt with %d processes:\n", i);
-    stat = main_iter_minsmax("./test/t2.txt", i);
-    assert(stat.min == t2.min);
-    assert(stat.max == t2.max);
-    assert(stat.sum == t2.sum);
-    print_stats(stat);
-  }
-}
+// void testminsmax_iter() {
+//   // ====================== t1.txt ===================== //
+//   struct stats stat;
+//   const struct stats t1 = {5, 55, 123};
+//   int max_proc_t1 = 10;
+//   int i;
+//   for (i = 1; i <= max_proc_t1; i++) {
+//     printf("\nTesting file t1.txt with %d processes:\n", i);
+//     stat = main_iter_minsmax("./test/t1.txt", i);
+//     assert(stat.min == t1.min);
+//     assert(stat.max == t1.max);
+//     assert(stat.sum == t1.sum);
+//     print_stats(stat);
+//   }
+//   // ====================== t2.txt ===================== //
+//   const struct stats t2 = {-814, 40, 0};
+//   int max_proc_t2 = 10;
+//   for (i = 1; i <= max_proc_t2; i++) {
+//     printf("\nTesting file t2.txt with %d processes:\n", i);
+//     stat = main_iter_minsmax("./test/t2.txt", i);
+//     assert(stat.min == t2.min);
+//     assert(stat.max == t2.max);
+//     assert(stat.sum == t2.sum);
+//     print_stats(stat);
+//   }
+// }
 
 void testminsmax_iter_recurse() {
   // ====================== t1.txt ===================== //
   struct stats stat;
   const struct stats t1 = {5, 55, 123};
-  int max_proc = 10;
+  int max_proc = 3;
   int i, j;
   for (i = 1; i <= max_proc; i++) {
     for(j = 1; i <= max_proc; i++) {
