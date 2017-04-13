@@ -108,11 +108,11 @@ void mypthread_exit(void *retval) {
 		qdelete_item(wait,&temp_thread,(void *) &compare_condition_pthreads);
 		qenqueue(ready,&temp_thread);
 	}
-	mypthread_t next;
-	next.tid = tid;
-	qdequeue(ready,(void *) &next);
+
+	mypthread_t* next;
+	next = ready->rear->next->data;
 	ucontext_t dummy;
-	swapcontext(&dummy, next.mynode->mycontext);	// swap contexts without storing, effectively terminating current thread
+	swapcontext(&dummy, next->mynode->mycontext);	// swap contexts without storing, effectively terminating current thread
 	// should never reach here	
 	exit(0);
 }
@@ -135,10 +135,11 @@ int mypthread_yield() {
 		newnode->tid = tid;
 		newnode->mynode->mycontext = current;	// if not, it must be enqueued and the process switches to next in queue
 		qenqueue(ready,&node);
-		mypthread_t next;
-		qdequeue(ready,(void *) &next);
+		
+		mypthread_t* next;
+		next = ready->rear->next->data;
 		ucontext_t dummy;
-		swapcontext(&dummy, next.mynode->mycontext);
+		swapcontext(&dummy, next->mynode->mycontext);
 	}
 	else							// current process is in ready queue, indicating that is has returned 
 	{							// after yielding. Now it must dequeue itself and continue operation.
@@ -174,10 +175,11 @@ int mypthread_join(mypthread_t thread, void **retval) {
 			newnode->mynode->mycontext = current;			// if so, enqueue into wait queue as normal	
 			newnode->mynode->condition = thread.tid;
 			qenqueue(wait,&node);
-			mypthread_t next;
-			qdequeue(ready,(void *) &next);
+
+			mypthread_t* next;
+			next = ready->rear->next->data;
 			ucontext_t dummy;
-			swapcontext(&dummy, next.mynode->mycontext);
+			swapcontext(&dummy, next->mynode->mycontext);
 		}
 
 		return 0;				// if not, return and indicate that thread to join is not in either queue
