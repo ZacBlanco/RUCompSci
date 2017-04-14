@@ -28,8 +28,6 @@ unsigned short master = 0;
 unsigned short counter = 1;
 // tid will store the current thread's id and will be updated upon context switch
 unsigned short tid = 1;
-// This queue will hold all threads that are currently waiting for another to exit via the join function.
-queue_t *wait = NULL;
 
 // This queue holds threads that have yielded or have entered the ready queue after their join join_tid is satisfied.
 // The first process in this queue will be swapped to when the next context switch occurs.
@@ -59,10 +57,6 @@ int compare_tid_pthreads(void *d1, void *d2)
 */
 int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*start_routine)(void *), void *arg)
 {
-    if (wait == NULL)
-    {
-        wait = qmakequeue();
-    }
     if (ready == NULL)
     {
         ready = qmakequeue();
@@ -90,6 +84,7 @@ int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*
     makecontext(exit_cont, (void(*)(void))mypthread_exit, 1, 0);
     current->uc_link = exit_cont;
 
+    // Now make the context with the original start routine.
     makecontext(current, (void(*)())start_routine, 1, arg);
     Node *mnode = malloc(sizeof(Node));
     if (counter + 1 == master)
@@ -117,11 +112,12 @@ void mypthread_exit(void *retval)
         pm("Exiting main thread.");
         exit(0);
     }
-    //Not master thread - continue processing
+
+    //Not master thread - go to another thread.
     mypthread_t* newthread;
     qdequeue(ready, (void**)&newthread);
-    // printf("TID %hu, UC_LINK: %p\n", newthread->tid, newthread->node->mycontext.uc_link);
     
+    // 
     tid = newthread->tid;
     setcontext(&(newthread->node->mycontext));
     return;
@@ -133,7 +129,7 @@ void mypthread_exit(void *retval)
 */
 int mypthread_yield()
 {
-    // SOOO When we yeild we assume that we are the currently running thread.
+    // S When we yield we assume that we are the currently running thread.
     // Our TID is NOT in the ready queue.
     // We need to add ourselves to the ready queue
     // Then after adding ourselves to the ready queue we dequeue 

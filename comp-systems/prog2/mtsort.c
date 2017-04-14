@@ -193,7 +193,6 @@ int main( int argc, char **argv )
 {
         mypthread_join( threads[i], 0 );
 }
-	printf("skipped joins");
     mypthread_join( thrcheck, 0 );
 
     for( i = 0; i < nListSize; i++ )
