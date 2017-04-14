@@ -40,6 +40,11 @@ int qexists(queue_t* q, void* data, int (*func)(void* d1, void* d2));
 // Otherwise it is populated with the deleted item
 void qdelete_item(queue_t* q, void* to_delete, void** data, int (*func)(void* d1, void* d2));
 
+// Search in a queue for an item
+// data = item containing key to compare with
+// ret_data, pointer to store return value in
+// func - compareTo function
+int qsearch(queue_t *q, void *data, void **ret_data, int (*func)(void *d1, void *d2));
 // Free everything in the queue
 //void qdelete_queue(); Not implemented
 

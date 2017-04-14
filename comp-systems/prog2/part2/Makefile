@@ -1,5 +1,9 @@
 TEST_EXE=test.out
 
+test3:
+	gcc -g mtsort.c mypthread.c queue.c -o ${TEST_EXE} -fno-stack-protector
+	./${TEST_EXE}
+
 test2:
 	gcc -g mypthread_test.c mypthread.c queue.c -o ${TEST_EXE}
 	./${TEST_EXE}

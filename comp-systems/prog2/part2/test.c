@@ -48,7 +48,7 @@ int main() {
     assert(q.size == 5);
     int s = 3;
     int* plc;
-    qdelete_item(&q, &s, &plc, &int_cmp);
+    qdelete_item(&q, &s, (void**)&plc, &int_cmp);
     assert(q.size == 4);
     assert(qexists(&q, &(is[0]), &ptr_cmp) == 1);
     assert(qexists(&q, &(is[1]), &ptr_cmp) == 1);
@@ -56,5 +56,6 @@ int main() {
     assert(qexists(&q, &(is[4]), &ptr_cmp) == 1);
 
     printf("All tests passed\n");
+    exit(0);
 
 }

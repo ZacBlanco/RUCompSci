@@ -3,47 +3,41 @@
 #define H_MYPTHREAD
 
 #include <ucontext.h>
-#include <stdio.h>      
+#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include "queue.h"
 
 #define STACK_SIZE 65536
 
-struct threadNode; //defined in .c class
-
-typedef struct{
+typedef struct
+{
     //Thread ID
-    short tid;
-    //Pointer to thread node 
-    struct threadNode * mynode;
+    unsigned short tid;
+    //Pointer to thread node
+    struct threadNode *node;
 } mypthread_t;
 
+typedef struct threadNode
+{
+    //retval somewhere
+    ucontext_t mycontext; // - the context of the thread
+} Node;
 
-typedef struct threadNode{
-    
-// Type your commands
-// Need field for retval
-short condition;
-// Next threadnode pointer
-ucontext_t *mycontext; // - the context to switch to
-
-}Node;
-
-typedef struct {
+typedef struct
+{
     //Not specified to implement in project instructions but decided to do it anyway.
 } mypthread_attr_t;
 
 // Functions
-int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*start_routine) (void *), void *arg);
+int mypthread_create(mypthread_t *thread, const mypthread_attr_t *attr, void *(*start_routine)(void *), void *arg);
 
 void mypthread_exit(void *retval);
 
 int mypthread_yield();
 
 int mypthread_join(mypthread_t thread, void **retval);
-void print_queue(queue_t* q);
-
+void print_queue(queue_t *q);
 
 /* Don't touch anything after this line.
  *
@@ -58,7 +52,7 @@ typedef int mypthread_mutex_t;
 typedef int mypthread_mutexattr_t;
 
 static inline int mypthread_mutex_init(mypthread_mutex_t *mutex,
-        	const mypthread_mutexattr_t *attr) { return 0; }
+                                       const mypthread_mutexattr_t *attr) { return 0; }
 
 static inline int mypthread_mutex_destroy(mypthread_mutex_t *mutex) { return 0; }
 
