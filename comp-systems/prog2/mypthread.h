@@ -10,7 +10,7 @@
 
 #define STACK_SIZE 65536
 
-struct threadNode; //defined in .c class
+// struct threadNode; //defined in .c class
 
 typedef struct{
     //Thread ID

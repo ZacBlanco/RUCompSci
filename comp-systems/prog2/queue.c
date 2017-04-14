@@ -43,34 +43,35 @@ void qdequeue(queue_t* q, void** data) {
 int qexists(queue_t* q, void* data, int (*func)(void* d1, void* d2)) {
     queue_node* curr = q->rear->next;
     do {
-        // printf("Call func\n");
         if (func(curr->data, data) == 0) {
             return 1;
         }
-        // printf("after call func\n");
     } while((curr = curr->next) != q->rear->next);
     return 0;
 }
 
 void qdelete_item(queue_t* q, void* to_delete, void** data, int (*func)(void* d1, void* d2)) {
-    queue_node* prev = NULL;
-    queue_node* curr = q->rear;
-    while((curr = curr->next) != q->rear) {
+    if (q->rear == NULL) {
+        return;
+    }
+    queue_node* prev = q->rear;
+    queue_node* curr = q->rear->next;
+     do {
         if (func(curr->data, to_delete) == 0) {
             if (curr->next == curr) {
                 q->rear = NULL;
-                *data = curr;
+                *data = curr->data;
                 free(curr);
                 q->size--;
                 return;
             } else {
                 prev->next = curr->next;
-                *data = curr;  
+                *data = curr->data;  
                 free(curr);
                 q->size--;
                 return;
             }
         }
         prev = curr;
-    }
+    } while((curr = curr->next) != q->rear->next);
 }
