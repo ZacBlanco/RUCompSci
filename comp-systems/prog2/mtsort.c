@@ -174,7 +174,6 @@ int main( int argc, char **argv )
             exit( 1 );
         }
     }
-
     pthrargcheck.num  = pList;
     pthrargcheck.mtx  = mutexes;
     pthrargcheck.size = nListSize;

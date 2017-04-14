@@ -16,7 +16,6 @@ void mypthread_test()
     mypthread_create(&tid, NULL, print, NULL);
     printf("Joining on thread\n");
     mypthread_join(tid, NULL);
-    
     return;
 }
 
@@ -34,6 +33,7 @@ void mypthread_test2(){
 int main()
 {
     mypthread_test();
-    printf("going into test2\n");
-    // mypthread_test2();
+    mypthread_test2();
+    // mypthread_exit(0);
+    return 0;
 }
