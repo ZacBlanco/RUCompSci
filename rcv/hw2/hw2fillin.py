@@ -33,7 +33,7 @@ def disp_mat(data, key, width=None, height=None):
 		k = cv2.waitKey(50) & 0xFF
 		if k == ord(key):
 			break
-	cv2.destroyAllWindows()
+	cv2.destroyWindow("img")
 
 def calcmapPt(x, y, hom):
 	vec = np.array([x, y, 1]).T # The original point vector
@@ -111,13 +111,13 @@ def problem2():
 	orig, mapped = get_points(refPt)
 	# Set the corresponding point in the frontal view as reference points
 	
+	# Draw the points where we're going to map to
 	for pt in mapped:
 		image = cv2.circle(image,(pt[0], pt[1]), 12, (0,0,255), -1);
 		cv2.imshow(windowName, image)
 		cv2.waitKey(1)
 	
 	disp_mat(warp(image, orig, mapped), "c")
-	cv2.destroyAllWindows()
 	############# PROBLEM 2 ####################
 
 def problem3():
@@ -129,7 +129,7 @@ def problem3():
 	cols = min(testimg.shape[1], image.shape[1])
 	testimg = testimg[:rows,:cols]
 	blank[0:rows,0:cols] = testimg
-	disp_mat(testimg, "c")
+	# disp_mat(testimg, "c")
 	
 	# Image was now expanded
 	rows, cols = testimg.shape[:2] # size of the original image
@@ -153,23 +153,25 @@ def problem3():
 	############# PROBLEM 3 ####################
 
 def problem4():
-	l = 512
-	size = (l,l)
-	sx = sy = 1
-	f = 100
-	ox = oy = 200
+	l = 512 # The image size
+	size = (l,l) # Size of the new image
+	sx = sy = 1 # problem parameter
+	f = 100 # focal length
+	ox = oy = 200 # shift
+
+	# Problem parameter (Internal camera matrix)
 	Mint = np.matrix([[-.707, -.707, 0,   3],
 					  [.707, -.707,  0, 0.5],
 					  [0,     0,     1,   3]])
+	# Problem Parameter (External Camera Matrix)
 	Mext = np.matrix([[f/sx, 0, ox],
 					  [0, f/sy, oy],
 					  [0,    0,  1]])
+
 	M = Mext.dot(Mint) # results in a 3x4 Matrix (camera matrix)
 
-	# Points on a 3d house
-
+	# House size parameter
 	sz = 200
-	
 	house_points = [
 		[(0, 0, 0), (sz, 0, 0), (sz, 0, sz), (0, 0, sz)], #front
 		[(0, sz, 0), (sz, sz, 0), (sz, sz, sz), (0, sz, sz)], #back
@@ -179,7 +181,6 @@ def problem4():
 		[(0, sz, sz), (sz, sz, sz), (sz/2, sz, sz + sz/3)], # roof back
 		[((sz/2, 0, sz + sz/3)), (sz/2, sz, sz + sz/3)], # roof connector
 	]
-
 
 	shift = [-100, -150, 100] # This is so we can move the house in 3d space
 	def convert3d(ptlist):
@@ -204,14 +205,10 @@ def problem4():
 		return pts
 
 	# This draws the house
-	# house_points = [(100, l/2), (100, l), (300, l), (300, l/2), (100, l/2), (200, 0), (300, l/2)]
-	# house_points = np.array(house_points, np.int32)
-	# house_points.shape = (7, 1, 2)
 	img = np.zeros(size, np.uint8)
 	for im_pts in img_pts:
 		img = cv2.polylines(img, [drawable(im_pts)], False, (255, 255, 255))	
 	disp_mat(img, "q")
-
 
 # Gather our code in a main() function
 def main():
@@ -234,13 +231,11 @@ def main():
 		if key == ord("c"):
 			break
 	
-	# problem2()
-	# problem3()
+	problem2()
+	problem3()
 	problem4()
 	# Close the window will exit the program
 	cv2.destroyAllWindows()
-
-
 
 # Standard boilerplate to call the main() function to begin
 # the program.
