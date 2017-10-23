@@ -32,10 +32,13 @@ Number of bytes read
 '''
 
 import sys
+from sock_tester import Server
 
 
 def main():
-    pass
+    port_no = int(input("Enter a port number: "))
+    s1 = Server('0.0.0.0', port_no)
+    s1.run()
 
 if __name__ == "__main__":
     main()

@@ -20,13 +20,31 @@ Total transmit time
 '''
 
 import sys
-import sock_tester
+from sock_tester import TCPClient, UDPClient
 
 
 
+def str_to_bool(str):
+    if str == 'False':
+        return False
+    elif str == 'True':
+        return True
 
 def main():
-    pass
+    ip_address = input("Enter hostname or IP address: ")
+    port_no = int(input("Enter port number: "))
+    transport_protocol = input("TCP or UDP: " )
+    acks = input("Streaming(False) or stop-and-wait(True): ")
+    acks = str_to_bool(acks)
+    message_size = int(input("Enter message size: "))
+
+    if transport_protocol == 'TCP':
+        client = TCPClient(ip_address, port_no, acks)
+        client.run(message_size, 2 ** 20)
+    else:
+        client = UDPClient(ip_address, port_no, acks)
+        client.run(message_size, 2 ** 20)
+
 
 if __name__ == "__main__":
     main()

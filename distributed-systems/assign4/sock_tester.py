@@ -114,6 +114,7 @@ class Server(object):
 
 
     def wait(self):
+        self.udp_thread.join()
         self.tcp_thread.join()
 
 
@@ -215,8 +216,9 @@ def test():
     # client = TCPClient('127.0.0.1', 8080)
     # for x in range (1, 15):
         # client.run(2 ** x, 5 * (2 ** 20))
-    client2 = UDPClient('127.0.0.1', 8081, acks=True)
+    client2 = TCPClient('127.0.0.1', 8080)
     client3 = UDPClient('127.0.0.1', 8081, acks=False)
+    time.sleep(1)
     for x in range(3, 15):
         client2.run(2 ** x, 1 * M)
         client3.run(2 ** x, 1 * M)
