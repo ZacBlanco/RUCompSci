@@ -25,12 +25,11 @@ class Server(object):
     The TCP thread will always listen on the specified port
     The UDP thread will always listen on the specified port + 1
 
-
     Basic usage example
 
     srv = Server('0.0.0.0', 8080)
     srv.run() # Starts two separate threads to listen on UDP/TCP
-    srv.wait() # Listen forever
+    srv.wait_forever() # Listen forever
     # or
     srv.stop_server() # both threads exit after timing out
     '''
@@ -45,7 +44,7 @@ class Server(object):
         self._sock = create_socket(udp=False)
         self._sock.settimeout(1)
         self._sock.bind((self.listen_addr, self.port))
-        self._sock.listen()
+        self._sock.listen(5) # 5 is the number of backlog (waiting incoming) TCP connections. Specified for python 3.4 support
         while not self.stop:
             msgs = 0
             byte_count = 0
@@ -59,7 +58,6 @@ class Server(object):
                 print("msg_size: {}, transfer_size: {}, use_acks: {}".format(msg_size, transfer_size, use_acks))
                 while( byte_count < transfer_size): # loop while we still receive data and we haven't gone over transfer size
                     msg = conn.recv(msg_size)
-                    # print("recvd {}".format(msg))
                     if len(msg) <= 0:
                         break
                     msgs += 1
@@ -72,7 +70,7 @@ class Server(object):
                 pass
 
     def __run_udp__(self):
-        '''Run the UDP thread'''
+        '''Run the UDP loop'''
         self._usock = create_socket()
         self._usock.settimeout(1)
         self._usock.bind((self.listen_addr, self.port + 1))
@@ -93,16 +91,16 @@ class Server(object):
                         print("Msg size was supposed to be {}. Got {}".format(msg_size, len(msg)))
                         break
                     msgs += 1
-                    byte_count += len(msg)
-                    if use_acks:
-                        # print("Sending ACK {}".format(int(True).to_bytes(1, 'little')))
+                    byte_count += len(msg) 
+                    if use_acks: # If the protocol is using ACKS, send the true bit back. 
                         self._usock.sendto(int(True).to_bytes(1, 'little'), addr)
-            except socket.timeout as err:
+            except socket.timeout:
                 # print(err)
                 pass
 
-
     def run(self):
+        '''Starts the UDP and TCP listening threads'''
+        self.stop = False
         self.tcp_thread = threading.Thread(None, target=self.__run_tcp__)
         self.udp_thread = threading.Thread(None, target=self.__run_udp__)
         self.tcp_thread.start()
@@ -110,14 +108,11 @@ class Server(object):
 
     def stop_server(self):
         self.stop = True
-        self.wait()
-
-
-    def wait(self):
+        self.wait_forever()
+    
+    def wait_forever(self):
         self.udp_thread.join()
         self.tcp_thread.join()
-
-
 
 class TCPClient(object):
     def __init__(self, addr, port, acks=False):
