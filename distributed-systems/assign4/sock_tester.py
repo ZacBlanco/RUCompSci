@@ -67,8 +67,7 @@ class Server(object):
                     if use_acks:
                         conn.send(int(True).to_bytes(1, 'little'))
                 conn.close()
-            except:
-                # print(err)
+            except socket.timeout:
                 pass
             except:
                 print(sys.exc_info()[0])
