@@ -24,10 +24,10 @@ from sock_tester import TCPClient, UDPClient
 
 
 
-def str_to_bool(str):
-    if str == 'False':
+def str_to_bool(s):
+    if s.upper() == 'FALSE':
         return False
-    elif str == 'True':
+    elif s.upper() == 'TRUE':
         return True
 
 def main():
@@ -37,13 +37,14 @@ def main():
     acks = input("Streaming (False) or stop-and-wait (True): ")
     acks = str_to_bool(acks)
     message_size = int(input("Enter message size: "))
+    num_messages = int(input("Number of messages: "))
 
     if transport_protocol == 'TCP':
         client = TCPClient(ip_address, port_no, acks)
-        client.run(message_size, 2 ** 20)
+        client.run(message_size, message_size * num_messages)
     else:
         client = UDPClient(ip_address, port_no, acks)
-        client.run(message_size, 2 ** 20)
+        client.run(message_size, message_size * num_messages)
 
 
 if __name__ == "__main__":
