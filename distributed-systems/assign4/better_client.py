@@ -34,7 +34,7 @@ def main():
     ip_address = input("Enter hostname or IP address: ")
     port_no = int(input("Enter port number: "))
     transport_protocol = input("TCP or UDP: " )
-    acks = input("Streaming(False) or stop-and-wait(True): ")
+    acks = input("Streaming (False) or stop-and-wait (True): ")
     acks = str_to_bool(acks)
     message_size = int(input("Enter message size: "))
 

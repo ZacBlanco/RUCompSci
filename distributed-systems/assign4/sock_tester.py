@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import socket
 import threading
+import sys
 import time
 import os
 import math
@@ -69,6 +70,8 @@ class Server(object):
             except socket.timeout as err:
                 # print(err)
                 pass
+            except:
+                print(sys.exc_info()[0])
 
     def __run_udp__(self):
         '''Run the UDP loop'''
@@ -98,6 +101,8 @@ class Server(object):
             except socket.timeout:
                 # print(err)
                 pass
+            except:
+                print(sys.exc_info()[0])
 
     def run(self):
         '''Starts the UDP and TCP listening threads'''
@@ -110,7 +115,7 @@ class Server(object):
     def stop_server(self):
         self.stop = True
         self.wait_forever()
-    
+
     def wait_forever(self):
         self.udp_thread.join()
         self.tcp_thread.join()
@@ -150,9 +155,8 @@ class TCPClient(object):
             end = time.time()
             print("Transfer finished: Messages Sent: {}, Bytes Sent: {}, Total Time: {} seconds, Transfer Rate {} MB/s".format(num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M))
             ret = (num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M)
-        except Exception as err:
-            print("client error")
-            print(err)
+        except:
+            print(sys.exc_info()[0])
         finally:
             _sock.close()
             return ret
@@ -197,9 +201,10 @@ class UDPClient(object):
             end = time.time()
             print("Transfer finished: Messages Sent: {}, Bytes Sent: {}, Total Time: {} seconds, Transfer Rate {} MB/s".format(num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M))
             return (num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M)
-        except Exception as err:
+        except:
+            print(sys.exc_info()[0])
             # print("client error")
-            print(err)
+            # print(err)
         finally:
             _sock.close()
             return (None, None, None, None)
@@ -223,8 +228,8 @@ def test():
     s1.stop_server()
 
 def ilab_test(tcp, acks):
-    ilab_ip = '128.6.13.180'
-    ilab_port = 8080
+    ilab_ip = 'man.cs.rutgers.edu'
+    ilab_port = 7878
 
     bytes = []
     transmission_rates = []
