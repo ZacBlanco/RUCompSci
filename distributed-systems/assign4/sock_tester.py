@@ -70,7 +70,7 @@ class Server(object):
             except socket.timeout:
                 pass
             except:
-                print(sys.exc_info()[0])
+                print("Unexpected Error: {}".format(sys.exc_info()[0]))
 
     def __run_udp__(self):
         '''Run the UDP loop'''
@@ -101,7 +101,7 @@ class Server(object):
                 # print(err)
                 pass
             except:
-                print(sys.exc_info()[0])
+                print("Unexpected Error: {}".format(sys.exc_info()[0]))
 
     def run(self):
         '''Starts the UDP and TCP listening threads'''
@@ -155,7 +155,7 @@ class TCPClient(object):
             print("Transfer finished: Messages Sent: {}, Bytes Sent: {}, Total Time: {} seconds, Transfer Rate {} MB/s".format(num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M))
             ret = (num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M)
         except:
-            print(sys.exc_info()[0])
+            print("Unexpected Error: {}".format(sys.exc_info()[0]))
         finally:
             _sock.close()
             return ret
@@ -204,7 +204,7 @@ class UDPClient(object):
             _sock.close()
             return (num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M)
         except:
-            print(sys.exc_info()[0])
+            print("Unexpected Error: {}".format(sys.exc_info()[0]))
             # print("client error")
             # print(err)
             _sock.close()
@@ -246,7 +246,12 @@ def ilab_test(tcp, acks, server, port):
             client = UDPClient(ilab_ip, ilab_port+1, acks=True)
         else:
             client = UDPClient(ilab_ip, ilab_port+1, acks=False)
-        transmission_rates.append(client.run(x, x * 1000)[3])
+        rate = None
+        tries = 0
+        while rate is None and tries < 5:
+            rate = client.run(x, x * 1000)[3]
+            tries += 1
+        transmission_rates.append(rate)
 
     for x in range(17):
         print("2^{} Bytes : {} ".format(x, transmission_rates[x]))
