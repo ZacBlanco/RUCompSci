@@ -160,10 +160,11 @@ class TCPClient(object):
 
 class UDPClient(object):
 
-    def __init__(self, addr, port, acks=False):
+    def __init__(self, addr, port, acks=False, timeout=5):
         self.addr = addr
         self.port = port
         self.acks = acks
+        self.timeout = timeout
     
     def run(self, msg_size, total_transfer):
         '''UDP Transfer test client
@@ -171,6 +172,7 @@ class UDPClient(object):
         Very similar to the TCP client except we use sendto/recvfrom
         '''
         _sock = create_socket()
+        _sock.settimeout(self.timeout)
         addr = (self.addr, self.port)
         try:
             _sock.sendto(msg_size.to_bytes(4, 'little'), addr)
@@ -236,10 +238,10 @@ def ilab_test(tcp, acks, server, port):
         elif tcp == True:
             client = TCPClient(ilab_ip, ilab_port, acks = False)
         elif acks == True:
-            client = UDPClient(ilab_ip, ilab_port, acks = True)
+            client = UDPClient(ilab_ip, ilab_port+1, acks = True)
         else:
             print('HERE')
-            client = UDPClient(ilab_ip, ilab_port, acks = False)
+            client = UDPClient(ilab_ip, ilab_port+1, acks = False)
         transmission_rates.append(client.run(x, x * 1000)[3])
 
     for x in range(17):
@@ -254,9 +256,9 @@ def benchmarks():
     server = input("Please enter the server name: ")
     port = input("Please enter the port number: ")
     ilab_test(True, True, server, port) # TCP WITH ACKS
-    # ilab_test(True, False, server, port) # TCP WITHOUT ACKS # only one working
-    #ilab_test(tcp = False, acks = True)
-    #ilab_test(tcp = False, acks = False)
+    ilab_test(True, False, server, port) # TCP WITHOUT ACKS # only one working
+    # ilab_test(False, True, server, port)
+    # ilab_test(False, False, server, port)
 
 if __name__ == "__main__":
     benchmarks()
