@@ -262,7 +262,7 @@ def benchmarks():
     # ilab_test(True, True, server, port) # TCP WITH ACKS
     # ilab_test(True, False, server, port) # TCP WITHOUT ACKS # only one working
     ilab_test(False, True, server, port) # UDP with ACKS
-    # ilab_test(False, False, server, port) # UDP without ACKS
+    ilab_test(False, False, server, port) # UDP without ACKS
 
 if __name__ == "__main__":
     benchmarks()
