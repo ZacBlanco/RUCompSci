@@ -66,7 +66,7 @@ class Server(object):
                     if use_acks:
                         conn.send(int(True).to_bytes(1, 'little'))
                 conn.close()
-            except socket.timeout as err:
+            except:
                 # print(err)
                 pass
 
@@ -222,16 +222,15 @@ def test():
     time.sleep(.1)
     s1.stop_server()
 
-def ilab_test(tcp, acks):
-    ilab_ip = '128.6.13.180'
-    ilab_port = 8080
-
-    bytes = []
+def ilab_test(tcp, acks, server, port):
+    ilab_ip = server
+    ilab_port = int(port)
+    msg_sizes = []
     transmission_rates = []
     for x in range(17):
-        bytes.append(2**x)
+        msg_sizes.append(2**x)
 
-    for x in bytes:
+    for x in msg_sizes:
         if tcp == True and acks == True:
             client = TCPClient(ilab_ip, ilab_port, acks = True)
         elif tcp == True:
@@ -241,19 +240,21 @@ def ilab_test(tcp, acks):
         else:
             print('HERE')
             client = UDPClient(ilab_ip, ilab_port, acks = False)
-        transmission_rates.append(client.run(x, 1 * M)[3])
+        transmission_rates.append(client.run(x, x * 1000)[3])
 
     for x in range(17):
         print("2^{} Bytes : {} ".format(x, transmission_rates[x]))
 
-    plt.plot(bytes, transmission_rates, 'ro')
+    plt.plot(msg_sizes, transmission_rates, 'ro')
     plt.ylabel('Transmission Rate MB/s')
     plt.xscale('log', basex = 2)
     plt.show()
 
 def benchmarks():
-    #ilab_test(tcp = True, acks = True)
-    ilab_test(tcp = True, acks = False) # only one working
+    server = input("Please enter the server name: ")
+    port = input("Please enter the port number: ")
+    ilab_test(True, True, server, port) # TCP WITH ACKS
+    # ilab_test(True, False, server, port) # TCP WITHOUT ACKS # only one working
     #ilab_test(tcp = False, acks = True)
     #ilab_test(tcp = False, acks = False)
 
