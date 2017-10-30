@@ -4,6 +4,7 @@ import threading
 import time
 import os
 import math
+import matplotlib.pyplot as plt
 
 M = 2 ** 20
 G = 2 ** 20
@@ -221,6 +222,40 @@ def test():
     time.sleep(.1)
     s1.stop_server()
 
+def ilab_test(tcp, acks):
+    ilab_ip = '128.6.13.180'
+    ilab_port = 8080
+
+    bytes = []
+    transmission_rates = []
+    for x in range(17):
+        bytes.append(2**x)
+
+    for x in bytes:
+        if tcp == True and acks == True:
+            client = TCPClient(ilab_ip, ilab_port, acks = True)
+        elif tcp == True:
+            client = TCPClient(ilab_ip, ilab_port, acks = False)
+        elif acks == True:
+            client = UDPClient(ilab_ip, ilab_port, acks = True)
+        else:
+            print('HERE')
+            client = UDPClient(ilab_ip, ilab_port, acks = False)
+        transmission_rates.append(client.run(x, 1 * M)[3])
+
+    for x in range(17):
+        print("2^{} Bytes : {} ".format(x, transmission_rates[x]))
+
+    plt.plot(bytes, transmission_rates, 'ro')
+    plt.ylabel('Transmission Rate MB/s')
+    plt.xscale('log', basex = 2)
+    plt.show()
+
+def benchmarks():
+    #ilab_test(tcp = True, acks = True)
+    ilab_test(tcp = True, acks = False) # only one working
+    #ilab_test(tcp = False, acks = True)
+    #ilab_test(tcp = False, acks = False)
 
 if __name__ == "__main__":
-    test()
+    benchmarks()
