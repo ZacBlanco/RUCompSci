@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import socket
 import threading
+import sys
 import time
 import os
 import math
@@ -66,9 +67,10 @@ class Server(object):
                     if use_acks:
                         conn.send(int(True).to_bytes(1, 'little'))
                 conn.close()
-            except:
-                # print(err)
+            except socket.timeout:
                 pass
+            except:
+                print("Unexpected Error: {}".format(sys.exc_info()[0]))
 
     def __run_udp__(self):
         '''Run the UDP loop'''
@@ -98,6 +100,8 @@ class Server(object):
             except socket.timeout:
                 # print(err)
                 pass
+            except:
+                print("Unexpected Error: {}".format(sys.exc_info()[0]))
 
     def run(self):
         '''Starts the UDP and TCP listening threads'''
@@ -110,7 +114,7 @@ class Server(object):
     def stop_server(self):
         self.stop = True
         self.wait_forever()
-    
+
     def wait_forever(self):
         self.udp_thread.join()
         self.tcp_thread.join()
@@ -150,9 +154,8 @@ class TCPClient(object):
             end = time.time()
             print("Transfer finished: Messages Sent: {}, Bytes Sent: {}, Total Time: {} seconds, Transfer Rate {} MB/s".format(num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M))
             ret = (num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M)
-        except Exception as err:
-            print("client error")
-            print(err)
+        except:
+            print("Unexpected Error: {}".format(sys.exc_info()[0]))
         finally:
             _sock.close()
             return ret
@@ -198,11 +201,12 @@ class UDPClient(object):
                         raise RuntimeError("Did not get True ACK")
             end = time.time()
             print("Transfer finished: Messages Sent: {}, Bytes Sent: {}, Total Time: {} seconds, Transfer Rate {} MB/s".format(num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M))
+            _sock.close()
             return (num_msgs, num_bytes, round(end-start, 4), num_bytes/(end-start)/M)
-        except Exception as err:
+        except:
+            print("Unexpected Error: {}".format(sys.exc_info()[0]))
             # print("client error")
-            print(err)
-        finally:
+            # print(err)
             _sock.close()
             return (None, None, None, None)
         
@@ -228,21 +232,26 @@ def ilab_test(tcp, acks, server, port):
     ilab_ip = server
     ilab_port = int(port)
     msg_sizes = []
+
     transmission_rates = []
     for x in range(17):
         msg_sizes.append(2**x)
 
     for x in msg_sizes:
         if tcp == True and acks == True:
-            client = TCPClient(ilab_ip, ilab_port, acks = True)
+            client = TCPClient(ilab_ip, ilab_port, acks=True)
         elif tcp == True:
-            client = TCPClient(ilab_ip, ilab_port, acks = False)
+            client = TCPClient(ilab_ip, ilab_port, acks=False)
         elif acks == True:
-            client = UDPClient(ilab_ip, ilab_port+1, acks = True)
+            client = UDPClient(ilab_ip, ilab_port+1, acks=True)
         else:
-            print('HERE')
-            client = UDPClient(ilab_ip, ilab_port+1, acks = False)
-        transmission_rates.append(client.run(x, x * 1000)[3])
+            client = UDPClient(ilab_ip, ilab_port+1, acks=False)
+        rate = None
+        tries = 0
+        while rate is None and tries < 5:
+            rate = client.run(x, x * 1000)[3]
+            tries += 1
+        transmission_rates.append(rate)
 
     for x in range(17):
         print("2^{} Bytes : {} ".format(x, transmission_rates[x]))
@@ -255,10 +264,10 @@ def ilab_test(tcp, acks, server, port):
 def benchmarks():
     server = input("Please enter the server name: ")
     port = input("Please enter the port number: ")
-    ilab_test(True, True, server, port) # TCP WITH ACKS
-    ilab_test(True, False, server, port) # TCP WITHOUT ACKS # only one working
-    # ilab_test(False, True, server, port)
-    # ilab_test(False, False, server, port)
+    # ilab_test(True, True, server, port) # TCP WITH ACKS
+    # ilab_test(True, False, server, port) # TCP WITHOUT ACKS # only one working
+    ilab_test(False, True, server, port) # UDP with ACKS
+    ilab_test(False, False, server, port) # UDP without ACKS
 
 if __name__ == "__main__":
     benchmarks()
