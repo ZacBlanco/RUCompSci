@@ -88,26 +88,13 @@ def problem1(imgname):
     e = -.02
     f = 5
     affine_mat = np.matrix([[a+1, b, c],
-                            [d, e+1, f]])
+                            [d, e+1, f]]) # +1 for affine warp function
                             # [0, 0, 1]])
     img = cv2.imread(IMAGE, cv2.IMREAD_GRAYSCALE)
-    while img.shape[0] > 750 and img.shape[1] > 750:
+    while img.shape[0] > 750 and img.shape[1] > 750: # Ensures that the image isn't too large
         img = cv2.pyrDown(img)
-    # disp_key(img, 'n')
-    # print(img.shape)
     (rows, cols) = img.shape[:2]
     newimg = cv2.warpAffine(img, affine_mat, (cols, rows))
-    # mapx = np.zeros((rows, cols), np.float32)
-    # mapy = np.zeros((rows, cols), np.float32)
-    # print(affine_mat)        
-    # for r in range(rows):
-    #     for c in range(cols):
-    #         pt = np.array([c, r, 1])
-    #         uv = affine_mat.dot(pt).T
-    #         mapx[r, c] = c + uv[0]
-    #         mapy[r, c] = r + uv[1]
-
-    # newimg = cv2.remap(img, mapx, mapy, 1)
     disp_key(img, 'n')
     disp_key(newimg, 'n')
     disp_key(newimg-img, 'n')
@@ -118,14 +105,13 @@ def problem2(img1, img2, size, pyrlevels, niters):
     # params = np.random.rand(6, 1)
     params =  np.zeros((6, 1))
     params.shape = (6, 1)
-    # filt = np.array(normalize_filt([1, 4, 6, 4, 1]))
     i1 = img1
     i2 = img2
     for i in range(pyrlevels):
         i1 = img1
         i2 = img2
         for i in range(pyrlevels - i):
-            i1 = cv2.pyrDown(i1)
+            i1 = cv2.pyrDown(i1) # pyrDown already blurs the image for us
             i2 = cv2.pyrDown(i2)
         size = i1.shape[:2]
         # disp_key(i1, 'n')
@@ -175,22 +161,79 @@ def lk_method(img1, img2, size, params0, niters):
                 it = float(img2[r, c]) - float(getsubpix(img1, c+uu, r+vv)) # uses bilinear interpolation
                 ixx = Agrad[r, c, 0].item()
                 iyy = Agrad[r, c, 1].item()
-                # if (r % 10 == 0 and c % 10 == 0 and n == niters-1):
-                    # cv2.arrowedLine(arrowimg, (c, r), (c+uu, r+vv), (255, 255, 255), 1)
                 v2 = np.matrix([it*ixx*c, it*ixx*r, it*ixx, it*iyy*c, it*iyy*r, it*iyy], np.float32)
                 aTb -= v2.reshape(6, 1)
-        
+                # if (r % 10 == 0 and c % 10 == 0 and n == niters-1):
+                    # cv2.arrowedLine(arrowimg, (c, r), (c+uu, r+vv), (255, 255, 255), 1)
+    
         params += aTa.dot(aTb)
         # if n == niters -1:
         #     disp_key(arrowimg, 'n')
+    pa = params.reshape(2, 3)
+    rows, cols = img1.shape
+    disp_key(cv2.warpAffine(img1, pa, (cols, rows)), 'n')
     return params
    
+def problem3():
+    # https://keras.io/applications/#resnet50
+    from keras.applications.resnet50 import ResNet50 as rn50
+    from keras.preprocessing import image
+    from keras.applications.resnet50 import preprocess_input, decode_predictions
+    network = rn50(weights='imagenet') # default input size is 224x224
+    # explore classes: http://image-net.org/explore
+    classes = ['alp', 'acoustic_guitar', 'hare', 'stingray']
+    TP = 0
+    TN = 0
+    FP = 0
+    FN = 0
+    for classname in classes:
+        for i in range(1, 6):
+            img = image.load_img('images/{}/img{}.jpg'.format(classname, i), target_size=(224, 224))
+            x = image.img_to_array(img)
+            x = np.expand_dims(x, axis=0)
+            x = preprocess_input(x)
+            preds = network.predict(x)
+            p = decode_predictions(preds, top=1)[0][0]
+            # print(p[1] == classname)
+            # print(p[1])
+            predicted_class = p[1]
+            if str(predicted_class) == classname:
+                TP += 1
+            else:
+                FN += 1
+
+    # Now Part 2 - Calculate matrices
+    # Confusion Matrix - 2x2 Actual +- vs Predicted +-
+    # Accuracy (TP +TN) / (TP+TN+FP+FN)
+    # F Score - (Precision*Recall)/(Precision + Recall)
+    # Precision - TP / (TP + FP)
+    # Recall - TP / (TP + FN)
+
+    print("Confusion Matrix:")
+    print("\tCondition Positive - Condition Negative")
+    print("Predicted Positive: {} \t {}".format(TP, FP))
+    print("Predicted Negative: {} \t {}".format(FN, TN))
+    acc = float(TP+TN) / (TP+TN+FP+FN)
+    prec = float(TP) / (TP + FP)
+    rec = float(TP) / (TP + FN)
+    f_score =  (prec*rec) / (prec + rec)
+    print("Accuracy: {}".format(acc))
+    print("Precision: {}".format(prec))
+    print("Recall: {}".format(rec))
+    print("F Score: {}".format(f_score))
+        
+        
+
+        
+
+
+
 
 def main():
     IMAGE = 'hat.jpg'
     im1, im2 = problem1(IMAGE)
     problem2(im1, im2, im1.shape[:2], 4, 10)
-
+    problem3()
 
     # ix = np.zeros(size, np.float32)
     # iy = np.zeros(size, np.float32)
@@ -226,7 +269,8 @@ def main():
     #             uvals = np.linalg.pinv(S.T.dot(S)).dot(S.T).dot(T)
     #         ix[y, x] = uvals[0]
     #         iy[y, x] = uvals[1]
-    #         ts[y, x] = -itv    
+    #         ts[y, x] = -itv  
+    # CODE BY ZACHARY BLANCO - 11/28/2017  
 
 if __name__ == "__main__":
     main()

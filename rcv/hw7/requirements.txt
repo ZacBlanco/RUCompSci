@@ -1,4 +1,7 @@
 opencv-contrib-python
 matplotlib
 numpy
-
+keras
+tensorflow
+h5py
+pillow
