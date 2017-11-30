@@ -9,7 +9,8 @@ public class WordCount {
 	public static void main(String[] args) throws Exception {
 		
 		JobConf conf = new JobConf(WordCount.class);
-		conf.setJobName("WordCount");
+		//conf.setJobName("WordCount"); // Task 1
+		conf.setJobName("TimeCount"); // Task 2
 
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(IntWritable.class);

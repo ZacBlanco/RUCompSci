@@ -17,7 +17,10 @@ public class WordCountMapper extends MapReduceBase implements
 		StringTokenizer tokenizer = new StringTokenizer(line);
 		while (tokenizer.hasMoreTokens()) {
 			word.set(tokenizer.nextToken());
-			output.collect(word, one);
+			String text = word.toString();
+			if (text.matches("\\b\\d{2}:\\d{2}:\\d{2}\\b")) {
+				output.collect(word, one);
+			}
 		}
 	}
 }
