@@ -10,7 +10,8 @@ public class WordCount {
 		
 		JobConf conf = new JobConf(WordCount.class);
 		//conf.setJobName("WordCount"); // Task 1
-		conf.setJobName("TimeCount"); // Task 2
+		//conf.setJobName("TimeCount"); // Task 2
+		conf.setJobName("RequestCount"); // Task 3
 
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(IntWritable.class);

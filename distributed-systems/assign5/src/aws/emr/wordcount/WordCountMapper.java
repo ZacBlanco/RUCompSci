@@ -16,11 +16,44 @@ public class WordCountMapper extends MapReduceBase implements
 		String line = value.toString();
 		StringTokenizer tokenizer = new StringTokenizer(line);
 		while (tokenizer.hasMoreTokens()) {
+			
 			word.set(tokenizer.nextToken());
 			String text = word.toString();
+			
+			if (text.matches("\\b\\d{2}:\\d{2}:\\d{2}\\b")) {
+				text = text.substring(0, 2);
+				word.set(text);
+				output.collect(word, one);
+			}
+			
+			/*
+			 *********** Task 1 **********
+			 
+			 word.set(tokenizer.nextToken());
+			 output.collect(word, one);
+ 			
+ 			************* Task 2 **********
+			 
+		    word.set(tokenizer.nextToken());
+			String text = word.toString();
+			
 			if (text.matches("\\b\\d{2}:\\d{2}:\\d{2}\\b")) {
 				output.collect(word, one);
 			}
+			
+			************* Task 3 **********
+			
+			word.set(tokenizer.nextToken());
+			String text = word.toString();
+			
+			if (text.matches("\\b\\d{2}:\\d{2}:\\d{2}\\b")) {
+				text = text.substring(0, 2);
+				word.set(text);
+				output.collect(word, one);
+			}
+			
+			 */
+			
 		}
 	}
 }
