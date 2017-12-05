@@ -16,10 +16,7 @@ public class Task4Mapper extends MapReduceBase implements
 		String line = value.toString();
 		StringTokenizer tokenizer = new StringTokenizer(line);
 		while (tokenizer.hasMoreTokens()) {
-			
-			word.set(tokenizer.nextToken());
-			String text = word.toString();
-			
+
 			/*
 			************* Task 4 **********
 			*/
