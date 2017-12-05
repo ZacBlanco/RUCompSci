@@ -20,8 +20,7 @@ public class WordCountMapper extends MapReduceBase implements
 			word.set(tokenizer.nextToken());
 			String text = word.toString();
 			
-			if (text.matches("\\b\\d{2}:\\d{2}:\\d{2}\\b")) {
-				text = text.substring(0, 2);
+			if (text.matches("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b")) {
 				word.set(text);
 				output.collect(word, one);
 			}
