@@ -9,22 +9,22 @@ public class WordCount {
 	public static void main(String[] args) throws Exception {
 		
 		// UNCOMMENT/Recomment to compile different jobs.		
+//
+//		JobConf wordcount = setupConf("WordCount", Task1Mapper.class, WordCountReducer.class, args);
+//		JobClient.runJob(wordcount);
 
-		JobConf wordcount = setupConf("WordCount", Task1Mapper.class, WordCountReducer.class);
-		JobClient.run(wordcount);
+		// JobConf timecount = setupConf("TimeCount", Task2Mapper.class, WordCountReducer.class, args);
+		// JobClient.runJob(timecount);
 
-		// JobConf timecount = setupConf("TimeCount", Task2Mapper.class, WordCountReducer.class);
-		// JobClient.run(timecount);
+		 JobConf reqcount = setupConf("RequestCount", Task3Mapper.class, WordCountReducer.class, args);
+		 JobClient.runJob(reqcount);
 
-		// JobConf reqcount = setupConf("RequestCount", Task3Mapper.class, WordCountReducer.class);
-		// JobClient.run(reqcount);
-
-		// JobConf ipcount = setupConf("IPCount", Task4Mapper.class, WordCountReducer.class);
-		// JobClient.run(ipcount);
+		// JobConf ipcount = setupConf("IPCount", Task4Mapper.class, WordCountReducer.class, args);
+		// JobClient.runJob(ipcount);
 
 	}
 
-	public static JobConf setupConf(String jobname, Class mapper, Class reducer) {
+	public static JobConf setupConf(String jobname, Class mapper, Class reducer, String[] args) {
 		
 		JobConf conf = new JobConf(WordCount.class);
 		conf.setJobName(jobname);
