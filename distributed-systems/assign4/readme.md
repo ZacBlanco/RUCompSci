@@ -16,7 +16,7 @@ Group Members
 
 ## Benchmark Instructions
 
-To benchmark you need to start a server.
+To benchmark you need to start a server on a separate machine.
 
 ```
 python3 better_server.py
@@ -26,11 +26,17 @@ The server runs two threads. One for TCP and one for UDP benchmarking. The ackno
 
 From here you can either write a custom python script to run the client benchmarks or you can use the `better_client.py` to run benchmarks from the command line.
 
+`sock_tester.py` must reside in the same directory as `better\_client.py` and `better\_server.py`.
+
 ### `better_client.py`
 
 Simply run `python3 better_client.py` and you will be prompted to enter the benchmark parameters such as TCP, UDP, port number, and acknowledgement protocol.
 
 The the final parameters of the benchmark will be printed out after the transfer has occurred.
+
+### `better_server.py`
+
+Simply run `python3 better_server.py` and you will be prompted to run the server on a specific port. The port chosen will be used for TCP connections. UDP connections will run on port + 1.
 
 ### Custom Benchmarking Script
 
