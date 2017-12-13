@@ -20,3 +20,10 @@ cs214/Asst2/comp_proc.bin
 .DS_Store
 
 **/env/**
+
+rcv/final/Images/**
+rcv/final/catsndogs/**
+rcv/final/bundle/**
+rcv/final/**/catsndogs/*.jpg
+rcv/final/ekfmonoslam/**
+rcv/final/__pycache__/utils.cpython-35.pyc

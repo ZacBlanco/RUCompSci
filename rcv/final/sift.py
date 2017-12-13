@@ -35,13 +35,3 @@ if __name__ == "__main__":
             for row in d:
                 [f.write(' ' + str(int(h))) for h in row]
                 f.write('\n')
-            
-            
-    # for i in range(10):
-    #     k = kp[i]
-
-    #     print(round(k.pt[0], 3), round(k.pt[1], 3), round(k.size, 3), round(torad(k.angle), 3))
-    #     print(des[i][:20].tolist())
-
-
-
