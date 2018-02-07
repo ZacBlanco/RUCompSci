@@ -1,3 +1,44 @@
+'''A rudimentary set of boilerplate code for creating simple interfaces with pygame.
+
+This module has two main components to it.
+
+- command line options
+- pygame running
+
+First, we'll go over how to use the module to create a game.
+
+In your own python module you should write two functions (the actual names don't matter)
+
+- setup
+- loop
+
+The setup function is a function that is run once before the game loop starts. It is useful to initialize any variables here. 
+The function signature should look something like ``def setup(screen, args)``
+
+- where ``screen`` is the pygame screen object (used to draw things on the window)
+- ``args`` is a dictionary of command line parameters and their values.
+
+Then, the loop function signature should look like ``def loop(delta, screen)`` where delta is the time is took to run the last frame
+and screen is the pygame variable used to draw on the window.
+
+Then finally, to run the game all you have to do in your own module is write the following code
+
+```
+import game
+
+def setup(screen, args):
+    # initialization logic
+
+def loop(delta, screen):
+    # game logic
+
+if __name__ == "__main__":
+    game.run(setup, loop)
+```
+
+
+'''
+
 import sys
 import pygame
 import time
@@ -9,7 +50,7 @@ def game(args, setup, loop):
     '''Runs the Pygame
     Arguments:
         args: the game parameters passed from the user on startup from the OPTIONS variable
-        setup: A single setup function for the pygame display. Passes the screen to the function
+        setup: A single setup function for the pygame display.screen and cmd line args are passed to the function
         loop: A function which takes two arguments (delta, screen) and is run in a loop for the game.
     
     Returns:
@@ -26,7 +67,7 @@ def game(args, setup, loop):
     print(APP_TITLE)
     
     # User setup function
-    setup(screen)
+    setup(screen, args)
 
     # Event Loop
     while True:
@@ -126,7 +167,7 @@ def run(setup, loop):
     '''Runs the game with the setup and loop functions
 
     Arguments:
-        setup: A function with node arguments that is run once before the game loop
+        setup: A function with 2 arguments (screen, cmd line args) that is run once before the game loop 
         loop: A function with a two arguments (delta time, game surface) that gets run up to FPS frames per second.
     '''
     args = sys.argv[1:]
