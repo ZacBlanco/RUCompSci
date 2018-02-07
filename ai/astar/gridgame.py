@@ -5,17 +5,14 @@ game.APP_TITLE = "Intro to artificial intelligence"
 
 TILE1 = None
 G = None
-def setup(screen):
+def setup(screen, args):
     global TILE1, G
     TILE1 = Tile('blocked', 10, 20, [50, 50])
-    G = Grid.gen_grid(0, 0, 300, 300, 20, 20)
+    G = Grid.gen_grid(0, 0, args['w'], args['h'], args['tw'], args['th'])
 def LOOP(d, s):
     global TILE1, G
     # s.fill([10, 10, 10])
-    # TILE1.draw(s)
-    #G.draw(s)
-    t = Tile('blocked', 50, 50, (25, 25))
-    t.draw(s)
+    G.draw(s)
 
 
 class Grid(object):
@@ -36,15 +33,25 @@ class Grid(object):
     
     @staticmethod
     def gen_grid(x, y, gw, gh, tx, ty):
+        '''Generate a blank grid
+
+        Arguments:
+            x: The initial horizontal location in the window for the grid (pixels)
+            y: The initial top location of the grid (pixels)
+            gw: The total width of the grid in pixels
+            gh: The total height of the grid in pixels
+            tx: The number of tiles in each row
+            ty: The number of tiles in each column
+        '''
         g = Grid(x, y, gw, gh, tx, ty)
         # Tile size:
-        width = float(tx) / gw
-        height = float(ty) / gh
+        width = float(gw) / tx
+        height = float(gh) / ty
         g.matrix = [[ Tile('unblocked', x + (i*width), y + (j*height), [width, height]) for j in range(ty)] for i in range(tx)]
         for row in g.matrix:
-            for t in row:
-                if (t.x % 2 == 0):
-                    t.update_tile(tt='blocked')
+            for t in range(len(row)):
+                if (t % 2 == 0):
+                    row[t].update_tile(tt='blocked')
         return g
 
 
@@ -55,13 +62,15 @@ class Grid(object):
     def draw(self, screen):
         for row in self.matrix:
             for t in row:
-                print("x: {} y: {} col: {}".format(t.x, t.y, t.color))
+                # print("x: {} y: {} col: {}".format(t.x, t.y, t.color))
                 t.draw(screen)
 
 class Tile(object):
     TYPE_COLORS = {
-        'unblocked': [107, 163, 255],
-        'blocked': [214, 49, 76]
+        'unblocked': [37, 186, 86],
+        'blocked': [226, 56, 22],
+        'agent': [0, 0, 0],
+        'target': [124, 22, 226]
     }
 
     def __init__(self, tt, xloc, yloc, size):
@@ -92,5 +101,6 @@ class Tile(object):
 
 if __name__ == "__main__":
     # add options here
-
+    game.add_option('tw', False, 50, 'The number of tiles in each row of the grid')
+    game.add_option('th', False, 50, 'The number of tiles in each column of the grid')
     game.run(setup, LOOP)

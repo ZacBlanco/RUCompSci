@@ -21,7 +21,7 @@ The function signature should look something like ``def setup(screen, args)``
 Then, the loop function signature should look like ``def loop(delta, screen)`` where delta is the time is took to run the last frame
 and screen is the pygame variable used to draw on the window.
 
-Then finally, to run the game all you have to do in your own module is write the following code
+Then finally, to run the game all you have to do in your own module is call run the game.run function and pass your setup and loop functions
 
 ```
 import game
