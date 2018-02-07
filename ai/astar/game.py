@@ -90,12 +90,12 @@ def game(args, setup, loop):
 OPTIONS = {
     'w': {
         'req': False,
-        'def': 720,
+        'def': 1024,
         'desc': 'window height'
     },
     'h': {
         'req': False,
-        'def': 480,
+        'def': 768,
         'desc': 'window width'
     },
     'fps': {
