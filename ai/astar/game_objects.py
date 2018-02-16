@@ -1,62 +1,5 @@
 import random
-import game
-import time
 from game import APP as g
-
-game.APP_TITLE = "Intro to artificial intelligence"
-DEFAULT_WIDTH = 70
-DEFAULT_HEIGHT = 49
-
-
-def setup(screen, args):
-    game.g = Grid.gen_grid(0, 0, int(args['w']), int(args['h']), int(args['tw']), int(args['th']))
-    for row in game.g.matrix:
-            for col in row:
-                col.update(tt='wall')
-    game.start = (1, 1)
-    game.dir_stack = []
-    game.curr_tile = game.start
-    game.dirs = game.g.gen_rand_dirs()
-    for d in game.dirs:
-        game.dir_stack.append((game.curr_tile, d))
-    # game.g.dfs_maze()
-
-def LOOP(d, s):
-
-    
-
-
-    (x, y), direction = game.dir_stack.pop()
-    if direction == 0:
-        if (y - 2 <= 0):
-            return
-        if game.g.matrix[y-2][x].type != 'path':
-            game.g.matrix[y-2][x].update(tt='path')
-            game.g.matrix[y-1][x].update(tt='path')
-            [game.dir_stack.append(l) for l in game.g.gen_dt_list(x, y-2)]
-    elif direction == 1:
-        if (x + 2 >= game.g.tx -1):
-            return
-        if game.g.matrix[y][x+2].type != 'path':
-            game.g.matrix[y][x+2].update(tt='path')
-            game.g.matrix[y][x+1].update(tt='path')
-            [game.dir_stack.append(l) for l in game.g.gen_dt_list(x+2, y)]
-    elif direction == 2:
-        if (y + 2 >= game.g.ty -1):
-            return
-        if game.g.matrix[y+2][x].type != 'path':
-            game.g.matrix[y+2][x].update(tt='path')
-            game.g.matrix[y+1][x].update(tt='path')
-            [game.dir_stack.append(l) for l in game.g.gen_dt_list(x, y+2)]
-    else:
-        if (x - 2 <= 0):
-            return
-        if game.g.matrix[y][x-2].type != 'path':
-            game.g.matrix[y][x-2].update(tt='path')
-            game.g.matrix[y][x-1].update(tt='path')
-            [game.dir_stack.append(l) for l in game.g.gen_dt_list(x-2, y)]
-    game.g.draw(s)
-
 
 class Grid(object):
     def __init__(self, x, y, g_width, g_height, tx, ty):
@@ -90,6 +33,60 @@ class Grid(object):
         return self.matrix[location[1]][location[0]]
 
     @staticmethod
+    def from_file(filename):
+        grid = None
+        with open(filename, 'r') as f:
+            l1 = f.readline().strip('\n')
+            x, y, gw, gh, tx, ty = [int(x) for x in l1.split(' ')]
+            grid = Grid.gen_grid(int(x), y, gw, gh, tx, ty)
+            l1 = f.readline()
+            line_count = 0
+            while (l1 != ''):
+                line_count += 1
+                tile = Tile.from_string(l1)
+                tx, ty = tile.get_tile_loc()
+                grid.matrix[ty][tx] = tile
+                l1 = f.readline()
+        if (line_count != grid.tx*grid.ty):
+            raise ValueError("File did not contain enough data to read full grid.")
+        
+        return grid
+        
+
+
+    def to_file(self, filename):
+        '''Writes a Grid to a file
+
+        Writes to a file in the following format
+        
+        <First Line>
+        x, y, gw, gh, tx, ty
+        tile
+        tile
+        ...
+        tile
+        tile
+        <EOF>
+
+        The function _will_ check whether or not the file has initialized all tiles properly.
+        If there are not enough tile lines, then an exception will be thrown
+
+        Arguments:
+            filename (str): The file to write to
+        
+        '''
+        params = [self.x, self.y, self.gw, self.gh, self.tx, self.ty]
+        param_str = ' '.join(str(s) for s in params) + '\n'
+        with open(filename, 'w') as f:
+            f.write(param_str)
+            for row in self.matrix:
+                for tile in row:
+                    f.write(str(tile) + '\n')
+        
+    
+    
+
+    @staticmethod
     def gen_grid(x, y, gw, gh, tx, ty):
         '''Generate a blank grid
 
@@ -109,9 +106,6 @@ class Grid(object):
         g.th = height # tile height (pixels)
         g.matrix = [[ Tile('wall', i, j, x + (i*width), y + (j*height), [width, height]) for i in range(tx)] for j in range(ty)]
 
-        start = (0,0)
-        g.matrix[start[0]][start[1]].update(tt='path')
-        
         return g
     
     def random_maze(self, prob):
@@ -130,6 +124,7 @@ class Grid(object):
         for d in dirs:
             l.append(((tx, ty), d))
         return l
+
     def gen_dt_list(self, tx, ty):
         l = []
         dirs = self.gen_rand_dirs()
@@ -144,7 +139,6 @@ class Grid(object):
         dirs = self.gen_rand_dirs()
         for d in dirs:
             dir_stack.append((curr_tile, d))
-
 
         while len(dir_stack) > 0:
             (x, y), direction = dir_stack.pop()
@@ -178,52 +172,19 @@ class Grid(object):
                     [dir_stack.append(l) for l in self.__gen_dt_list(x-2, y)]
 
 
-
-    def __dfs_maze_recurse(self, x, y):
-
-        for direction in self.gen_rand_dirs():
-            if direction == 0:
-                if (y - 2 <= 0):
-                    continue
-                if self.matrix[y-2][x].type != 'path':
-                    self.matrix[y-2][x].update(tt='path')
-                    self.matrix[y-1][x].update(tt='path')
-                    self.__dfs_maze_recurse(x, y-2)
-            elif direction == 1:
-                if (x + 2 >= self.tx -1):
-                    continue
-                if self.matrix[y][x+2].type != 'path':
-                    self.matrix[y][x+2].update(tt='path')
-                    self.matrix[y][x+1].update(tt='path')
-                    self.__dfs_maze_recurse(x+2, y)
-            elif direction == 2:
-                if (y + 2 >= self.ty -1):
-                    continue
-                if self.matrix[y+2][x].type != 'path':
-                    self.matrix[y+2][x].update(tt='path')
-                    self.matrix[y+1][x].update(tt='path')
-                    self.__dfs_maze_recurse(x, y+2)
-            else:
-                if (x - 2 <= 0):
-                    continue
-                if self.matrix[y][x-2].type != 'path':
-                    self.matrix[y][x-2].update(tt='path')
-                    self.matrix[y][x-1].update(tt='path')
-                    self.__dfs_maze_recurse(x-2, y)
-
     def dfs_maze(self):
-        # self.__dfs_maze_recurse(0, 0)
+        for row in self.matrix:
+            for tile in row:
+                tile.update(tt="wall")
         self.__dfs_maze_norecurse(1, 1)
         self.matrix[1][1].update(tt="path")
         
-
 
 
     def gen_rand_dirs(self):
         nums = list(range(4))
         random.shuffle(nums)
         return nums
-
 
     def primms_maze(self):
 
@@ -274,10 +235,6 @@ class Grid(object):
 
         return None
 
-    @staticmethod
-    def from_file(filename):
-        pass
-
     def draw(self, screen):
         for row in self.matrix:
             for t in row:
@@ -295,7 +252,10 @@ class Tile(object):
         'path': [37, 186, 86],
         'wall': [226, 56, 22],
         'agent': [255, 255, 255],
-        'target': [124, 22, 226]
+        'target': [124, 22, 226],
+        'explored': [239, 191, 57],
+        'reached': [77, 150, 234],
+        'shortest': [87, 77, 234]
     }
 
     def __init__(self, tt, gx, gy, xloc, yloc, size):
@@ -319,7 +279,11 @@ class Tile(object):
             self.type = tt
 
     def get_tile_loc(self):
-        '''Returns the locations of the tile in x/y grid coordinates'''
+        '''Returns the locations of the tile in x/y grid coordinates
+        
+        Returns:
+            (tuple): A tuple of (x, y) representing the location of the tile in tile coordinates
+        '''
         return (self.gx, self.gy)
 
     def get_walls(self, gw, gh):
@@ -338,16 +302,11 @@ class Tile(object):
         return neighbors
     
     def __str__(self):
-        s = '''X: {}
-               Y: {}
-               W: {}
-               H: {}
-               COLOR: {}
-        '''.format(self.x, self.y, self.size[0], self.size[1], self.color)
+        ps = [self.gx, self.gy, self.type, self.x, self.y, self.size[0], self.size[1]]
+        s = ' '.join(str(x) for x in ps)
         return s
-
-if __name__ == "__main__":
-    # add options here
-    game.add_option('tw', False, DEFAULT_WIDTH, 'The number of tiles in each row of the grid')
-    game.add_option('th', False, DEFAULT_HEIGHT, 'The number of tiles in each column of the grid')
-    game.run(setup, LOOP)
+    
+    @staticmethod
+    def from_string(s):
+        vals = s.split(' ')
+        return Tile(vals[2], int(vals[0]), int(vals[1]), float(vals[3]), float(vals[4]), (float(vals[5]), float(vals[6])))
