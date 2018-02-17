@@ -38,7 +38,8 @@ def setup(screen, args):
         sys.exit(0)
     else:
         game.g = Grid.gen_grid(0, 0, int(args['w']), int(args['h']), int(args['tw']), int(args['th']))
-        game.g.dfs_maze()
+        # game.g.dfs_maze()
+        game.g.random_maze(.75)
         game.g.draw(screen)
         g.display.flip()
 
@@ -57,30 +58,30 @@ def setup(screen, args):
     game.search = {}
     game.tree = {}
     game.last = None
+    game.astar = True
 
 def loop(d, s):
 
 
-    if not game.reconstruct:
+    if game.astar:
         game.ctr += 1 # Line 19
         game.g_score[game.curr_tile] = 0 #Line 20
         game.search[game.curr_tile] = game.ctr # Line 21
         game.g_score[game.target] = math.inf # Line 22
         game.search[game.target] = game.ctr # Line 23
-        topen, tclosed = compute_path(game.curr_tile, game.target)
+        topen, tclosed, last = compute_path(game.curr_tile, game.target, s)
         if len(topen) > 0:
             # Didn't fail
-            last = None
-            tmp = game.curr_tile
-            while tmp in game.tree:
-                last = tmp
-                tmp = game.tree[tmp]
-                if tmp == 
             game.curr_tile = last
-            print("curr tile: {}".format(game.curr_tile))
+            tmp = last
+            while tmp in game.tree:
+                game.g.get(tmp).color = Tile.TYPE_COLORS['shortest']
+                tmp = game.tree[tmp]
+            print("curr tile: {}, last {}".format(game.curr_tile, last))
             if game.curr_tile == game.target:
                 game.reconstruct = True
-            time.sleep(5)
+                game.astar = False
+                print("reconstruct is true")
         else:
             # Failed Search
             print("FAILED SEARCH. NO PATH")
@@ -101,18 +102,22 @@ def loop(d, s):
 
     game.g.draw(s)
 
-def compute_path(source_tile, target_tile):
+def compute_path(source_tile, target_tile, s):
     topen = TileHeap()
     tclosed = {}
     topen.push(source_tile, 0, heuristic(source_tile, target_tile)) # Line 25
-    while game.g_score[target_tile] > topen.peek()[0]:
-        f, g, tile = topen.pop() # Remove the minimum item
-        tclosed[tile] = (f, g) # Add to closed
+    last = None
+    while len(topen) >  0: # this prevents us from getting getting an error on failed search
+        if not game.g_score[target_tile] > topen.peek()[0]:
+            break 
+        f, gs, tile = topen.pop() # Remove the minimum item
+        tclosed[tile] = (f, gs) # Add to closed
         for neighbor in game.g.get(tile).get_walls(game.g.tx, game.g.ty): # for all actions
             
             if game.g.get(neighbor).type != 'wall':
                 game.g.get(neighbor).color = Tile.TYPE_COLORS['reached'] # 
             if neighbor in game.closed or game.g.get(neighbor).type == 'wall': # don't do anything if its a wall
+                # game.g.get(neighbor).color = Tile.TYPE_COLORS['wall']
                 continue
 
             # Instead of initializing them ALL at the beginning, check if it's been initialized here
@@ -128,10 +133,14 @@ def compute_path(source_tile, target_tile):
             # Line 9-13 in computePath
             if game.g_score[neighbor] > game.g_score[tile] + 1: # +1 represents action cost.
                 game.g_score[neighbor] = game.g_score[tile] + 1
-                game.tree[tile] = neighbor
+                game.tree[neighbor] = tile
+                last = neighbor
                 topen.push(neighbor, game.g_score[neighbor], heuristic(neighbor, target_tile)) # Line 12+13 in one (function updates automatically)
+        game.g.draw(s)
+        g.display.flip()
+        
     
-    return topen, tclosed
+    return topen, tclosed, last
 
 if __name__ == "__main__":
     # add options here
