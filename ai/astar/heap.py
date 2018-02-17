@@ -2,7 +2,7 @@ import heapq
 import itertools
 
 class TileHeap(object):
-    REMOVED = "NULL_TASK"
+    REMOVED = "NULL_TILE"
     
     def __init__(self):
         self.heap_list = BinaryHeap()
@@ -15,24 +15,30 @@ class TileHeap(object):
     def __contains__(self, item):
         return item in self.heap_dict
 
-    def push(self, tile, fscore):
+    def peek(self):
+        return self.heap_list.peek()
+
+    def __getitem__(self, key):
+        return self.heap_dict[key]
+
+    def push(self, tile, gscore, hscore):
         if tile in self.heap_dict:
             self.remove(tile)
         tid = next(self.ctr)
-        ent = [fscore, tid, tile]
+        ent = (gscore+hscore, gscore, tid, tile)
         self.heap_dict[tile] = ent
-        heapq.heappush(self.heap_list, ent)
+        self.heap_list.push(ent)
 
-    def remove(self, tile):
-        ent = self.heap_dict.pop(tile)
-        ent[2] = TileHeap.REMOVED
+    def remove(self, tile_ent):
+        ent = self.heap_dict.pop(tile_ent)
+        ent[3] = TileHeap.REMOVED
 
     def pop(self):
         while self.heap_list:
-            fscore, tid, tile = heapq.heappop(self.heap_list)
+            fscore, gscore, tid, tile = self.heap_list.pop()
             if tile is not TileHeap.REMOVED:
                 self.heap_dict.pop(tile)
-                return fscore, tile
+                return fscore, gscore, tile
         raise KeyError("Attempted to pop empty priority queue")
 
 class BinaryHeap(object):
@@ -71,10 +77,14 @@ class BinaryHeap(object):
     def _compare_nodes(self, i, j):
         '''Compares two nodes in the heap.
 
+        Arguments:
+            i: Index of in the heap list
+            j: Index in the heap list
+
         Returns:
-            -1: if i < j
-             0: if i == j
-             1: if i > j
+            -1: if val(i) < val(j)
+             0: if val(i) == val(j)
+             1: if val(i) > val(j)
         '''
         n1 = self.h[i]
         n2 = self.h[j]
@@ -103,7 +113,7 @@ class BinaryHeap(object):
 
     def __sift_up__(self):
         curr = len(self.h) - 1
-        parent = Heap._parent(curr)
+        parent = BinaryHeap._parent(curr)
         while curr > 0:
             c = self._compare_nodes(curr, parent)
             if self.minheap:
@@ -121,14 +131,14 @@ class BinaryHeap(object):
                 else:
                     break
             curr = parent
-            parent = Heap._parent(curr)
+            parent = BinaryHeap._parent(curr)
 
 
     def __sift_down__(self):
         curr = 0
         while curr < len(self.h):
-            left = Heap._left_child(curr)
-            right = Heap._right_child(curr)
+            left = BinaryHeap._left_child(curr)
+            right = BinaryHeap._right_child(curr)
             cl = self._compare_nodes(left, curr) if left < len(self.h) else 0
             cr = self._compare_nodes(left, curr) if right < len(self.h) else 0
             swp = curr
@@ -160,7 +170,7 @@ class BinaryHeap(object):
             curr = swp
 
 if __name__ == "__main__":
-    a = Heap()
+    a = BinaryHeap()
     a.push(0)
     a.push(1)
     a.push(2)
