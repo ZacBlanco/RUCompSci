@@ -45,7 +45,7 @@ import time
 
 APP_TITLE = 'Pygame test'
 APP = pygame
-
+ARGS = None
 def game(args, setup, loop):
     '''Runs the Pygame
     Arguments:
@@ -170,6 +170,8 @@ def run(setup, loop):
         setup: A function with 2 arguments (screen, cmd line args) that is run once before the game loop 
         loop: A function with a two arguments (delta time, game surface) that gets run up to FPS frames per second.
     '''
+    global ARGS
     args = sys.argv[1:]
     option = parse_options(args)
+    ARGS = option
     game(option, setup, loop)
