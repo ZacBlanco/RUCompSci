@@ -39,7 +39,7 @@ def setup(screen, args):
     else:
         game.g = Grid.gen_grid(0, 0, int(args['w']), int(args['h']), int(args['tw']), int(args['th']))
         # game.g.dfs_maze()
-        game.g.random_maze(.75)
+        game.g.random_maze(.7)
         game.g.draw(screen)
         g.display.flip()
 
@@ -72,12 +72,11 @@ def loop(d, s):
         topen, tclosed, last = compute_path(game.curr_tile, game.target, s)
         if len(topen) > 0:
             # Didn't fail
+            # while tmp in game.tree:
+            #     game.g.get(tmp).color = Tile.TYPE_COLORS['shortest']
+            #     tmp = game.tree[tmp]
+            print("Started with: {}, Ended On {}".format(game.curr_tile, last))
             game.curr_tile = last
-            tmp = last
-            while tmp in game.tree:
-                game.g.get(tmp).color = Tile.TYPE_COLORS['shortest']
-                tmp = game.tree[tmp]
-            print("curr tile: {}, last {}".format(game.curr_tile, last))
             if game.curr_tile == game.target:
                 game.reconstruct = True
                 game.astar = False
@@ -85,6 +84,8 @@ def loop(d, s):
         else:
             # Failed Search
             print("FAILED SEARCH. NO PATH")
+            game.astar = False
+            time.sleep(5)
     
 
     if game.reconstruct:
@@ -98,7 +99,11 @@ def loop(d, s):
             game.last = game.tree[game.last]
         else:
             game.reconstruct = False
+            time.sleep(5)
 
+    if not game.reconstruct and not game.astar:
+        print("Rerunning setup")
+        setup(s, game.ARGS)
 
     game.g.draw(s)
 
@@ -108,7 +113,7 @@ def compute_path(source_tile, target_tile, s):
     topen.push(source_tile, 0, heuristic(source_tile, target_tile)) # Line 25
     last = None
     while len(topen) >  0: # this prevents us from getting getting an error on failed search
-        if not game.g_score[target_tile] > topen.peek()[0]:
+        if not game.g_score[target_tile] > topen.peek()[0]: # break from loop (Line 2)
             break 
         f, gs, tile = topen.pop() # Remove the minimum item
         tclosed[tile] = (f, gs) # Add to closed

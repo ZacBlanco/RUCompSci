@@ -25,7 +25,7 @@ class TileHeap(object):
         if tile in self.heap_dict:
             self.remove(tile)
         tid = next(self.ctr)
-        ent = (gscore+hscore, gscore, tid, tile)
+        ent = [gscore+hscore, gscore, tid, tile]
         self.heap_dict[tile] = ent
         self.heap_list.push(ent)
 
