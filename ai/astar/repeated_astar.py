@@ -10,8 +10,8 @@ from game_objects import Tile, Grid
 from heap import TileHeap
 
 game.APP_TITLE = "Intro to artificial intelligence"
-DEFAULT_WIDTH = 71
-DEFAULT_HEIGHT = 71
+DEFAULT_WIDTH = 101
+DEFAULT_HEIGHT = 101
 
 def heuristic(source_tile, target_tile):
     '''A set of 2-tuple of the (x, y) location of our targets
@@ -19,18 +19,22 @@ def heuristic(source_tile, target_tile):
     Returns:
         int: The heuristic distance between the two tiles (minmium number of x+y movements)
     '''
-    return target_tile[1] - source_tile[1] + target_tile[0] - source_tile[0]
+    return abs(target_tile[1] - source_tile[1] + target_tile[0] - source_tile[0])
     
 
 
 def setup(screen, args):
+    '''Run the game setup
+
+    '''
 
     if args['file'] is not '':
         game.g = Grid.from_file(args['file'])
     elif args['generate'] is not '':
         game.g = Grid.gen_grid(0, 0, int(args['w']), int(args['h']), int(args['tw']), int(args['th']))
         for i in range(50):
-            game.g.dfs_maze()
+            # game.g.dfs_maze()
+            game.g.random_maze(.7)            
             game.g.draw(screen)
             g.display.flip()
             time.sleep(0.2)
@@ -46,8 +50,10 @@ def setup(screen, args):
     game.ctr = 0
     game.open = TileHeap()
     game.closed = {}
-    game.source = (1, 1)
-    game.target = (game.g.tx - 2, game.g.ty - 2)
+    # game.source = (1, 1)
+    # game.target = (game.g.tx - 2, game.g.ty - 2)
+    game.source = (game.g.tx - 2, game.g.ty - 2)
+    game.target = (1, 1)
     game.g.get(game.source).update(tt="agent")
     game.g.get(game.target).update(tt="target")
 
@@ -81,6 +87,7 @@ def loop(d, s):
                 game.reconstruct = True
                 game.astar = False
                 print("reconstruct is true")
+                game.g.get(game.source).update(tt='agent')
         else:
             # Failed Search
             print("FAILED SEARCH. NO PATH")
@@ -111,13 +118,19 @@ def compute_path(source_tile, target_tile, s):
     topen = TileHeap()
     tclosed = {}
     topen.push(source_tile, 0, heuristic(source_tile, target_tile)) # Line 25
-    last = None
+    last = None # used to return last time searched
     while len(topen) >  0: # this prevents us from getting getting an error on failed search
         if not game.g_score[target_tile] > topen.peek()[0]: # break from loop (Line 2)
             break 
         f, gs, tile = topen.pop() # Remove the minimum item
         tclosed[tile] = (f, gs) # Add to closed
         for neighbor in game.g.get(tile).get_walls(game.g.tx, game.g.ty): # for all actions
+            
+            if neighbor == target_tile:
+                last = target_tile
+                game.g_score[neighbor] = game.g_score[tile] + 1
+                game.tree[neighbor] = tile
+                break
             
             if game.g.get(neighbor).type != 'wall':
                 game.g.get(neighbor).color = Tile.TYPE_COLORS['reached'] # 
@@ -141,6 +154,7 @@ def compute_path(source_tile, target_tile, s):
                 game.tree[neighbor] = tile
                 last = neighbor
                 topen.push(neighbor, game.g_score[neighbor], heuristic(neighbor, target_tile)) # Line 12+13 in one (function updates automatically)
+        
         game.g.draw(s)
         g.display.flip()
         

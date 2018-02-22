@@ -1,5 +1,6 @@
 import heapq
 import itertools
+import math
 
 class TileHeap(object):
     REMOVED = "NULL_TILE"
@@ -21,11 +22,15 @@ class TileHeap(object):
     def __getitem__(self, key):
         return self.heap_dict[key]
 
-    def push(self, tile, gscore, hscore):
+    def push(self, tile, gscore, hscore, min_g=False):
         if tile in self.heap_dict:
             self.remove(tile)
         tid = next(self.ctr)
-        ent = [gscore+hscore, gscore, tid, tile]
+        ent = []
+        if min_g:
+            ent = [gscore+hscore, gscore, tid, tile]
+        else:
+            ent = [gscore+hscore, 100000 - gscore, tid, tile]
         self.heap_dict[tile] = ent
         self.heap_list.push(ent)
 
