@@ -10,8 +10,8 @@ from game_objects import Tile, Grid
 from heap import TileHeap
 
 game.APP_TITLE = "Intro to artificial intelligence"
-DEFAULT_WIDTH = 101
-DEFAULT_HEIGHT = 101
+DEFAULT_WIDTH = 71
+DEFAULT_HEIGHT = 71
 
 def heuristic(source_tile, target_tile):
     '''A set of 2-tuple of the (x, y) location of our targets
@@ -27,7 +27,6 @@ def setup(screen, args):
     '''Run the game setup
 
     '''
-
     if args['file'] is not '':
         game.g = Grid.from_file(args['file'])
     elif args['generate'] is not '':
