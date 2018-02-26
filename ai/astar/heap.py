@@ -5,10 +5,16 @@ import math
 class TileHeap(object):
     REMOVED = "NULL_TILE"
     
-    def __init__(self):
+    def __init__(self, min_tb=False):
+        '''Create a new TileHeap
+
+        Arguments:
+            min_tb=False (boolean): If specified, tiebreaks in the heap will be done with minimum g_scores
+        '''
         self.heap_list = BinaryHeap()
         self.heap_dict = {}
         self.ctr = itertools.count()
+        self.min_tiebreaker = min_tb
 
     def __len__(self):
         return len(self.heap_dict)
@@ -22,12 +28,12 @@ class TileHeap(object):
     def __getitem__(self, key):
         return self.heap_dict[key]
 
-    def push(self, tile, gscore, hscore, min_g=False):
+    def push(self, tile, gscore, hscore):
         if tile in self.heap_dict:
             self.remove(tile)
         tid = next(self.ctr)
         ent = []
-        if min_g:
+        if self.min_tiebreaker:
             ent = [gscore+hscore, gscore, tid, tile]
         else:
             ent = [gscore+hscore, 100000 - gscore, tid, tile]

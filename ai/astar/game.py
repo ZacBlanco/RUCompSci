@@ -46,6 +46,8 @@ import time
 APP_TITLE = 'Pygame test'
 APP = pygame
 ARGS = None
+EXIT = False
+
 def game(args, setup, loop):
     '''Runs the Pygame
     Arguments:
@@ -56,6 +58,7 @@ def game(args, setup, loop):
     Returns:
         None: The application exits if the game loop is broken.
     '''
+    global EXIT
     pygame.init()
 
     size = width, height = int(args['w']), int(args['h'])
@@ -70,7 +73,7 @@ def game(args, setup, loop):
     setup(screen, args)
 
     # Event Loop
-    while True:
+    while True and not EXIT:
         tick = time.time()
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
@@ -83,8 +86,7 @@ def game(args, setup, loop):
         delta = tock-tick # Time to run single frame
         if delta < frame_time: time.sleep(frame_time - delta) # sleep for the rest of the duration
 
-    sys.exit(0)
-    return None        
+    return 0
 
 
 OPTIONS = {
@@ -170,7 +172,8 @@ def run(setup, loop):
         setup: A function with 2 arguments (screen, cmd line args) that is run once before the game loop 
         loop: A function with a two arguments (delta time, game surface) that gets run up to FPS frames per second.
     '''
-    global ARGS
+    global ARGS, EXIT
+    EXIT = False
     args = sys.argv[1:]
     option = parse_options(args)
     ARGS = option

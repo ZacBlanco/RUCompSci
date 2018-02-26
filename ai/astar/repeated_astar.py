@@ -10,8 +10,8 @@ from game_objects import Tile, Grid
 from heap import TileHeap
 
 game.APP_TITLE = "Intro to artificial intelligence"
-DEFAULT_WIDTH = 71
-DEFAULT_HEIGHT = 71
+DEFAULT_WIDTH = 101
+DEFAULT_HEIGHT = 101
 
 def heuristic(source_tile, target_tile):
     '''A set of 2-tuple of the (x, y) location of our targets
@@ -29,6 +29,7 @@ def setup(screen, args):
     '''
     if args['file'] is not '':
         game.g = Grid.from_file(args['file'])
+        print("Game grid loaded from {}".format(args['file']))
     elif args['generate'] is not '':
         game.g = Grid.gen_grid(0, 0, int(args['w']), int(args['h']), int(args['tw']), int(args['th']))
         for i in range(50):
@@ -46,16 +47,22 @@ def setup(screen, args):
         game.g.draw(screen)
         g.display.flip()
 
+    game.min_tb = False
+    if args['tbr'] != '':
+        game.min_tb = True
     game.ctr = 0
-    game.open = TileHeap()
+    game.open = TileHeap(min_tb=game.min_tb)
     game.closed = {}
-    # game.source = (1, 1)
-    # game.target = (game.g.tx - 2, game.g.ty - 2)
-    game.source = (game.g.tx - 2, game.g.ty - 2)
-    game.target = (1, 1)
+    game.source = (1, 1)
+    game.target = (game.g.tx - 2, game.g.ty - 2)
+    if args['b'] != '':
+        tmp = game.source
+        game.source = game.target
+        game.target = tmp
     game.g.get(game.source).update(tt="agent")
     game.g.get(game.target).update(tt="target")
 
+    game.expanded = 0 # number of expanded tiles
     game.g_score = {}
     game.g_score[game.source] = 0
     game.reconstruct = False
@@ -64,6 +71,8 @@ def setup(screen, args):
     game.tree = {}
     game.last = None
     game.astar = True
+    game.start = time.time()
+    game.break_ctr = 0
 
 def loop(d, s):
 
@@ -86,35 +95,41 @@ def loop(d, s):
                 game.reconstruct = True
                 game.astar = False
                 print("reconstruct is true")
+                game.end = time.time()
+                print("Finished running in {} seconds".format(game.end - game.start))
+                print("Expanded {} cells".format(game.expanded))
                 game.g.get(game.source).update(tt='agent')
         else:
             # Failed Search
             print("FAILED SEARCH. NO PATH")
             game.astar = False
-            time.sleep(5)
+            game.EXIT = True
+            # time.sleep(2)
     
 
     if game.reconstruct:
-
         if game.last == None:
             game.last = game.target
         # print(game.last)
         # print(game.target)
         game.g.get(game.last).color = Tile.TYPE_COLORS['shortest']
-        if game.last in game.tree:
+        if game.last in game.tree and game.break_ctr < 2500:
             game.last = game.tree[game.last]
         else:
             game.reconstruct = False
-            time.sleep(5)
+            game.EXIT = True
+            # time.sleep(2)
+        game.break_ctr += 1
 
     if not game.reconstruct and not game.astar:
         print("Rerunning setup")
+        game.g.draw(s)
         setup(s, game.ARGS)
 
-    game.g.draw(s)
+    # game.g.draw(s)
 
 def compute_path(source_tile, target_tile, s):
-    topen = TileHeap()
+    topen = TileHeap(min_tb=game.min_tb)
     tclosed = {}
     topen.push(source_tile, 0, heuristic(source_tile, target_tile)) # Line 25
     last = None # used to return last time searched
@@ -123,6 +138,8 @@ def compute_path(source_tile, target_tile, s):
             break 
         f, gs, tile = topen.pop() # Remove the minimum item
         tclosed[tile] = (f, gs) # Add to closed
+        game.g.get(tile).color = Tile.TYPE_COLORS['explored'] #
+        game.expanded += 1 # add one to expanded
         for neighbor in game.g.get(tile).get_walls(game.g.tx, game.g.ty): # for all actions
             
             if neighbor == target_tile:
@@ -131,9 +148,9 @@ def compute_path(source_tile, target_tile, s):
                 game.tree[neighbor] = tile
                 break
             
-            if game.g.get(neighbor).type != 'wall':
+            if game.g.get(neighbor).type != 'wall' and neighbor not in tclosed:
                 game.g.get(neighbor).color = Tile.TYPE_COLORS['reached'] # 
-            if neighbor in game.closed or game.g.get(neighbor).type == 'wall': # don't do anything if its a wall
+            if neighbor in tclosed or game.g.get(neighbor).type == 'wall': # don't do anything if its a wall
                 # game.g.get(neighbor).color = Tile.TYPE_COLORS['wall']
                 continue
 
@@ -154,8 +171,9 @@ def compute_path(source_tile, target_tile, s):
                 last = neighbor
                 topen.push(neighbor, game.g_score[neighbor], heuristic(neighbor, target_tile)) # Line 12+13 in one (function updates automatically)
         
-        game.g.draw(s)
-        g.display.flip()
+        # game.g.draw(s)
+        # g.display.flip()
+        # time.sleep(0.2)
         
     
     return topen, tclosed, last
@@ -166,4 +184,11 @@ if __name__ == "__main__":
     game.add_option('th', False, DEFAULT_HEIGHT, 'The number of tiles in each column of the grid')
     game.add_option('file', False, "", 'If specified, will read from the file instead of generating a new maze')
     game.add_option('generate', False, "", 'This will generate 50 different mazes and save them under a folder names "mazes"')
+    game.add_option('b', False, "", 'Specify this option to run backwards repeated A* search')
+    game.add_option('tbr', False, '', 'If specified, will break ties with the SMALLER g-score. By default breaks ties with max g_score ')
     game.run(setup, loop)
+    # UNCOMMENT for getting test data from all mazes
+    # for i in range(50):
+    #     sys.argv = ['script', '-file' , 'mazes/maze{}.grid'.format(i), '-fps', '10000', '-b', 't']
+    #     game.run(setup, loop)
+        
