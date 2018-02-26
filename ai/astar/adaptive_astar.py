@@ -13,8 +13,16 @@ game.APP_TITLE = "Intro to artificial intelligence"
 DEFAULT_WIDTH = 101
 DEFAULT_HEIGHT = 101
 
-def heuristic(source_tile_gscore, target_tile_g_score):
+def heuristic(source_tile, target_tile):
     '''A set of 2-tuple of the (x, y) location of our targets
+    
+    Returns:
+        int: The heuristic distance between the two tiles (minmium number of x+y movements)
+    '''
+    return abs(target_tile[1] - source_tile[1] + target_tile[0] - source_tile[0])
+
+def adaptive_heuristic(source_tile_gscore, target_tile_g_score):
+    '''A set of g scores for the source and target tile
     
     Returns:
         int: The heuristic distance between the two tiles (minmium number of x+y movements)
@@ -56,6 +64,12 @@ def setup(screen, args):
     # This is the initilization stuff in main
     # fill in/change lines as nexessary
     game.ctr = 0
+    game.deltah = {}
+    game.deltah[1] = 0
+    game.search = {}
+    for i in range(DEFAULT_WIDTH):
+        for j in range(DEFAULT_HEIGHT):
+            game.search[(i, j)] = 0
     game.closed = {}
     game.source = (1, 1)
     game.target = (game.g.tx - 2, game.g.ty - 2)
@@ -68,25 +82,47 @@ def setup(screen, args):
 
     game.expanded = 0 # number of expanded tiles
     game.g_score = {}
+    game.h_score = {}
     game.g_score[game.source] = 0
     game.reconstruct = False
     game.curr_tile = game.source
-    game.search = {}
+    
+    game.pathcost = {}
     game.tree = {}
     game.last = None
     game.astar = True
     game.start = time.time()
     game.break_ctr = 0
 
+
+def initialize_state(s):
+    if s not in game.search:
+        game.search[s] = game.ctr
+    if game.search[s] != game.ctr and game.search[s] != 0:
+        if s not in game.h_score or s not in game.g_score:
+            game.h_score[s] = heuristic(s, game.target)
+            game.g_score[s] = 10000
+        if game.search[s] not in game.pathcost:
+            game.pathcost[game.search[s]] = 10000
+        if game.g_score[s] + game.h_score[s] < game.pathcost[game.search[s]]:
+            game.h_score[s] = game.pathcost[game.search[s]] + game.g_score[s]
+        if game.ctr not in game.deltah:
+            game.deltah[game.ctr] = 0
+        game.h_score[s] = game.h_score[s] - (game.deltah[game.ctr] - game.deltah[game.search[s]])
+        game.g_score[s] = 10000
+    elif game.search[s] == 0:
+        game.g_score[s] = 10000
+        game.h_score[s] = heuristic(s, game.target)
+    game.search[s] = game.ctr
+        
 def loop(d, s):
 
 
     if game.astar: # beginning of the while loop (Line 27)
         game.ctr += 1 # Line 19
+        initialize_state(game.curr_tile)
+        initialize_state(game.target)
         game.g_score[game.curr_tile] = 0
-        game.search[game.curr_tile] = game.ctr
-        game.g_score[game.target] = 100000
-        game.search[game.target] = game.ctr
         topen, tclosed, last = compute_path(game.curr_tile, game.target, s)
         if len(topen) > 0:
             # Didn't fail
@@ -94,6 +130,10 @@ def loop(d, s):
             #     game.g.get(tmp).color = Tile.TYPE_COLORS['shortest']
             #     tmp = game.tree[tmp]
             print("Started with: {}, Ended On {}".format(game.curr_tile, last))
+            if len(topen) == 0:
+                game.pathcost[game.ctr] = math.inf
+            else:
+                game.pathcost[game.ctr] = game.g_score[game.target]
             game.curr_tile = last
             if game.curr_tile == game.target:
                 game.reconstruct = True
@@ -103,6 +143,9 @@ def loop(d, s):
                 print("Finished running in {} seconds".format(game.end - game.start))
                 print("Expanded {} cells".format(game.expanded))
                 game.g.get(game.source).update(tt='agent')
+            
+            game.deltah[game.ctr +1] = game.deltah[game.ctr]
+            game.ctr += 1
         else:
             # Failed Search
             print("FAILED SEARCH. NO PATH")
@@ -130,7 +173,7 @@ def loop(d, s):
         game.g.draw(s)
         setup(s, game.ARGS)
 
-    # game.g.draw(s)
+    game.g.draw(s)
 
 def compute_path(source_tile, target_tile, s):
     topen = TileHeap(min_tb=game.min_tb)
