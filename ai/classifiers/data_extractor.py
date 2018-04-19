@@ -5,11 +5,15 @@ facedata:
     - Every 70th line is blank.
 
 
-digitdat:
+digitdata:
     - 28 lines per entry.
     - Every 28th line is blank.
+    - Digits actually only appear on up to 19 lines
+        - Find the first line which isn't simply just spaces. The next 19 lines contain the digit.
 '''
 import numpy as np
+import random 
+
 
 def read_facedata(dtype='train'):
     '''Read in the face data into numpy vectors along with their class label as a tuple.
@@ -73,8 +77,18 @@ def read_digitdata(dtype='training'):
         num_items = int(num_lines/28)
         for x in range(num_items):
             ind = x*28
-            feature = data[ind:(ind+28)] # Get all of the lines pertaining for 
-            feature_string = list(''.join(feature).replace('\n', ''))
+            feature = data[ind:(ind+28)] # Get all of the lines pertaining for
+
+            # Tested refinement --- it didn't improve bayesian classification.
+            # Refine to get the 19 lines where the first line includes the digit.
+            # for i in range(9):
+            #     if len(feature[i].replace('\n', '').replace(' ', '')) != 0: # line isn't a space
+            #         break
+
+            # refined_feature = feature[i:i+19]
+            refined_feature = feature
+
+            feature_string = list(''.join(refined_feature).replace('\n', ''))
             # print('item {}'.format(x))
             # print(feature_string)
             feat = list(map(lambda x: ord(x), feature_string)) # Convert into a list of numbers
@@ -91,8 +105,20 @@ def read_digitdata(dtype='training'):
             item =(raw_features[x], label)
             labeled_data.append(item)
     return labeled_data
+
+
+def take_sample(dataset, frac):
+    '''Take a sample of data from the dataset
+    '''
+    newset = []
+    for item in dataset:
+        v = random.random()
+        if v < frac:
+            newset.append(item)
+    return newset
     
 
+# Test reading of data
 if __name__ == "__main__":
     # x = read_facedata('validation')
     # [print(z) for z in x]

@@ -5,7 +5,7 @@ from data_extractor import read_facedata, read_digitdata
 import numpy as np
 
 
-def generate_model(data):
+def train(data):
     '''Given a dataset, generate the bayesian model which can be used to make inferential predictions on the class of a dataset
     
     Arguments:
@@ -28,24 +28,29 @@ def generate_model(data):
         mat = np.column_stack(dat).T # transpose for column stacking
         mean = np.mean(mat, axis=0)
         std = np.std(mat, axis=0)
-        summaries[field] = (mean, std)
+        summaries[field] = (mean, std, len(dat))
     
     return summaries
 
-def make_prediction(data, model):
-    # [print("{} {}".format(k, model[k])) for k in model]
+def predict(data, model):
     def gaus_prob(x, mu, sig):
-        if sig == 0:
-            return 1.0
-        return (1/(math.sqrt(2*math.pi*(sig**2))))*math.exp(-.5*(math.pow((x-mu)/sig, 2)))
-    guas = lambda x, mu, sig: 1 if (sig == 0) else (1.0/(math.sqrt(2.0*math.pi*(math.pow(sig, 2)))))*math.exp(-.5*(math.pow((float(x)-mu)/sig, 2)))
+        k = .1
+        rv = k
+        if sig != 0:
+            val = (1.0/(math.sqrt(2.0*math.pi*(sig**2))))*math.exp(-.5*(math.pow((float(x)-mu)/sig, 2)))
+            if val == 0:
+                rv = 1E-300 # If we get a probability of 0, just set it to something tiny so when we take the log it is larger
+            else:
+                rv = val
+        return rv
     npg = np.vectorize(gaus_prob)
     probs = []
     for key in model:
         bclass = model[key] # mu, sigma tuple
         prob = npg(data, bclass[0], bclass[1])
-        prob = -1 * np.log(prob) # do log probabilities
-        probs.append((key, np.sum(prob)))
+        prob = -np.log(prob) # do log probabilities
+        prob = np.sum(prob)# - bclass[2]
+        probs.append((key, prob))
     # print(probs)
     return min(probs, key=lambda x: x[1])
 
@@ -53,25 +58,25 @@ def make_prediction(data, model):
 if __name__ == "__main__":
 
     y = read_facedata('train')
-    m = generate_model(y)
+    m = train(y)
     d = read_facedata('test')
     # np.set_printoptions(threshold=np.inf)
     total = len(d)
     cor = 0
     for i in range(total):
-        cl, lp = make_prediction(d[i][0], m)
+        cl, lp = predict(d[i][0], m)
         if (cl == d[i][1]):
             cor += 1
     accuracy = float(cor)/total
     print(accuracy)
 
     y = read_digitdata('training')
-    m = generate_model(y)
-    d = read_digitdata('training')
-    total = len(d)
+    m = train(y)
+    d = read_digitdata('test')
     cor = 0
     for i in range(total):
-        cl, lp = make_prediction(d[i][0], m)
+        # print(i)
+        cl, lp = predict(d[i][0], m)
         # print("({}, {})".format(cl, lp))
         if (cl == d[i][1]):
             cor += 1
