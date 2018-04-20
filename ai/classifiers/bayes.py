@@ -1,7 +1,7 @@
 '''Bayes classifier for data
 '''
 import math
-from data_extractor import read_facedata, read_digitdata
+from data_utils import read_facedata, read_digitdata
 import numpy as np
 
 

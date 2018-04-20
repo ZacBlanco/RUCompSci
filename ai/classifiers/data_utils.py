@@ -86,6 +86,7 @@ def read_digitdata(dtype='training'):
             #         break
 
             # refined_feature = feature[i:i+19]
+            
             refined_feature = feature
 
             feature_string = list(''.join(refined_feature).replace('\n', ''))
@@ -105,6 +106,19 @@ def read_digitdata(dtype='training'):
             item =(raw_features[x], label)
             labeled_data.append(item)
     return labeled_data
+
+def binarize(dataset, zval=32): # space is 0, all others are 1.
+    '''Convert data to all 1's and 0's 
+
+
+    '''
+    bcov = lambda x: 0 if x == zval else 1
+    binariz = np.vectorize(bcov)
+    l = []
+    for d in dataset:
+        l.append((binariz(d[0]), d[1]))
+    return l
+
 
 
 def take_sample(dataset, frac):
